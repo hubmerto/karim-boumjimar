@@ -1,0 +1,289 @@
+[
+  {
+    "id": "beauty-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 94838,
+    "outputBytes": 76246
+  },
+  {
+    "id": "beauty-02",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 132454,
+    "outputBytes": 112516
+  },
+  {
+    "id": "beauty-03",
+    "width": 1500,
+    "height": 2250,
+    "inputBytes": 253660,
+    "outputBytes": 220938
+  },
+  {
+    "id": "beauty-04",
+    "width": 1500,
+    "height": 2250,
+    "inputBytes": 174168,
+    "outputBytes": 147908
+  },
+  {
+    "id": "beauty-05",
+    "width": 1500,
+    "height": 2250,
+    "inputBytes": 269140,
+    "outputBytes": 243212
+  },
+  {
+    "id": "birdsofparadise-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 170626,
+    "outputBytes": 125884
+  },
+  {
+    "id": "birdsofparadise-02",
+    "width": 1500,
+    "height": 1001,
+    "inputBytes": 74032,
+    "outputBytes": 42172
+  },
+  {
+    "id": "birdsofparadise-03",
+    "width": 1500,
+    "height": 1001,
+    "inputBytes": 116394,
+    "outputBytes": 78056
+  },
+  {
+    "id": "deepcuts-01",
+    "width": 1500,
+    "height": 1160,
+    "inputBytes": 151516,
+    "outputBytes": 124058
+  },
+  {
+    "id": "deepcuts-02",
+    "width": 1500,
+    "height": 2000,
+    "inputBytes": 335642,
+    "outputBytes": 279236
+  },
+  {
+    "id": "deepcuts-03",
+    "width": 1500,
+    "height": 2017,
+    "inputBytes": 230406,
+    "outputBytes": 180282
+  },
+  {
+    "id": "drawing-01",
+    "width": 1500,
+    "height": 1124,
+    "inputBytes": 180270,
+    "outputBytes": 146950
+  },
+  {
+    "id": "drawing-02",
+    "width": 1500,
+    "height": 2001,
+    "inputBytes": 67158,
+    "outputBytes": 45742
+  },
+  {
+    "id": "drawing-03",
+    "width": 1500,
+    "height": 1001,
+    "inputBytes": 310626,
+    "outputBytes": 274328
+  },
+  {
+    "id": "drawing-04",
+    "width": 1500,
+    "height": 1001,
+    "inputBytes": 282250,
+    "outputBytes": 246588
+  },
+  {
+    "id": "fearandfauna-01",
+    "width": 1500,
+    "height": 994,
+    "inputBytes": 263332,
+    "outputBytes": 238416
+  },
+  {
+    "id": "fearandfauna-02",
+    "width": 1500,
+    "height": 2250,
+    "inputBytes": 403668,
+    "outputBytes": 357902
+  },
+  {
+    "id": "glory-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 268326,
+    "outputBytes": 223690
+  },
+  {
+    "id": "glory-02",
+    "width": 1080,
+    "height": 1620,
+    "inputBytes": 132622,
+    "outputBytes": 107886
+  },
+  {
+    "id": "kultuur-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 102678,
+    "outputBytes": 89390
+  },
+  {
+    "id": "kultuur-02",
+    "width": 1500,
+    "height": 2100,
+    "inputBytes": 258632,
+    "outputBytes": 234658
+  },
+  {
+    "id": "liljevalchs-01",
+    "width": 1500,
+    "height": 1125,
+    "inputBytes": 160352,
+    "outputBytes": 96874
+  },
+  {
+    "id": "liljevalchs-02",
+    "width": 1500,
+    "height": 1125,
+    "inputBytes": 125190,
+    "outputBytes": 80172
+  },
+  {
+    "id": "moestings-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 240694,
+    "outputBytes": 183280
+  },
+  {
+    "id": "moestings-02",
+    "width": 1500,
+    "height": 2249,
+    "inputBytes": 295666,
+    "outputBytes": 244136
+  },
+  {
+    "id": "moestings-03",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 213812,
+    "outputBytes": 163644
+  },
+  {
+    "id": "moestings-04",
+    "width": 1500,
+    "height": 2100,
+    "inputBytes": 145024,
+    "outputBytes": 95202
+  },
+  {
+    "id": "mouths-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 97782,
+    "outputBytes": 68584
+  },
+  {
+    "id": "mouths-02",
+    "width": 1500,
+    "height": 2248,
+    "inputBytes": 91714,
+    "outputBytes": 66810
+  },
+  {
+    "id": "mouths-03",
+    "width": 1500,
+    "height": 2250,
+    "inputBytes": 158046,
+    "outputBytes": 120210
+  },
+  {
+    "id": "overgaden-01",
+    "width": 1500,
+    "height": 1145,
+    "inputBytes": 172158,
+    "outputBytes": 151300
+  },
+  {
+    "id": "overgaden-02",
+    "width": 1500,
+    "height": 1178,
+    "inputBytes": 174420,
+    "outputBytes": 152498
+  },
+  {
+    "id": "pandemonium-01",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 209206,
+    "outputBytes": 184450
+  },
+  {
+    "id": "pandemonium-02",
+    "width": 1500,
+    "height": 1016,
+    "inputBytes": 240540,
+    "outputBytes": 213870
+  },
+  {
+    "id": "pandemonium-03",
+    "width": 1500,
+    "height": 971,
+    "inputBytes": 199846,
+    "outputBytes": 176818
+  },
+  {
+    "id": "pandemonium-04",
+    "width": 1500,
+    "height": 2244,
+    "inputBytes": 889450,
+    "outputBytes": 797292
+  },
+  {
+    "id": "pandemonium-05",
+    "width": 1134,
+    "height": 1507,
+    "inputBytes": 135032,
+    "outputBytes": 122324
+  },
+  {
+    "id": "symbiosis-01",
+    "width": 1500,
+    "height": 2038,
+    "inputBytes": 237066,
+    "outputBytes": 186314
+  },
+  {
+    "id": "symbiosis-02",
+    "width": 1500,
+    "height": 1875,
+    "inputBytes": 416686,
+    "outputBytes": 338256
+  },
+  {
+    "id": "symbiosis-03",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 144440,
+    "outputBytes": 107262
+  },
+  {
+    "id": "symbiosis-04",
+    "width": 1500,
+    "height": 1000,
+    "inputBytes": 147888,
+    "outputBytes": 111216
+  }
+]
