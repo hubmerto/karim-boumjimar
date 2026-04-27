@@ -17,8 +17,12 @@ export function Canvas() {
     onPointerMove,
     onPointerUp,
     dragMovedRef,
+    isAnimating,
   } = useCanvas(WORKS);
   const deselect = useSelection((s) => s.deselect);
+  const condensed = useSelection(
+    (s) => !!(s.selectedId || s.selectedGroupKey),
+  );
   const groups = useMemo(() => groupTilesByTitle(WORKS), []);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export function Canvas() {
 
   const onBackgroundClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Real bg clicks only — not at the tail of a pan-drag, not on a tile.
+      // Real bg clicks only - not at the tail of a pan-drag, not on a tile.
       if (dragMovedRef.current) return;
       const target = e.target as HTMLElement;
       if (target.closest("[data-work-id]")) return;
@@ -43,7 +47,11 @@ export function Canvas() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 top-12 overflow-hidden bg-canvas md:left-[200px] md:right-[300px]"
+      className={`fixed inset-0 top-12 overflow-hidden bg-canvas transition-[left,right] duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        condensed
+          ? "md:left-[24px] md:right-[300px]"
+          : "md:left-[200px] md:right-0"
+      }`}
       style={{
         cursor,
         touchAction: "none",
@@ -54,13 +62,17 @@ export function Canvas() {
       onPointerCancel={onPointerUp}
       onClick={onBackgroundClick}
       role="application"
-      aria-label="Works canvas — pan and zoom to navigate"
+      aria-label="Works canvas - pan and zoom to navigate"
     >
       <div
         className="absolute left-0 top-0"
         style={{
           transformOrigin: "0 0",
           transform: `translate3d(${transform.tx}px, ${transform.ty}px, 0) scale(${transform.scale})`,
+          // Smooth nav-driven moves; instant during pan/zoom so dragging feels direct.
+          transition: isAnimating
+            ? "transform 400ms cubic-bezier(0.32, 0.72, 0, 1)"
+            : "none",
           willChange: "transform",
         }}
       >

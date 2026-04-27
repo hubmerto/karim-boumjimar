@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Karim Boumjimar - Portfolio
 
-## Getting Started
+Single-viewport canvas portfolio for ceramic artist Karim Boumjimar.
+Next.js 16 (App Router) + Tailwind 4 + Zustand + Sharp.
 
-First, run the development server:
+## Continuing on another machine
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/hubmerto/karim-boumjimar.git
+cd karim-boumjimar
+
+# Install Node + pnpm if you don't already have them.
+# Fastest path without Homebrew:
+curl -L https://github.com/Schniz/fnm/releases/latest/download/fnm-macos.zip -o /tmp/fnm.zip
+mkdir -p ~/.fnm && unzip -o /tmp/fnm.zip -d ~/.fnm && chmod +x ~/.fnm/fnm
+echo 'export PATH="$HOME/.fnm:$PATH"' >> ~/.zprofile
+echo 'eval "$(fnm env --use-on-cd --shell zsh)"' >> ~/.zprofile
+export PATH="$HOME/.fnm:$PATH" && eval "$(fnm env --shell zsh)"
+fnm install --lts
+corepack enable && corepack prepare pnpm@latest --activate
+
+# Then:
+pnpm install
+pnpm dev   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If you already have Node 20+ and pnpm: just `pnpm install && pnpm dev`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project shape
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/                   Root layout + page (App Router)
+  components/            Canvas, Inspector, ProjectPanel, LeftToolbar, ...
+  components/views/      Bio / About / News / Grant text views
+  data/
+    works.ts             41 work tiles with positions (generated)
+    bio.ts               bio paragraphs, news, grant info
+    descriptions.ts      long-form project descriptions
+  lib/
+    canvas-math.ts       fitAll / centerOn / zoomAt
+    useCanvas.ts         pan/zoom hook (wheel, drag, pinch, keyboard)
+    store.ts             zustand selection + view state
+    paths.ts             basePath helper for static export
+scripts/                 Asset pipeline (run via node)
+public/images/
+  works/                 canvas-ready WebPs (committed)
+  originals/             full-res JPGs (gitignored)
+```
 
-## Learn More
+## Editing content
 
-To learn more about Next.js, take a look at the following resources:
+- Bio / About text - `src/data/bio.ts` (`BIO_PARAGRAPHS`, `ABOUT_PARAGRAPHS`)
+- News timeline - same file (`NEWS` array)
+- Project descriptions - `src/data/descriptions.ts`
+- Tile positions / clusters - `scripts/build-works.mjs` (CLUSTERS object), then re-run `node scripts/build-works.mjs`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Re-running the asset pipeline
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+If you change which images are picked, or add new ones:
 
-## Deploy on Vercel
+```bash
+curl -sL https://www.karimboumjimar.com/sitemap.xml -o /tmp/sitemap.xml
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Build manifest from sitemap
+python3 -c "
+import xml.etree.ElementTree as ET, json
+tree = ET.parse('/tmp/sitemap.xml')
+ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9', 'image': 'http://www.google.com/schemas/sitemap-image/1.1'}
+manifest = []
+for url in tree.getroot().findall('sm:url', ns):
+    loc = url.find('sm:loc', ns).text
+    slug = loc.rsplit('/', 1)[-1]
+    images = [{'url': i.find('image:loc', ns).text, 'title': (i.find('image:title', ns) or {}).text if i.find('image:title', ns) is not None else None, 'caption': (i.find('image:caption', ns) or {}).text if i.find('image:caption', ns) is not None else None} for i in url.findall('image:image', ns)]
+    manifest.append({'page': loc, 'slug': slug, 'images': images})
+print(json.dumps(manifest, indent=2, ensure_ascii=False))
+" > /tmp/manifest.json
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+node scripts/curate.mjs        # picks images, writes scripts/curated.json
+node scripts/download.mjs      # downloads to public/images/originals/
+node scripts/to-webp.mjs       # converts to public/images/works/
+node scripts/build-works.mjs   # regenerates src/data/works.ts
+```
+
+## Deploying to GitHub Pages
+
+The deploy workflow file lives outside the repo at `/tmp/deploy-workflow.yml` until your `gh` token has the `workflow` scope. To enable auto-deploy:
+
+```bash
+gh auth refresh -h github.com -s workflow   # opens browser to authorise
+mkdir -p .github/workflows
+cp /tmp/deploy-workflow.yml .github/workflows/deploy.yml
+git add .github/workflows/deploy.yml
+git commit -m "Add Pages deploy workflow"
+git push
+```
+
+Then in the repo on github.com: **Settings - Pages - Source: GitHub Actions**.
+
+After that, every push to `main` builds and deploys to `https://hubmerto.github.io/karim-boumjimar/`.

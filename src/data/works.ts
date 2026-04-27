@@ -13,9 +13,9 @@ export const WORKS: Work[] = [
     title: "Pandemonium Paradiso",
     year: 2025,
     medium: "ceramic",
-    venue: "O—Overgaden",
+    venue: "O-Overgaden",
     city: "Copenhagen",
-    date: "29 Aug – 26 Oct 2025",
+    date: "29 Aug - 26 Oct 2025",
     photoCredit: "David Stjernholm",
     images: [
       {
@@ -36,9 +36,9 @@ export const WORKS: Work[] = [
     title: "Pandemonium Paradiso",
     year: 2025,
     medium: "ceramic",
-    venue: "O—Overgaden",
+    venue: "O-Overgaden",
     city: "Copenhagen",
-    date: "29 Aug – 26 Oct 2025",
+    date: "29 Aug - 26 Oct 2025",
     photoCredit: "David Stjernholm",
     images: [
       {
@@ -59,9 +59,9 @@ export const WORKS: Work[] = [
     title: "Pandemonium Paradiso",
     year: 2025,
     medium: "ceramic",
-    venue: "O—Overgaden",
+    venue: "O-Overgaden",
     city: "Copenhagen",
-    date: "29 Aug – 26 Oct 2025",
+    date: "29 Aug - 26 Oct 2025",
     photoCredit: "David Stjernholm",
     images: [
       {
@@ -82,9 +82,9 @@ export const WORKS: Work[] = [
     title: "Pandemonium Paradiso",
     year: 2025,
     medium: "ceramic",
-    venue: "O—Overgaden",
+    venue: "O-Overgaden",
     city: "Copenhagen",
-    date: "29 Aug – 26 Oct 2025",
+    date: "29 Aug - 26 Oct 2025",
     photoCredit: "David Stjernholm",
     images: [
       {
@@ -105,9 +105,9 @@ export const WORKS: Work[] = [
     title: "Pandemonium Paradiso",
     year: 2025,
     medium: "ceramic",
-    venue: "O—Overgaden",
+    venue: "O-Overgaden",
     city: "Copenhagen",
-    date: "29 Aug – 26 Oct 2025",
+    date: "29 Aug - 26 Oct 2025",
     photoCredit: "David Stjernholm",
     images: [
       {
@@ -545,7 +545,7 @@ export const WORKS: Work[] = [
     medium: "ceramic",
     venue: "CFHILL",
     city: "Stockholm",
-    date: "14 Nov – 30 Dec 2025",
+    date: "14 Nov - 30 Dec 2025",
     images: [
       {
         src: "/images/works/deepcuts-01.webp",
@@ -567,7 +567,7 @@ export const WORKS: Work[] = [
     medium: "ceramic",
     venue: "CFHILL",
     city: "Stockholm",
-    date: "14 Nov – 30 Dec 2025",
+    date: "14 Nov - 30 Dec 2025",
     images: [
       {
         src: "/images/works/deepcuts-02.webp",
@@ -589,7 +589,7 @@ export const WORKS: Work[] = [
     medium: "ceramic",
     venue: "CFHILL",
     city: "Stockholm",
-    date: "14 Nov – 30 Dec 2025",
+    date: "14 Nov - 30 Dec 2025",
     images: [
       {
         src: "/images/works/deepcuts-03.webp",

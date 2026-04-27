@@ -12,17 +12,33 @@ import { useSelection } from "@/lib/store";
 import type { Work } from "@/types/work";
 
 const TOPBAR_H = 48;
-const LEFT_TOOLBAR_W = 200;
+export const LEFT_TOOLBAR_W_FULL = 200;
+// Width of the slim "show sections" handle when the toolbar is hidden.
+export const LEFT_TOOLBAR_W_CONDENSED = 24;
 const INSPECTOR_W = 300;
 const SHEET_PEEK_H = 56; // mobile bottom-sheet peek height (matches InspectorSheet)
 
+function leftWidth() {
+  if (typeof window === "undefined") return LEFT_TOOLBAR_W_FULL;
+  const condensed = !!(
+    useSelection.getState().selectedId ||
+    useSelection.getState().selectedGroupKey
+  );
+  return condensed ? LEFT_TOOLBAR_W_CONDENSED : LEFT_TOOLBAR_W_FULL;
+}
+
 function viewportRect() {
   if (typeof window === "undefined") {
-    return { x: LEFT_TOOLBAR_W, y: TOPBAR_H, w: 1024 - LEFT_TOOLBAR_W, h: 600 };
+    return { x: LEFT_TOOLBAR_W_FULL, y: TOPBAR_H, w: 1024 - LEFT_TOOLBAR_W_FULL, h: 600 };
   }
   const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const leftW = isDesktop ? LEFT_TOOLBAR_W : 0;
-  const inspectorW = isDesktop ? INSPECTOR_W : 0;
+  const hasSelection = !!(
+    useSelection.getState().selectedId ||
+    useSelection.getState().selectedGroupKey
+  );
+  const leftW = isDesktop ? leftWidth() : 0;
+  // Right panels (Inspector + ProjectPanel) only appear when a tile or group is selected.
+  const inspectorW = isDesktop && hasSelection ? INSPECTOR_W : 0;
   const bottomChrome = isDesktop ? 0 : SHEET_PEEK_H;
   return {
     x: leftW,
@@ -35,7 +51,7 @@ function viewportRect() {
 export function useCanvas(works: Work[]) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Identical initial state on server and client to keep hydration deterministic.
-  // fitAll is applied via useLayoutEffect below — runs synchronously after mount,
+  // fitAll is applied via useLayoutEffect below - runs synchronously after mount,
   // before paint, so users never see the un-fit state.
   const [transform, setTransform] = useState<Transform>({
     tx: 0,
@@ -52,10 +68,37 @@ export function useCanvas(works: Work[]) {
     setTransform(fitAllTransform(works, viewportRect()));
   }, [works]);
 
+  // When the left toolbar slides out / back in, the canvas container's left
+  // edge shifts by (LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED).
+  // Compensate the tx so tile screen positions stay anchored.
+  const condensed = useSelection(
+    (s) => !!(s.selectedId || s.selectedGroupKey),
+  );
+  const prevCondensedRef = useRef(condensed);
+  useEffect(() => {
+    if (prevCondensedRef.current === condensed) return;
+    const widthDelta = LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED; // 176
+    // Toolbar shrinking → container shifts left → bump tx right to compensate.
+    const txDelta = condensed ? widthDelta : -widthDelta;
+    setTransform((t) => ({ ...t, tx: t.tx + txDelta }));
+    prevCondensedRef.current = condensed;
+  }, [condensed]);
+
   const [isDragging, setIsDragging] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
+  // True while a navigation-driven transform change is animating. Keeps a CSS
+  // transition on the wrapper for ~400ms then turns off so pan/zoom feels instant.
+  const [isAnimating, setIsAnimating] = useState(false);
   const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
   const dragMovedRef = useRef(false);
+  const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const animateTransform = useCallback((next: Transform) => {
+    if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+    setIsAnimating(true);
+    setTransform(next);
+    animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
+  }, []);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -79,7 +122,7 @@ export function useCanvas(works: Work[]) {
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.01);
-        setTransform(zoomAt(t, factor, e.clientX, e.clientY));
+        setTransform(zoomAt(t, factor, e.clientX, e.clientY, viewportRect()));
       } else {
         // Pan in the direction of the wheel (deltaX / deltaY).
         setTransform({
@@ -167,7 +210,9 @@ export function useCanvas(works: Work[]) {
       const t = transformRef.current;
       const factor = scaleTarget / t.scale;
       if (factor !== 1) {
-        setTransform(zoomAt(t, factor, pinchCenter.x, pinchCenter.y));
+        setTransform(
+          zoomAt(t, factor, pinchCenter.x, pinchCenter.y, viewportRect()),
+        );
       }
     }
     function onTouchEnd() {
@@ -216,13 +261,16 @@ export function useCanvas(works: Work[]) {
   }, [works]);
 
   const fitAll = useCallback(() => {
-    setTransform(fitAllTransform(works, viewportRect()));
-  }, [works]);
+    animateTransform(fitAllTransform(works, viewportRect()));
+  }, [works, animateTransform]);
 
-  const zoomToWork = useCallback((work: Work, scale = 1) => {
-    const v = viewportRect();
-    setTransform(centerOn(v, work.position.x, work.position.y, scale));
-  }, []);
+  const zoomToWork = useCallback(
+    (work: Work, scale = 1) => {
+      const v = viewportRect();
+      animateTransform(centerOn(v, work.position.x, work.position.y, scale));
+    },
+    [animateTransform],
+  );
 
   // Listen for nav requests from outside the canvas (Index dropdown, group click, etc.).
   const navTargetWorkId = useSelection((s) => s.navTargetWorkId);
@@ -240,12 +288,17 @@ export function useCanvas(works: Work[]) {
         (w) => `${w.title}|${w.year}` === navTargetGroupKey,
       );
       if (groupWorks.length) {
-        // Fit the group with comfortable padding (so the spotlight zooms in).
-        setTransform(fitAllTransform(groupWorks, viewportRect(), 0.75));
+        // Defer one frame so the canvas container has begun its CSS transition
+        // (left/right changing as toolbar slides + right panels mount). Reading
+        // viewportRect on the next frame gives the same target dimensions, but
+        // the visual animations stay in lockstep at 400ms each.
+        requestAnimationFrame(() => {
+          animateTransform(fitAllTransform(groupWorks, viewportRect(), 0.6));
+        });
       }
       clearNav();
     }
-  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav]);
+  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 
@@ -260,6 +313,7 @@ export function useCanvas(works: Work[]) {
     zoomToWork,
     isDragging,
     spaceHeld,
+    isAnimating,
     /** Did the most recent pointer interaction move beyond the click threshold? */
     dragMovedRef,
   };

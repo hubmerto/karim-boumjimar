@@ -5,24 +5,11 @@ import { WORKS } from "@/data/works";
 import { descriptionFor } from "@/data/descriptions";
 import { useSelection } from "@/lib/store";
 
-/**
- * Returns the active group key based on the current selection — either the
- * explicitly-selected group or the group of the currently-selected tile.
- */
-function useActiveGroupKey(): string | null {
-  const selectedId = useSelection((s) => s.selectedId);
-  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
-  return useMemo(() => {
-    if (selectedGroupKey) return selectedGroupKey;
-    if (!selectedId) return null;
-    const w = WORKS.find((w) => w.id === selectedId);
-    return w ? `${w.title}|${w.year}` : null;
-  }, [selectedGroupKey, selectedId]);
-}
+
 
 export function ProjectPanel() {
-  const activeKey = useActiveGroupKey();
-  const deselect = useSelection((s) => s.deselect);
+  const activeKey = useSelection((s) => s.selectedGroupKey);
+  const closeProject = useSelection((s) => s.closeProject);
 
   const data = useMemo(() => {
     if (!activeKey) return null;
@@ -51,10 +38,20 @@ export function ProjectPanel() {
       aria-label="Project description"
     >
       <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+            About
+          </span>
+          <button
+            type="button"
+            onClick={closeProject}
+            aria-label="Close project description"
+            className="text-[16px] leading-none text-mute hover:text-ink"
+          >
+            →
+          </button>
+        </div>
         <div className="space-y-1">
-          <div className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute">
-            About this project
-          </div>
           <h2 className="text-base font-medium text-ink">{data.title}</h2>
           <div className="text-[12px] text-mute">
             {data.year}
@@ -67,21 +64,12 @@ export function ProjectPanel() {
         </div>
         {data.photoCredit ? (
           <div className="border-t border-line pt-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute">
+            <div className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
               Photography
             </div>
             <div className="text-[13px] text-ink">{data.photoCredit}</div>
           </div>
         ) : null}
-        <div className="border-t border-line pt-4">
-          <button
-            type="button"
-            onClick={deselect}
-            className="text-[12px] text-mute hover:text-ink"
-          >
-            ← clear
-          </button>
-        </div>
       </div>
     </aside>
   );

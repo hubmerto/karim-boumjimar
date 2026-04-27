@@ -110,7 +110,7 @@ export function Index({
 
   return (
     <>
-      {/* Click-outside backdrop. Hairline only, no dim — keeps the clinical aesthetic. */}
+      {/* Click-outside backdrop. Hairline only, no dim - keeps the clinical aesthetic. */}
       <button
         type="button"
         aria-label="Close index"
@@ -121,10 +121,10 @@ export function Index({
         ref={panelRef}
         role="dialog"
         aria-label="Works index"
-        className="fixed top-12 bottom-0 left-0 z-40 flex w-[400px] max-w-[90vw] flex-col border-r border-line bg-canvas md:left-[200px]"
+        className="fixed top-12 bottom-0 left-0 z-40 flex w-[420px] max-w-[90vw] flex-col border-r border-line bg-canvas md:left-[200px]"
       >
-        <div className="flex items-center justify-between border-b border-line px-5 py-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute">
+        <div className="flex items-center justify-between border-b border-line px-8 py-4">
+          <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
             Index · {entries.length}
           </span>
           <div className="flex items-center gap-4">
@@ -134,7 +134,7 @@ export function Index({
               onClick={() => setSort("chronological")}
             />
             <SortButton
-              label="A–Z"
+              label="A-Z"
               active={sort === "alphabetical"}
               onClick={() => setSort("alphabetical")}
             />
@@ -142,13 +142,17 @@ export function Index({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="font-mono text-[12px] text-mute hover:text-ink"
+              className="italic text-[14px] text-mute hover:text-ink"
             >
               ×
             </button>
           </div>
         </div>
-        <ul role="listbox" aria-label="Exhibitions" className="flex-1 overflow-y-auto px-2 py-1">
+        <ul
+          role="listbox"
+          aria-label="Exhibitions"
+          className="flex-1 overflow-y-auto py-2"
+        >
           {entries.map((e, i) => (
             <li key={e.groupKey}>
               <button
@@ -161,7 +165,7 @@ export function Index({
                   navigateToGroup(e.groupKey);
                   onClose();
                 }}
-                className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-3 py-2 text-left text-[13px] ${
+                className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-8 py-2 text-left text-[13px] ${
                   i === activeIdx ? "bg-line text-ink" : "text-ink hover:bg-line"
                 }`}
               >
@@ -171,7 +175,7 @@ export function Index({
                     <span className="text-mute"> · {e.venue}</span>
                   ) : null}
                 </span>
-                <span className="font-mono text-[11px] text-mute">{e.year}</span>
+                <span className="italic text-[12px] text-mute">{e.year}</span>
               </button>
             </li>
           ))}
@@ -195,7 +199,7 @@ function SortButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`font-mono text-[10px] uppercase tracking-[0.06em] ${
+      className={`italic font-bold text-[10px] uppercase tracking-[0.1em] ${
         active ? "text-ink" : "text-mute hover:text-ink"
       }`}
     >

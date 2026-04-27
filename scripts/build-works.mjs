@@ -22,12 +22,12 @@ const CLUSTERS = {
   // Top row (y ≈ -2400)
   liljevalchs:     { x: -3200, y: -2400, tile: 420, cols: 2, label: "Stockholm Cosmologies", year: 2026, venue: "Liljevalchs Konsthall", city: "Stockholm" },
   moestings:       { x: -1300, y: -2400, tile: 520, cols: 2, label: "Bodies Under Construction", year: 2026, venue: "Møstings, The Frederiksberg Museums", city: "Copenhagen", photo: "Mikkel Kaldal" },
-  deepcuts:        { x:   800, y: -2400, tile: 460, cols: 3, label: "Deep Cuts", year: 2025, venue: "CFHILL", city: "Stockholm", date: "14 Nov – 30 Dec 2025" },
+  deepcuts:        { x:   800, y: -2400, tile: 460, cols: 3, label: "Deep Cuts", year: 2025, venue: "CFHILL", city: "Stockholm", date: "14 Nov - 30 Dec 2025" },
   mouths:          { x:  3000, y: -2400, tile: 440, cols: 3, label: "Mouths, Vessels, Portals", year: 2025, venue: "Alice Folker Gallery", city: "Copenhagen" },
 
   // Middle row (y ≈ 0): the headline ceramic exhibitions.
   drawing:         { x: -2900, y:     0, tile: 440, cols: 2, label: "Drawings", year: 2025 },
-  pandemonium:     { x:  -500, y:     0, tile: 580, cols: 3, label: "Pandemonium Paradiso", year: 2025, venue: "O—Overgaden", city: "Copenhagen", date: "29 Aug – 26 Oct 2025", photo: "David Stjernholm" },
+  pandemonium:     { x:  -500, y:     0, tile: 580, cols: 3, label: "Pandemonium Paradiso", year: 2025, venue: "O-Overgaden", city: "Copenhagen", date: "29 Aug - 26 Oct 2025", photo: "David Stjernholm" },
   beauty:          { x:  2800, y:     0, tile: 560, cols: 3, label: "Beauty is the Best Defense", year: 2026, venue: "Jessica Silverman", city: "San Francisco", photo: "Phillip Maisel" },
 
   // Bottom-mid row (y ≈ 1900): grad show + Birds of Paradise + early works
@@ -54,7 +54,7 @@ function hashJitter(seed) {
 /**
  * Grid layout inside a cluster. Tiles are arranged in a row-major grid with
  * `cols` tiles per row. Each cell is `tile + gap` wide and `tile + gap` tall
- * (using `tile` as a square allowance — actual tile heights are aspect-driven
+ * (using `tile` as a square allowance - actual tile heights are aspect-driven
  * but for a layout grid we just pad uniformly to avoid overlap).
  * Returns {dx, dy} offsets from cluster centre.
  */
@@ -85,7 +85,7 @@ const works = [];
 for (const [slug, items] of bySlug) {
   const c = CLUSTERS[slug];
   if (!c) {
-    console.warn(`! no cluster defined for slug: ${slug} — skipping`);
+    console.warn(`! no cluster defined for slug: ${slug} - skipping`);
     continue;
   }
   const total = items.length;

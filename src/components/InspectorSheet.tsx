@@ -32,9 +32,6 @@ export function InspectorSheet() {
     ? WORKS.find((w) => w.id === selectedId) ?? null
     : null;
 
-  // Only meaningful on the exhibitions canvas; other views show their own full content.
-  if (view !== "exhibitions") return null;
-
   const [snap, setSnap] = useState<Snap>("peek");
   const [mode, setMode] = useState<Mode>("default");
   const [dragDelta, setDragDelta] = useState(0);
@@ -116,6 +113,10 @@ export function InspectorSheet() {
   const isDragging = isDraggingRef.current;
   const transition = isDragging ? "none" : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)";
 
+  // Only meaningful on the exhibitions canvas; other views show their own full content.
+  // Must come AFTER all hooks to satisfy the rules of hooks.
+  if (view !== "exhibitions") return null;
+
   return (
     <div
       ref={sheetRef}
@@ -161,7 +162,7 @@ export function InspectorSheet() {
                   setSnap("full");
                 }
               }}
-              className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute hover:text-ink"
+              className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute hover:text-ink"
             >
               {mode === "index" ? "Close" : "Index"}
             </button>
@@ -217,7 +218,7 @@ function SheetIndex({ onPick }: { onPick: () => void }) {
               {e.title}
               {e.venue ? <span className="text-mute"> · {e.venue}</span> : null}
             </span>
-            <span className="font-mono text-[12px] text-mute">{e.year}</span>
+            <span className="italic text-[12px] text-mute">{e.year}</span>
           </button>
         </li>
       ))}

@@ -12,7 +12,7 @@ const root = resolve(__dirname, "..");
 const manifest = JSON.parse(readFileSync("/tmp/manifest.json", "utf8"));
 const bySlug = new Map(manifest.map((p) => [p.slug, p]));
 
-// (slug, indices, mediumOverride?) — picks spread across each exhibition.
+// (slug, indices, mediumOverride?) - picks spread across each exhibition.
 // indices reference the order images appear in the sitemap.
 const CURATION = [
   // Major recent ceramic exhibitions

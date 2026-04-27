@@ -1,5 +1,5 @@
 // Download curated images at ?format=1500w into public/images/originals/
-// (gitignored — these are the source masters for the WebP pass).
+// (gitignored - these are the source masters for the WebP pass).
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";

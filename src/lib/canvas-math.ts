@@ -53,8 +53,12 @@ export function worksBounds(works: Work[]) {
 
 /**
  * Compute a transform that fits all works into the visible canvas area.
- * `viewport` is the area available for the canvas, in screen pixels,
- * relative to the screen origin. Padding factor < 1 leaves breathing room.
+ * `viewport` is the area available for the canvas in screen pixels.
+ *
+ * Note on coordinate spaces: `tx`/`ty` are the CSS translate values of the
+ * inner transform wrapper, expressed in the canvas container's local
+ * coordinate system. The container's CSS positioning (e.g. `left: 200px`)
+ * already accounts for `viewport.x`/`y`, so they don't appear in tx/ty.
  */
 export function fitAllTransform(
   works: Work[],
@@ -69,33 +73,36 @@ export function fitAllTransform(
   );
   const bboxCx = (b.minX + b.maxX) / 2;
   const bboxCy = (b.minY + b.maxY) / 2;
-  const viewCx = viewport.x + viewport.w / 2;
-  const viewCy = viewport.y + viewport.h / 2;
   return {
-    tx: viewCx - bboxCx * scale,
-    ty: viewCy - bboxCy * scale,
+    tx: viewport.w / 2 - bboxCx * scale,
+    ty: viewport.h / 2 - bboxCy * scale,
     scale,
   };
 }
 
 /**
  * Scroll-anchored zoom: preserve the canvas point under the cursor.
- * `screenX`/`screenY` are in screen-pixel coordinates.
+ * `screenX`/`screenY` are mouse coordinates in screen space; `viewport`
+ * provides the canvas container's screen offset so we can convert into
+ * container-local coords (the space tx/ty live in).
  */
 export function zoomAt(
   current: Transform,
   factor: number,
   screenX: number,
   screenY: number,
+  viewport: { x: number; y: number; w: number; h: number },
 ): Transform {
   const newScale = clampScale(current.scale * factor);
   if (newScale === current.scale) return current;
-  // Canvas point currently under cursor:
-  const canvasX = (screenX - current.tx) / current.scale;
-  const canvasY = (screenY - current.ty) / current.scale;
+  const localX = screenX - viewport.x;
+  const localY = screenY - viewport.y;
+  // Canvas point currently under the cursor:
+  const canvasX = (localX - current.tx) / current.scale;
+  const canvasY = (localY - current.ty) / current.scale;
   return {
-    tx: screenX - canvasX * newScale,
-    ty: screenY - canvasY * newScale,
+    tx: localX - canvasX * newScale,
+    ty: localY - canvasY * newScale,
     scale: newScale,
   };
 }
@@ -121,18 +128,16 @@ export function groupTilesByTitle(works: Work[]) {
   });
 }
 
-/** Centre the viewport on a canvas point at the given scale (default keeps current scale). */
+/** Centre the viewport on a canvas point at the given scale. tx/ty in container-local coords. */
 export function centerOn(
   viewport: { x: number; y: number; w: number; h: number },
   canvasX: number,
   canvasY: number,
   scale: number,
 ): Transform {
-  const viewCx = viewport.x + viewport.w / 2;
-  const viewCy = viewport.y + viewport.h / 2;
   return {
-    tx: viewCx - canvasX * scale,
-    ty: viewCy - canvasY * scale,
+    tx: viewport.w / 2 - canvasX * scale,
+    ty: viewport.h / 2 - canvasY * scale,
     scale,
   };
 }

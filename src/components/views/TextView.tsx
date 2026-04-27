@@ -2,7 +2,7 @@
 
 /**
  * Reusable scaffold for text-only views (Bio / About / News / Grant).
- * Sits in the same area as the Canvas — fills viewport between the left toolbar
+ * Sits in the same area as the Canvas - fills viewport between the left toolbar
  * (200px on md+) and the right edge, below the top bar.
  */
 export function TextView({
@@ -15,7 +15,7 @@ export function TextView({
   return (
     <main className="fixed inset-0 top-12 right-0 z-0 overflow-y-auto bg-canvas md:left-[200px]">
       <div className="mx-auto max-w-[680px] px-6 py-12 md:px-12 md:py-16">
-        <h1 className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute mb-4">
+        <h1 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute mb-4">
           {title}
         </h1>
         {children}

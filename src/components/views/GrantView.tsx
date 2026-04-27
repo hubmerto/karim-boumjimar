@@ -21,7 +21,7 @@ export function GrantView() {
         ))}
       </div>
       <section className="mt-10 space-y-3 border-t border-line pt-6">
-        <h3 className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute">
+        <h3 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
           How to apply
         </h3>
         <p className="text-[14px] leading-[1.6] text-ink">

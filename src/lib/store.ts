@@ -13,7 +13,13 @@ type CanvasState = {
   /** Pan/zoom request to a group's bounding box (set by group outline click). */
   navTargetGroupKey: string | null;
   select: (id: string | null) => void;
+  /** Click a tile: highlights that tile, pins its group, and zooms to the group. */
+  selectWork: (id: string, groupKey: string) => void;
   selectGroup: (key: string | null) => void;
+  /** Closes only the right-side TITLE/YEAR Inspector. */
+  closeInspector: () => void;
+  /** Closes only the rightmost project description panel. */
+  closeProject: () => void;
   deselect: () => void;
   /** Trigger a canvas pan to a work, also selecting it. */
   navigateTo: (id: string) => void;
@@ -30,12 +36,20 @@ export const useSelection = create<CanvasState>((set) => ({
   navTargetWorkId: null,
   navTargetGroupKey: null,
   select: (id) => set({ selectedId: id }),
+  selectWork: (id, groupKey) =>
+    set({
+      selectedId: id,
+      selectedGroupKey: groupKey,
+      navTargetGroupKey: groupKey,
+    }),
   selectGroup: (key) =>
     set({
       selectedGroupKey: key,
       selectedId: null,
       navTargetGroupKey: key,
     }),
+  closeInspector: () => set({ selectedId: null }),
+  closeProject: () => set({ selectedGroupKey: null }),
   deselect: () => set({ selectedId: null, selectedGroupKey: null }),
   navigateTo: (id) =>
     set({

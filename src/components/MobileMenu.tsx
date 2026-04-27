@@ -58,7 +58,7 @@ export function MobileMenu({
                 >
                   <span>{item.label}</span>
                   {active ? (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute">
+                    <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
                       current
                     </span>
                   ) : null}

@@ -3,15 +3,17 @@
 import { memo } from "react";
 import type { Work } from "@/types/work";
 import { workBounds } from "@/lib/canvas-math";
+import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 
 type Props = { work: Work };
 
 function WorkTileImpl({ work }: Props) {
   const selected = useSelection((s) => s.selectedId === work.id);
-  const select = useSelection((s) => s.select);
+  const selectWork = useSelection((s) => s.selectWork);
   const bounds = workBounds(work);
   const img = work.images[0];
+  const groupKey = `${work.title}|${work.year}`;
 
   return (
     <button
@@ -21,7 +23,7 @@ function WorkTileImpl({ work }: Props) {
       aria-pressed={selected}
       onClick={(e) => {
         e.stopPropagation();
-        select(work.id);
+        selectWork(work.id, groupKey);
       }}
       className={`absolute block cursor-pointer select-none ${
         selected ? "outline outline-1 outline-offset-0 outline-selection" : ""
@@ -33,10 +35,10 @@ function WorkTileImpl({ work }: Props) {
         height: bounds.height,
       }}
     >
-      {/* Plain <img> — next/image fights with arbitrary 2D transforms on the parent. */}
+      {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={img.src}
+        src={asset(img.src)}
         alt={img.alt}
         width={img.width}
         height={img.height}

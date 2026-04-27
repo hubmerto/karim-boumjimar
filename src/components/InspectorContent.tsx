@@ -61,7 +61,7 @@ export function DefaultView() {
 }
 
 export function SelectedView({ work }: { work: Work }) {
-  const deselect = useSelection((s) => s.deselect);
+  const closeInspector = useSelection((s) => s.closeInspector);
   const rows: { label: string; value: string | undefined }[] = [
     { label: "TITLE", value: work.title },
     { label: "YEAR", value: String(work.year) },
@@ -78,10 +78,23 @@ export function SelectedView({ work }: { work: Work }) {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+          Work
+        </span>
+        <button
+          type="button"
+          onClick={closeInspector}
+          aria-label="Close inspector"
+          className="text-[16px] leading-none text-mute hover:text-ink"
+        >
+          →
+        </button>
+      </div>
       <dl className="space-y-3">
         {rows.map((row) => (
           <div key={row.label} className="grid grid-cols-[76px_1fr] gap-x-3">
-            <dt className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute leading-[1.55]">
+            <dt className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute leading-[1.55]">
               {row.label}
             </dt>
             <dd className="text-[13px] leading-[1.55] text-ink break-words">
@@ -90,15 +103,6 @@ export function SelectedView({ work }: { work: Work }) {
           </div>
         ))}
       </dl>
-      <div className="border-t border-line pt-4">
-        <button
-          type="button"
-          onClick={deselect}
-          className="text-[12px] text-mute hover:text-ink"
-        >
-          ← all works
-        </button>
-      </div>
     </div>
   );
 }
@@ -112,7 +116,7 @@ export function Section({
 }) {
   return (
     <section className="space-y-2 border-t border-line pt-4">
-      <h2 className="font-mono text-[10px] uppercase tracking-[0.06em] text-mute">
+      <h2 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
         {label}
       </h2>
       {children}
