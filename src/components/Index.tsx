@@ -115,16 +115,19 @@ export function Index({
         type="button"
         aria-label="Close index"
         onClick={onClose}
-        className="fixed inset-0 top-12 z-30 cursor-default md:left-[200px]"
+        className="fixed inset-0 top-12 z-30 cursor-default md:left-[420px]"
       />
       <div
         ref={panelRef}
         role="dialog"
         aria-label="Works index"
-        className="fixed top-12 bottom-0 left-0 z-40 flex w-[420px] max-w-[90vw] flex-col border-r border-line bg-canvas md:left-[200px]"
+        className="fixed top-12 bottom-0 left-0 z-40 flex w-[420px] max-w-[90vw] flex-col border-r border-line bg-canvas"
       >
-        <div className="flex items-center justify-between border-b border-line px-8 py-4">
-          <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+        <div className="flex items-center justify-between border-b border-line px-4 py-4">
+          <span
+            className="italic font-bold uppercase tracking-[0.1em] text-mute"
+            style={{ fontSize: 10 }}
+          >
             Index · {entries.length}
           </span>
           <div className="flex items-center gap-4">
@@ -142,7 +145,8 @@ export function Index({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="italic text-[14px] text-mute hover:text-ink"
+              className="italic text-mute hover:text-ink"
+              style={{ fontSize: 14 }}
             >
               ×
             </button>
@@ -151,7 +155,7 @@ export function Index({
         <ul
           role="listbox"
           aria-label="Exhibitions"
-          className="flex-1 overflow-y-auto py-2"
+          className="flex-1 overflow-y-auto py-4"
         >
           {entries.map((e, i) => (
             <li key={e.groupKey}>
@@ -165,9 +169,10 @@ export function Index({
                   navigateToGroup(e.groupKey);
                   onClose();
                 }}
-                className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-8 py-2 text-left text-[13px] ${
+                className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left ${
                   i === activeIdx ? "bg-line text-ink" : "text-ink hover:bg-line"
                 }`}
+                style={{ fontSize: 13 }}
               >
                 <span className="truncate">
                   {e.title}
@@ -199,9 +204,10 @@ function SortButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`italic font-bold text-[10px] uppercase tracking-[0.1em] ${
+      className={`italic font-bold uppercase tracking-[0.1em] ${
         active ? "text-ink" : "text-mute hover:text-ink"
       }`}
+      style={{ fontSize: 10 }}
     >
       {label}
     </button>

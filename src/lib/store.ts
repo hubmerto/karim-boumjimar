@@ -8,6 +8,8 @@ type CanvasState = {
   selectedId: string | null;
   /** Group identity when an outline is clicked but no specific tile is chosen. */
   selectedGroupKey: string | null;
+  /** When set, the canvas shows a horizontal full-height strip of this group's works. */
+  expandedGroupKey: string | null;
   /** Pan/zoom request to a single work id (set by Index, top-bar reset, etc.). */
   navTargetWorkId: string | null;
   /** Pan/zoom request to a group's bounding box (set by group outline click). */
@@ -21,6 +23,10 @@ type CanvasState = {
   /** Closes only the rightmost project description panel. */
   closeProject: () => void;
   deselect: () => void;
+  /** Open the horizontal full-height strip view for the given group. */
+  expandGroup: (key: string) => void;
+  /** Close the horizontal strip view, returning to the spotlight. */
+  collapseGroup: () => void;
   /** Trigger a canvas pan to a work, also selecting it. */
   navigateTo: (id: string) => void;
   /** Trigger a canvas fit-to-group, spotlighting that exhibition. */
@@ -30,9 +36,11 @@ type CanvasState = {
 
 export const useSelection = create<CanvasState>((set) => ({
   view: "exhibitions",
-  setView: (v) => set({ view: v, selectedId: null, selectedGroupKey: null }),
+  setView: (v) =>
+    set({ view: v, selectedId: null, selectedGroupKey: null, expandedGroupKey: null }),
   selectedId: null,
   selectedGroupKey: null,
+  expandedGroupKey: null,
   navTargetWorkId: null,
   navTargetGroupKey: null,
   select: (id) => set({ selectedId: id }),
@@ -49,8 +57,20 @@ export const useSelection = create<CanvasState>((set) => ({
       navTargetGroupKey: key,
     }),
   closeInspector: () => set({ selectedId: null }),
+  // Closing the project sidebar should NOT kill the gallery — gallery view
+  // is independent and may be exited via its own close affordances.
   closeProject: () => set({ selectedGroupKey: null }),
-  deselect: () => set({ selectedId: null, selectedGroupKey: null }),
+  deselect: () =>
+    set({ selectedId: null, selectedGroupKey: null, expandedGroupKey: null }),
+  expandGroup: (key) => set({ expandedGroupKey: key, selectedGroupKey: key }),
+  // Closing the gallery returns to the group view. Re-fire the camera fit
+  // so any incidental panning that slipped through is reset. We don't touch
+  // selectedGroupKey/selectedId, so sidebars the user closed stay closed.
+  collapseGroup: () =>
+    set((s) => ({
+      expandedGroupKey: null,
+      navTargetGroupKey: s.expandedGroupKey,
+    })),
   navigateTo: (id) =>
     set({
       navTargetWorkId: id,

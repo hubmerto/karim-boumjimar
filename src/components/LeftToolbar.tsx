@@ -53,7 +53,7 @@ export function LeftToolbar() {
           >
             <span>Index</span>
           </button>
-          <ul className="py-3">
+          <ul className="py-4">
             {ITEMS.map((item) => {
               const active = view === item.key;
               return (
@@ -62,7 +62,7 @@ export function LeftToolbar() {
                     type="button"
                     onClick={() => setView(item.key)}
                     aria-current={active ? "page" : undefined}
-                    className={`flex w-full items-center gap-3 px-6 py-2 text-left text-[13px] ${
+                    className={`flex w-full items-center gap-3 px-6 py-3 text-left text-[13px] ${
                       active ? "text-ink" : "text-mute hover:text-ink"
                     }`}
                   >

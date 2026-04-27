@@ -7,6 +7,7 @@ import { groupTilesByTitle } from "@/lib/canvas-math";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
+import { ExpandedGroup } from "@/components/ExpandedGroup";
 
 export function Canvas() {
   const {
@@ -20,9 +21,18 @@ export function Canvas() {
     isAnimating,
   } = useCanvas(WORKS);
   const deselect = useSelection((s) => s.deselect);
-  const condensed = useSelection(
-    (s) => !!(s.selectedId || s.selectedGroupKey),
-  );
+  const selectedId = useSelection((s) => s.selectedId);
+  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
+  const condensed = !!(selectedId || selectedGroupKey);
+  // Inspector renders for a tile (300px); ProjectPanel for a group (360px).
+  // Canvas right edge must clear whichever are visible so tiles aren't hidden.
+  const rightClass = selectedId && selectedGroupKey
+    ? "md:right-[660px]"
+    : selectedGroupKey
+      ? "md:right-[360px]"
+      : selectedId
+        ? "md:right-[300px]"
+        : "md:right-0";
   const groups = useMemo(() => groupTilesByTitle(WORKS), []);
 
   useEffect(() => {
@@ -48,13 +58,13 @@ export function Canvas() {
     <div
       ref={containerRef}
       className={`fixed inset-0 top-12 overflow-hidden bg-canvas transition-[left,right] duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
-        condensed
-          ? "md:left-[24px] md:right-[300px]"
-          : "md:left-[200px] md:right-0"
-      }`}
+        condensed ? "md:left-[24px]" : "md:left-[200px]"
+      } ${rightClass}`}
       style={{
         cursor,
         touchAction: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none",
       }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -94,6 +104,7 @@ export function Canvas() {
           <WorkTile key={w.id} work={w} />
         ))}
       </div>
+      <ExpandedGroup />
     </div>
   );
 }

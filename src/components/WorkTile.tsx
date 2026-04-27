@@ -11,6 +11,8 @@ type Props = { work: Work };
 function WorkTileImpl({ work }: Props) {
   const selected = useSelection((s) => s.selectedId === work.id);
   const selectWork = useSelection((s) => s.selectWork);
+  const expandGroup = useSelection((s) => s.expandGroup);
+  const activeGroupKey = useSelection((s) => s.selectedGroupKey);
   const bounds = workBounds(work);
   const img = work.images[0];
   const groupKey = `${work.title}|${work.year}`;
@@ -23,6 +25,10 @@ function WorkTileImpl({ work }: Props) {
       aria-pressed={selected}
       onClick={(e) => {
         e.stopPropagation();
+        if (activeGroupKey === groupKey) {
+          expandGroup(groupKey);
+          return;
+        }
         selectWork(work.id, groupKey);
       }}
       className={`absolute block cursor-pointer select-none ${

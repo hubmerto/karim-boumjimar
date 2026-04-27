@@ -16,6 +16,7 @@ export const LEFT_TOOLBAR_W_FULL = 200;
 // Width of the slim "show sections" handle when the toolbar is hidden.
 export const LEFT_TOOLBAR_W_CONDENSED = 24;
 const INSPECTOR_W = 300;
+const PROJECT_PANEL_W = 360;
 const SHEET_PEEK_H = 56; // mobile bottom-sheet peek height (matches InspectorSheet)
 
 function leftWidth() {
@@ -32,18 +33,19 @@ function viewportRect() {
     return { x: LEFT_TOOLBAR_W_FULL, y: TOPBAR_H, w: 1024 - LEFT_TOOLBAR_W_FULL, h: 600 };
   }
   const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const hasSelection = !!(
-    useSelection.getState().selectedId ||
-    useSelection.getState().selectedGroupKey
-  );
+  const { selectedId, selectedGroupKey } = useSelection.getState();
   const leftW = isDesktop ? leftWidth() : 0;
-  // Right panels (Inspector + ProjectPanel) only appear when a tile or group is selected.
-  const inspectorW = isDesktop && hasSelection ? INSPECTOR_W : 0;
+  // Right panels render independently: Inspector when a tile is selected,
+  // ProjectPanel when a group is selected. Subtract whichever are visible
+  // so groups center within the actual free canvas area.
+  const rightW = isDesktop
+    ? (selectedId ? INSPECTOR_W : 0) + (selectedGroupKey ? PROJECT_PANEL_W : 0)
+    : 0;
   const bottomChrome = isDesktop ? 0 : SHEET_PEEK_H;
   return {
     x: leftW,
     y: TOPBAR_H,
-    w: window.innerWidth - leftW - inspectorW,
+    w: window.innerWidth - leftW - rightW,
     h: window.innerHeight - TOPBAR_H - bottomChrome,
   };
 }
