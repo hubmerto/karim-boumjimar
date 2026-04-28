@@ -1,0 +1,60 @@
+{
+  "global": {
+    "color": {
+      "canvas":    { "value": "#ffffff", "type": "color", "description": "Page background" },
+      "ink":       { "value": "#111111", "type": "color", "description": "Body text and primary marks" },
+      "mute":      { "value": "#999999", "type": "color", "description": "Labels and de-emphasised text" },
+      "line":      { "value": "#eeeeee", "type": "color", "description": "Hairline borders" },
+      "selection": { "value": "#000000", "type": "color", "description": "Selection accent" }
+    },
+    "fontFamily": {
+      "sans": { "value": "Libre Baskerville, Georgia, Times New Roman, serif", "type": "fontFamilies" }
+    },
+    "fontWeight": {
+      "regular": { "value": "400", "type": "fontWeights" },
+      "bold":    { "value": "700", "type": "fontWeights" }
+    },
+    "fontSize": {
+      "10": { "value": "10",  "type": "fontSizes" },
+      "11": { "value": "11",  "type": "fontSizes" },
+      "12": { "value": "12",  "type": "fontSizes" },
+      "13": { "value": "13",  "type": "fontSizes" },
+      "14": { "value": "14",  "type": "fontSizes" },
+      "15": { "value": "15",  "type": "fontSizes" }
+    },
+    "letterSpacing": {
+      "label": { "value": "0.1em", "type": "letterSpacing", "description": "Italic uppercase labels" }
+    },
+    "spacing": {
+      "0":  { "value": "0",  "type": "spacing" },
+      "4":  { "value": "4",  "type": "spacing" },
+      "8":  { "value": "8",  "type": "spacing" },
+      "12": { "value": "12", "type": "spacing" },
+      "16": { "value": "16", "type": "spacing" },
+      "20": { "value": "20", "type": "spacing" },
+      "24": { "value": "24", "type": "spacing" },
+      "32": { "value": "32", "type": "spacing" },
+      "48": { "value": "48", "type": "spacing" }
+    },
+    "size": {
+      "topbarHeight":      { "value": "48",  "type": "sizing" },
+      "leftToolbarFull":   { "value": "200", "type": "sizing" },
+      "leftToolbarHandle": { "value": "24",  "type": "sizing" },
+      "inspectorWidth":    { "value": "300", "type": "sizing" },
+      "projectPanelWidth": { "value": "360", "type": "sizing" },
+      "indexDrawerWidth":  { "value": "420", "type": "sizing" }
+    },
+    "borderWidth": {
+      "hairline": { "value": "1", "type": "borderWidth" }
+    },
+    "duration": {
+      "navTransition": { "value": "400ms", "type": "duration" },
+      "splashFade":    { "value": "400ms", "type": "duration" },
+      "splashHold":    { "value": "1100ms", "type": "duration" },
+      "expandTile":    { "value": "800ms", "type": "duration" }
+    },
+    "easing": {
+      "house": { "value": "cubic-bezier(0.32, 0.72, 0, 1)", "type": "cubicBezier" }
+    }
+  }
+}
