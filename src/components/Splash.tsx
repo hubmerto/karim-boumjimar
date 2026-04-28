@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { ARTIST_NAME } from "@/data/bio";
 import { asset } from "@/lib/paths";
 
-const HOLD_MS = 1100;
-const FADE_MS = 400;
+const HOLD_MS = 700;
+const FADE_MS = 900;
+const EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 export function Splash() {
   const [phase, setPhase] = useState<"in" | "out" | "gone">("in");
@@ -21,14 +22,16 @@ export function Splash() {
 
   if (phase === "gone") return null;
 
+  const out = phase === "out";
+
   return (
     <div
       aria-hidden
       className="fixed inset-0 z-[100] flex items-center justify-center bg-canvas"
       style={{
-        opacity: phase === "out" ? 0 : 1,
-        transition: `opacity ${FADE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
-        pointerEvents: phase === "out" ? "none" : "auto",
+        opacity: out ? 0 : 1,
+        transition: `opacity ${FADE_MS}ms ${EASE}`,
+        pointerEvents: out ? "none" : "auto",
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -37,6 +40,12 @@ export function Splash() {
         alt={ARTIST_NAME}
         draggable={false}
         className="block h-10 w-auto max-w-[70vw] select-none md:h-14"
+        style={{
+          // Subtle dissolve forward as the splash fades.
+          transform: out ? "scale(1.04)" : "scale(1)",
+          transition: `transform ${FADE_MS}ms ${EASE}`,
+          willChange: "transform",
+        }}
       />
     </div>
   );
