@@ -125,27 +125,44 @@ export function useCanvas(works: Work[]) {
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.01);
         setTransform(zoomAt(t, factor, e.clientX, e.clientY, viewportRect()));
-      } else {
-        // Pan in the direction of the wheel (deltaX / deltaY).
-        setTransform({
-          tx: t.tx - e.deltaX,
-          ty: t.ty - e.deltaY,
-          scale: t.scale,
-        });
+        return;
       }
+      // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
+      // deltaY; Shift+wheel converts that into horizontal pan (Figma
+      // convention).
+      let dx = e.deltaX;
+      let dy = e.deltaY;
+      if (e.shiftKey && dx === 0) {
+        dx = dy;
+        dy = 0;
+      }
+      setTransform({
+        tx: t.tx - dx,
+        ty: t.ty - dy,
+        scale: t.scale,
+      });
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
   }, []);
 
-  // Pointer drag pan.
+  // Pointer drag pan. Triggers on:
+  //  - background left-click drag (click on canvas, not on a tile)
+  //  - any drag while spacebar held (Figma convention)
+  //  - middle-click drag (Figma convention)
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      // Only pan from background drags (e.g. on the canvas itself), or with space held.
       const target = e.target as HTMLElement;
       const onWork = !!target.closest("[data-work-id]");
-      if (onWork && !spaceHeld) return; // let the work get the click
-      if (e.button !== 0 && e.pointerType === "mouse") return;
+      const isMouse = e.pointerType === "mouse";
+      const isMiddle = isMouse && e.button === 1;
+      const isLeft = isMouse && e.button === 0;
+      // Skip non-left/middle mouse buttons (right-click etc).
+      if (isMouse && !isLeft && !isMiddle) return;
+      // For left-click, let tile clicks through unless space is held.
+      if (isLeft && onWork && !spaceHeld) return;
+      // Middle-click should always pan, even on a tile (Figma).
+      if (isMiddle) e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
