@@ -57,7 +57,7 @@ export const useSelection = create<CanvasState>((set) => ({
       navTargetGroupKey: key,
     }),
   closeInspector: () => set({ selectedId: null }),
-  // Closing the project sidebar should NOT kill the gallery — gallery view
+  // Closing the project sidebar should NOT kill the gallery. Gallery view
   // is independent and may be exited via its own close affordances.
   closeProject: () => set({ selectedGroupKey: null }),
   deselect: () =>
@@ -76,6 +76,7 @@ export const useSelection = create<CanvasState>((set) => ({
       navTargetWorkId: id,
       selectedId: id,
       selectedGroupKey: null,
+      expandedGroupKey: null,
       view: "exhibitions",
     }),
   navigateToGroup: (key) =>
@@ -83,6 +84,7 @@ export const useSelection = create<CanvasState>((set) => ({
       navTargetGroupKey: key,
       selectedGroupKey: key,
       selectedId: null,
+      expandedGroupKey: null,
       view: "exhibitions",
     }),
   clearNav: () => set({ navTargetWorkId: null, navTargetGroupKey: null }),

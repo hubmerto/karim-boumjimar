@@ -31,11 +31,11 @@ body {
   box-sizing: border-box;
 }
 
+/* Tailwind 4 preflight already resets buttons (font/color/background/border).
+   The universal `*` selector zeroes padding too, which we want, so any
+   text-* / px-* / py-* utility class can win on specificity. We only add
+   cursor: pointer since preflight doesn't set it. */
 button {
-  color: inherit;
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
 }
 

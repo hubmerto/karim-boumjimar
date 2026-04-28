@@ -155,7 +155,7 @@ export function ExpandedGroup() {
   }, [phase, collapseGroup]);
 
   // Catch any wheel events that happen on dialog chrome (background, title,
-  // close button) — block them entirely so the canvas can't be panned.
+  // close button), block them entirely so the canvas can't be panned.
   useEffect(() => {
     if (!displayKey) return;
     function onWheel(e: WheelEvent) {
