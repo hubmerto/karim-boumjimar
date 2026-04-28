@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   centerOn,
   clampScale,
-  clampTransform,
   fitAllTransform,
   type Transform,
-  worksBounds,
   zoomAt,
 } from "@/lib/canvas-math";
 import { useSelection } from "@/lib/store";
@@ -54,12 +52,6 @@ function viewportRect() {
 
 export function useCanvas(works: Work[]) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const bbox = useMemo(() => worksBounds(works), [works]);
-  // Helper: clamp any candidate transform against the current viewport + bbox.
-  const clamp = useCallback(
-    (t: Transform) => clampTransform(t, viewportRect(), bbox),
-    [bbox],
-  );
   // Identical initial state on server and client to keep hydration deterministic.
   // fitAll is applied via useLayoutEffect below - runs synchronously after mount,
   // before paint, so users never see the un-fit state.
@@ -103,15 +95,12 @@ export function useCanvas(works: Work[]) {
   const dragMovedRef = useRef(false);
   const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const animateTransform = useCallback(
-    (next: Transform) => {
-      if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
-      setIsAnimating(true);
-      setTransform(clamp(next));
-      animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
-    },
-    [clamp],
-  );
+  const animateTransform = useCallback((next: Transform) => {
+    if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+    setIsAnimating(true);
+    setTransform(next);
+    animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
+  }, []);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -135,19 +124,19 @@ export function useCanvas(works: Work[]) {
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.01);
-        setTransform(
-          clamp(zoomAt(t, factor, e.clientX, e.clientY, viewportRect())),
-        );
+        setTransform(zoomAt(t, factor, e.clientX, e.clientY, viewportRect()));
       } else {
         // Pan in the direction of the wheel (deltaX / deltaY).
-        setTransform(
-          clamp({ tx: t.tx - e.deltaX, ty: t.ty - e.deltaY, scale: t.scale }),
-        );
+        setTransform({
+          tx: t.tx - e.deltaX,
+          ty: t.ty - e.deltaY,
+          scale: t.scale,
+        });
       }
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [clamp]);
+  }, []);
 
   // Pointer drag pan.
   const onPointerDown = useCallback(
@@ -173,9 +162,9 @@ export function useCanvas(works: Work[]) {
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMovedRef.current = true;
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       const t = transformRef.current;
-      setTransform(clamp({ tx: t.tx + dx, ty: t.ty + dy, scale: t.scale }));
+      setTransform({ tx: t.tx + dx, ty: t.ty + dy, scale: t.scale });
     },
-    [isDragging, clamp],
+    [isDragging],
   );
 
   const onPointerUp = useCallback(
@@ -224,7 +213,7 @@ export function useCanvas(works: Work[]) {
       const factor = scaleTarget / t.scale;
       if (factor !== 1) {
         setTransform(
-          clamp(zoomAt(t, factor, pinchCenter.x, pinchCenter.y, viewportRect())),
+          zoomAt(t, factor, pinchCenter.x, pinchCenter.y, viewportRect()),
         );
       }
     }
@@ -240,7 +229,7 @@ export function useCanvas(works: Work[]) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [clamp]);
+  }, []);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {
@@ -252,14 +241,14 @@ export function useCanvas(works: Work[]) {
         e.preventDefault();
         setSpaceHeld(true);
       } else if (e.key === "1") {
-        setTransform(clamp(fitAllTransform(works, viewportRect())));
+        setTransform(fitAllTransform(works, viewportRect()));
       } else if (e.key === "0") {
         // 100% zoom centred on the current view centre.
         const t = transformRef.current;
         const v = viewportRect();
         const centerCanvasX = (v.x + v.w / 2 - t.tx) / t.scale;
         const centerCanvasY = (v.y + v.h / 2 - t.ty) / t.scale;
-        setTransform(clamp(centerOn(v, centerCanvasX, centerCanvasY, 1)));
+        setTransform(centerOn(v, centerCanvasX, centerCanvasY, 1));
       }
     }
     function onKeyUp(e: KeyboardEvent) {
@@ -271,7 +260,7 @@ export function useCanvas(works: Work[]) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [works, clamp]);
+  }, [works]);
 
   const fitAll = useCallback(() => {
     animateTransform(fitAllTransform(works, viewportRect()));
