@@ -18,6 +18,8 @@ export const LEFT_TOOLBAR_W_CONDENSED = 24;
 const INSPECTOR_W = 300;
 const PROJECT_PANEL_W = 360;
 const SHEET_PEEK_H = 56; // mobile bottom-sheet peek height (matches InspectorSheet)
+const SHEET_TOP_RESERVE = 64; // matches InspectorSheet TOP_RESERVE_PX
+const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
 
 function leftWidth() {
   if (typeof window === "undefined") return LEFT_TOOLBAR_W_FULL;
@@ -33,7 +35,8 @@ function viewportRect() {
     return { x: LEFT_TOOLBAR_W_FULL, y: TOPBAR_H, w: 1024 - LEFT_TOOLBAR_W_FULL, h: 600 };
   }
   const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const { selectedId, selectedGroupKey } = useSelection.getState();
+  const { selectedId, selectedGroupKey, expandedGroupKey } =
+    useSelection.getState();
   const leftW = isDesktop ? leftWidth() : 0;
   // Right panels render independently: Inspector when a tile is selected,
   // ProjectPanel when a group is selected. Subtract whichever are visible
@@ -41,7 +44,21 @@ function viewportRect() {
   const rightW = isDesktop
     ? (selectedId ? INSPECTOR_W : 0) + (selectedGroupKey ? PROJECT_PANEL_W : 0)
     : 0;
-  const bottomChrome = isDesktop ? 0 : SHEET_PEEK_H;
+  // Mobile bottom sheet: at "peek" only the 56px header is visible; when a
+  // selection is active the sheet auto-expands to "mid" (~55% of its full
+  // height showing). Subtract the matching height so groups center in the
+  // actually-visible canvas area, not behind the sheet.
+  let bottomChrome = 0;
+  if (!isDesktop) {
+    const hasSelection = !!(selectedId || selectedGroupKey);
+    if (hasSelection && !expandedGroupKey) {
+      const sheetH = Math.max(200, window.innerHeight - SHEET_TOP_RESERVE);
+      bottomChrome =
+        window.innerHeight - (SHEET_TOP_RESERVE + sheetH * SHEET_MID_FRACTION);
+    } else {
+      bottomChrome = SHEET_PEEK_H;
+    }
+  }
   return {
     x: leftW,
     y: TOPBAR_H,

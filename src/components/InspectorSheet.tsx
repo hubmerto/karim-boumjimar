@@ -28,6 +28,7 @@ function snapToOffsetPx(snap: Snap, vh: number) {
 export function InspectorSheet() {
   const view = useSelection((s) => s.view);
   const selectedId = useSelection((s) => s.selectedId);
+  const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const selected = selectedId
     ? WORKS.find((w) => w.id === selectedId) ?? null
     : null;
@@ -116,6 +117,9 @@ export function InspectorSheet() {
   // Only meaningful on the exhibitions canvas; other views show their own full content.
   // Must come AFTER all hooks to satisfy the rules of hooks.
   if (view !== "exhibitions") return null;
+  // Hide entirely while the gallery view is open so the horizontal strip
+  // gets the full canvas height on mobile.
+  if (expandedGroupKey) return null;
 
   return (
     <div
