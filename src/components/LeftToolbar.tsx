@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { useSelection, type View } from "@/lib/store";
@@ -90,6 +91,14 @@ export function LeftToolbar() {
           >
             {CONTACT.instagram}
           </a>
+          <div className="flex gap-3 pt-2">
+            <Link href="/imprint" className="hover:text-ink">
+              Imprint
+            </Link>
+            <Link href="/privacy" className="hover:text-ink">
+              Privacy
+            </Link>
+          </div>
         </div>
       </nav>
       <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
