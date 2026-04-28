@@ -22,7 +22,9 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   icons: {
-    icon: BASE_PATH + "/logo.svg",
+    icon: [
+      { url: BASE_PATH + "/favicon.svg", type: "image/svg+xml" },
+    ],
   },
   openGraph: {
     type: "website",
