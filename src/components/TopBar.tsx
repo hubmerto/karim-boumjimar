@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ARTIST_NAME } from "@/data/bio";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useSelection } from "@/lib/store";
+import { asset } from "@/lib/paths";
 
 export function TopBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -14,10 +15,16 @@ export function TopBar() {
       <button
         type="button"
         onClick={() => setView("exhibitions")}
-        className="text-[13px] text-ink hover:text-mute"
-        aria-label="Reset to exhibitions"
+        className="flex h-full items-center text-ink hover:opacity-60"
+        aria-label={`${ARTIST_NAME}, reset to exhibitions`}
       >
-        {ARTIST_NAME}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={asset("/logo.svg")}
+          alt={ARTIST_NAME}
+          draggable={false}
+          className="block h-5 w-auto select-none"
+        />
       </button>
       <button
         type="button"

@@ -10,10 +10,41 @@ const libre = Libre_Baskerville({
   display: "swap",
 });
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const SITE_URL = "https://hubmerto.com" + BASE_PATH;
+const TITLE = "Karim Boumjimar";
+const DESCRIPTION =
+  "Karim Boumjimar (b. 1998, Málaga). Ceramics and drawing. Lives between Copenhagen, Stockholm, Berlin and Spain.";
+const OG_IMAGE = BASE_PATH + "/og-image.png";
+
 export const metadata: Metadata = {
-  title: "Karim Boumjimar",
-  description:
-    "Karim Boumjimar (b. 1998, Málaga). Ceramics and drawing. Lives between Copenhagen, Stockholm, Berlin and Spain.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  icons: {
+    icon: BASE_PATH + "/logo.svg",
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    title: TITLE,
+    description: DESCRIPTION,
+    siteName: TITLE,
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: TITLE,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [OG_IMAGE],
+  },
 };
 
 export default function RootLayout({
