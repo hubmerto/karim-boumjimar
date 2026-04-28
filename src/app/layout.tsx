@@ -23,11 +23,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
-  icons: {
-    // <link rel="icon"> isn't joined with metadataBase, so we include
-    // BASE_PATH explicitly here.
-    icon: [{ url: BASE_PATH + "/favicon.svg", type: "image/svg+xml" }],
-  },
+  // Favicon is auto-discovered from src/app/icon.svg, so basePath is
+  // applied correctly without us configuring icons here.
   openGraph: {
     type: "website",
     url: SITE_URL,
