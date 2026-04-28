@@ -24,7 +24,9 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    // <link rel="icon"> isn't joined with metadataBase, so we include
+    // BASE_PATH explicitly here.
+    icon: [{ url: BASE_PATH + "/favicon.svg", type: "image/svg+xml" }],
   },
   openGraph: {
     type: "website",
