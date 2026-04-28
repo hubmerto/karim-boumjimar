@@ -128,6 +128,56 @@ export function groupTilesByTitle(works: Work[]) {
   });
 }
 
+/**
+ * Clamp a transform so the visible viewport stays within the works' bbox
+ * (no drifting into white space) and so scale never goes below the
+ * "fit all" threshold (you can't zoom out past every work being visible).
+ *
+ * Pan rules:
+ *  - If the scaled bbox is wider/taller than the viewport, the user can pan
+ *    but the bbox edges may not pass the matching viewport edge.
+ *  - If the scaled bbox is smaller than the viewport (only happens when
+ *    scale is exactly the fit value), the bbox stays centred.
+ */
+export function clampTransform(
+  t: Transform,
+  viewport: { x: number; y: number; w: number; h: number },
+  bbox: { minX: number; minY: number; maxX: number; maxY: number },
+  fitPadding = 0.9,
+): Transform {
+  const bboxW = Math.max(1, bbox.maxX - bbox.minX);
+  const bboxH = Math.max(1, bbox.maxY - bbox.minY);
+
+  const fitScale = Math.min(viewport.w / bboxW, viewport.h / bboxH) * fitPadding;
+  const minScale = Math.max(SCALE_MIN, fitScale);
+  const scale = Math.min(SCALE_MAX, Math.max(minScale, t.scale));
+
+  const scaledW = bboxW * scale;
+  const scaledH = bboxH * scale;
+  const bboxCx = (bbox.minX + bbox.maxX) / 2;
+  const bboxCy = (bbox.minY + bbox.maxY) / 2;
+
+  let tx: number;
+  if (scaledW > viewport.w + 0.5) {
+    const minTx = viewport.w - bbox.maxX * scale;
+    const maxTx = -bbox.minX * scale;
+    tx = Math.min(maxTx, Math.max(minTx, t.tx));
+  } else {
+    tx = viewport.w / 2 - bboxCx * scale;
+  }
+
+  let ty: number;
+  if (scaledH > viewport.h + 0.5) {
+    const minTy = viewport.h - bbox.maxY * scale;
+    const maxTy = -bbox.minY * scale;
+    ty = Math.min(maxTy, Math.max(minTy, t.ty));
+  } else {
+    ty = viewport.h / 2 - bboxCy * scale;
+  }
+
+  return { tx, ty, scale };
+}
+
 /** Centre the viewport on a canvas point at the given scale. tx/ty in container-local coords. */
 export function centerOn(
   viewport: { x: number; y: number; w: number; h: number },
