@@ -6,6 +6,7 @@ import {
   clampScale,
   fitAllTransform,
   type Transform,
+  worksBounds,
   zoomAt,
 } from "@/lib/canvas-math";
 import { useSelection } from "@/lib/store";
@@ -78,11 +79,26 @@ export function useCanvas(works: Work[]) {
   const transformRef = useRef(transform);
   transformRef.current = transform;
   const initializedRef = useRef(false);
+  // Two-stage opening: start at half the standard fit-all scale so all
+  // groups read as a small overview, then animate to fit-all on the
+  // user's first wheel / pinch / click.
+  const introRef = useRef(true);
 
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
-    setTransform(fitAllTransform(works, viewportRect()));
+    const v = viewportRect();
+    const fit = fitAllTransform(works, v);
+    // Same camera centre, half the scale = zoomed-out overview.
+    const halfScale = fit.scale * 0.5;
+    const b = worksBounds(works);
+    const cx = (b.minX + b.maxX) / 2;
+    const cy = (b.minY + b.maxY) / 2;
+    setTransform({
+      tx: v.w / 2 - cx * halfScale,
+      ty: v.h / 2 - cy * halfScale,
+      scale: halfScale,
+    });
   }, [works]);
 
   // When the left toolbar slides out / back in, the canvas container's left
@@ -117,6 +133,16 @@ export function useCanvas(works: Work[]) {
     animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
   }, []);
 
+  // First-interaction handler: snap from the 50% overview view to the
+  // standard fit-all view, swallowing the input that triggered it.
+  // Returns true if the intro was just consumed.
+  const consumeIntro = useCallback(() => {
+    if (!introRef.current) return false;
+    introRef.current = false;
+    animateTransform(fitAllTransform(works, viewportRect()));
+    return true;
+  }, [works, animateTransform]);
+
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
   // We DO clamp scale on resize so the user doesn't get stranded with empty space.
@@ -135,6 +161,9 @@ export function useCanvas(works: Work[]) {
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
+      // First wheel/pinch out of the overview: snap to fit-all and
+      // swallow this delta so the camera doesn't combine with the snap.
+      if (consumeIntro()) return;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
@@ -159,7 +188,7 @@ export function useCanvas(works: Work[]) {
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, []);
+  }, [consumeIntro]);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -174,6 +203,9 @@ export function useCanvas(works: Work[]) {
       const isLeft = isMouse && e.button === 0;
       // Skip non-left/middle mouse buttons (right-click etc).
       if (isMouse && !isLeft && !isMiddle) return;
+      // First background drag out of the overview: snap to fit-all and
+      // skip starting a drag this tick.
+      if (!onWork && consumeIntro()) return;
       // For left-click, let tile clicks through unless space is held.
       if (isLeft && onWork && !spaceHeld) return;
       // Middle-click should always pan, even on a tile (Figma).
@@ -183,7 +215,7 @@ export function useCanvas(works: Work[]) {
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       dragMovedRef.current = false;
     },
-    [spaceHeld],
+    [spaceHeld, consumeIntro],
   );
 
   const onPointerMove = useCallback(
@@ -226,6 +258,7 @@ export function useCanvas(works: Work[]) {
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length === 2) {
         e.preventDefault();
+        if (consumeIntro()) return;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
@@ -261,7 +294,7 @@ export function useCanvas(works: Work[]) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, []);
+  }, [consumeIntro]);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {
@@ -311,6 +344,9 @@ export function useCanvas(works: Work[]) {
   const navTargetGroupKey = useSelection((s) => s.navTargetGroupKey);
   const clearNav = useSelection((s) => s.clearNav);
   useEffect(() => {
+    // Tile / group clicks count as the first interaction. The animations
+    // below transition us straight to the target from the overview.
+    if (navTargetWorkId || navTargetGroupKey) introRef.current = false;
     if (navTargetWorkId) {
       const target = works.find((w) => w.id === navTargetWorkId);
       if (target) zoomToWork(target, 0.6);
