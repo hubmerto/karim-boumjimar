@@ -55,3 +55,10 @@ a {
   to { transform: scaleX(1); }
 }
 
+/* Bento entrance: each tile has its own delay + duration applied
+   inline, so they fade in at varied times within ~7s. */
+@keyframes tile-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+

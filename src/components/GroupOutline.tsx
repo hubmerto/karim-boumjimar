@@ -58,9 +58,10 @@ function GroupOutlineImpl({
         width: w,
         height: h,
         opacity: dispersion,
-        // Slight delay on the fade-in so the spread reads first.
+        // Wait until the tile spread is mostly done, then fade in
+        // gently (longer + later than the tile motion).
         transition:
-          "opacity 600ms cubic-bezier(0.16, 1, 0.3, 1) 400ms",
+          "opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms",
         pointerEvents: dispersion === 0 ? "none" : "auto",
       }}
       onClick={(e) => {

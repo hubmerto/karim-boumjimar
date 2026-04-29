@@ -133,9 +133,9 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
   const dragMovedRef = useRef(false);
   const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [animDuration, setAnimDuration] = useState(1100);
+  const [animDuration, setAnimDuration] = useState(1800);
   const animateTransform = useCallback(
-    (next: Transform, duration = 1100) => {
+    (next: Transform, duration = 1800) => {
       if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
       setIsAnimating(true);
       setAnimDuration(duration);
@@ -150,13 +150,15 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
 
   // First-interaction handler: ease from the bento intro into the
   // standard fit-all view (and tell the store so tiles also spread).
-  // Returns true if the intro was just consumed.
+  // Returns true if the intro was just consumed. The 2200ms duration
+  // here matches the WorkTile transform transition so camera and tiles
+  // settle together without a "snap" feel.
   const endIntro = useSelection((s) => s.endIntro);
   const consumeIntro = useCallback(() => {
     if (!introRef.current) return false;
     introRef.current = false;
     endIntro();
-    animateTransform(fitAllTransform(works, viewportRect()), 1100);
+    animateTransform(fitAllTransform(works, viewportRect()), 2200);
     return true;
   }, [works, animateTransform, endIntro]);
 

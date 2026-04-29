@@ -13,12 +13,12 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // Diamond / rhombus arrangement: rows widen toward the middle row and
 // narrow toward the points. 1+3+5+7+9+7+5+3+1 = 41 (matches WORKS.length).
 export const BENTO_ROW_COUNTS = [1, 3, 5, 7, 9, 7, 5, 3, 1];
-export const BENTO_CELL_W = 950;
-export const BENTO_CELL_H = 720;
-export const BENTO_GAP = 30;
+export const BENTO_CELL_W = 850;
+export const BENTO_CELL_H = 620;
+export const BENTO_GAP = 8;
 // Per-tile jitter on bento positions (canvas-space). Adds a small
 // imperfect feel: not every tile is on the same line.
-export const BENTO_JITTER = 60;
+export const BENTO_JITTER = 80;
 
 // Pre-computed bento bbox in canvas space (centred on origin). Width
 // is set by the widest row; height by the number of rows.
