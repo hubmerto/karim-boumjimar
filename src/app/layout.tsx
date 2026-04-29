@@ -14,7 +14,7 @@ const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const SITE_URL = "https://hubmerto.com" + BASE_PATH;
 const TITLE = "Karim Boumjimar";
 const DESCRIPTION =
-  "Karim Boumjimar (b. 1998, Málaga). Ceramics and drawing. Lives between Copenhagen, Stockholm, Berlin and Spain.";
+  "Examining social hierarchies through hybrid bodies, mythology, and ecology. Selected projects, writing, and exhibitions.";
 // metadataBase already includes BASE_PATH, so the image path must be
 // site-root-relative; otherwise Next.js joins the prefix twice.
 const OG_IMAGE = "/og-image.png";
