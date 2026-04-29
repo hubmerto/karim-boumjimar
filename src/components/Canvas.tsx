@@ -14,9 +14,10 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // toward the edges so the silhouette is a soft mound, not a square.
 // Sum = 41 (matches WORKS.length).
 export const BENTO_COL_COUNTS_DESKTOP = [3, 5, 9, 9, 6, 5, 4];
-// 4-column elongated variant for portrait phones. Same mound shape
-// but rotated long-axis vertical. Sum = 41.
-export const BENTO_COL_COUNTS_MOBILE = [7, 14, 14, 6];
+// 8-column mound for portrait phones. The wider distribution makes
+// the bento read more horizontally so the silhouette doesn't overflow
+// the phone's portrait height. Sum = 41.
+export const BENTO_COL_COUNTS_MOBILE = [3, 5, 6, 7, 7, 6, 4, 3];
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
@@ -159,11 +160,8 @@ export function Canvas() {
     return map;
   }, [groups, colCounts]);
 
-  const intro = useSelection((s) => s.intro);
-  const dispCtx = useMemo(
-    () => ({ dispersion: intro ? 0 : 1, tileOffsets, baseOffsets }),
-    [intro, tileOffsets, baseOffsets],
-  );
+  // dispersion is now driven by zoom (set inside useCanvas), so it lives
+  // alongside the transform from the same hook below.
 
   // Dynamic bento bbox: derive from the actual tile offsets so the
   // camera frames whatever layout (desktop 7-col or mobile 4-col) is
@@ -203,21 +201,6 @@ export function Canvas() {
     return { minX, minY, maxX, maxY };
   }, [baseOffsets]);
 
-  // Soft pan/zoom bound — switches between bento and spread depending
-  // on whether the user has interacted. Some breathing room added so
-  // the edges aren't a hard wall.
-  const activeBbox = useMemo(() => {
-    const b = intro ? bentoBbox : spreadBbox;
-    const padX = (b.maxX - b.minX) * 0.15;
-    const padY = (b.maxY - b.minY) * 0.15;
-    return {
-      minX: b.minX - padX,
-      maxX: b.maxX + padX,
-      minY: b.minY - padY,
-      maxY: b.maxY + padY,
-    };
-  }, [intro, bentoBbox, spreadBbox]);
-
   const {
     containerRef,
     transform,
@@ -228,7 +211,13 @@ export function Canvas() {
     dragMovedRef,
     isAnimating,
     animDuration,
-  } = useCanvas(WORKS, bentoBbox, activeBbox, baseOffsets);
+    dispersion,
+  } = useCanvas(WORKS, bentoBbox, spreadBbox, baseOffsets);
+
+  const dispCtx = useMemo(
+    () => ({ dispersion, tileOffsets, baseOffsets }),
+    [dispersion, tileOffsets, baseOffsets],
+  );
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

@@ -41,21 +41,13 @@ function WorkTileImpl({ work }: Props) {
   const dy = Math.round(
     introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
   );
-  // Two animations on the inner image wrapper:
-  //   1. tile-fade-in: gradual entrance, varied delay (0-6s) and
-  //      duration (1.8-3.5s), so 41 tiles drift in over ~9s.
-  //   2. tile-float: continuous gentle hover up/down on a 5-9s period
-  //      with a varied negative delay (so tiles aren't synced).
+  // tile-fade-in: gradual entrance, varied delay (0-6s) and duration
+  // (1.8-3.5s) so all 41 tiles drift in over the first ~9s.
   const innerAnimation = useMemo(() => {
     const { r1, r2 } = tileSeed(work.id);
     const fadeDelay = Math.round(r1 * 6000);
     const fadeDuration = Math.round(1800 + r2 * 1700);
-    const floatDuration = Math.round(5000 + r1 * 4000);
-    const floatDelay = -Math.round(r2 * floatDuration);
-    return [
-      `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`,
-      `tile-float ${floatDuration}ms ease-in-out ${floatDelay}ms infinite`,
-    ].join(", ");
+    return `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`;
   }, [work.id]);
 
   return (
@@ -88,13 +80,13 @@ function WorkTileImpl({ work }: Props) {
         willChange: "transform",
       }}
     >
-      {/* Inner wrapper carries the fade-in + float animations so they
-          don't conflict with the parent button's bento-spread transform. */}
+      {/* Inner wrapper carries the fade-in animation so it doesn't
+          conflict with the parent button's bento-spread transform. */}
       <span
         className="block h-full w-full"
         style={{
           animation: innerAnimation,
-          willChange: "transform, opacity",
+          willChange: "opacity",
         }}
       >
         {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}

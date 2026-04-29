@@ -74,8 +74,9 @@ type Bbox = { minX: number; minY: number; maxX: number; maxY: number };
 export function useCanvas(
   works: Work[],
   bentoBbox?: Bbox,
-  /** Soft pan/zoom limit (with padding) for the current state. */
-  panBbox?: Bbox,
+  /** The works' natural bbox once spread (groups apart). When dispersion
+   * flips to 1, pan clamping switches from bento to this. */
+  spreadBbox?: Bbox,
   /** Per-tile offset from its natural position to where it actually
    * renders post-spread. Mobile uses this to stack groups in a 2-col
    * vertical layout; on desktop it's empty. The camera must apply it
@@ -85,8 +86,8 @@ export function useCanvas(
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Identical initial state on server and client to keep hydration deterministic.
-  // fitAll is applied via useLayoutEffect below - runs synchronously after mount,
-  // before paint, so users never see the un-fit state.
+  // The 75% framing is applied via useLayoutEffect below, runs synchronously after
+  // mount, before paint, so users never see the un-framed state.
   const [transform, setTransform] = useState<Transform>({
     tx: 0,
     ty: TOPBAR_H,
@@ -95,22 +96,45 @@ export function useCanvas(
   const transformRef = useRef(transform);
   transformRef.current = transform;
   const initializedRef = useRef(false);
-  // Two-stage opening: start at half the standard fit-all scale so all
-  // groups read as a small overview, then animate to fit-all on the
-  // user's first wheel / pinch / click.
-  const introRef = useRef(true);
-  // Soft zoom bounds (75% .. 750% of fit-all). Computed once from a
-  // viewport-derived fit; stable across the session.
-  const userScaleBounds = useMemo(() => {
-    if (typeof window === "undefined") return { min: 0.05, max: 1 };
-    const fit = fitAllTransform(works, {
+  // True when the user has interacted (click, drag, wheel, pinch). Used to
+  // skip the auto-zoom from 75% to 100% if the user took action first.
+  const userInteractedRef = useRef(false);
+  // dispersion is a binary 0/1 with hysteresis driven by zoom level
+  //   - scale > bentoFit * 1.25  -> dispersion = 1 (spread, groups apart)
+  //   - scale <= bentoFit * 0.75 -> dispersion = 0 (bento, packed mound)
+  // Anywhere between, the value sticks to its previous setting.
+  const [dispersion, setDispersion] = useState(0);
+  // bentoFit is computed once per viewport / bento bbox change. Stable so
+  // pan/zoom math doesn't fluctuate as the user interacts.
+  const bentoFit = useMemo(() => {
+    if (typeof window === "undefined" || !bentoBbox) return 1;
+    return fitBboxTransform(bentoBbox, {
       x: 0,
       y: 0,
       w: window.innerWidth,
       h: window.innerHeight,
     }).scale;
-    return { min: fit * 0.75, max: fit * 7.5 };
-  }, [works]);
+  }, [bentoBbox]);
+  // User can zoom from 75% (re-bento threshold) up to 7.5x of bento fit.
+  const userScaleBounds = useMemo(
+    () => ({ min: bentoFit * 0.75, max: bentoFit * 7.5 }),
+    [bentoFit],
+  );
+  // Active bbox for pan/zoom clamping. Switches between bento and spread
+  // following dispersion. 15% padding so edges feel like a soft cushion,
+  // not a wall.
+  const panBbox = useMemo<Bbox | undefined>(() => {
+    const b = dispersion === 0 ? bentoBbox : spreadBbox;
+    if (!b) return undefined;
+    const padX = (b.maxX - b.minX) * 0.15;
+    const padY = (b.maxY - b.minY) * 0.15;
+    return {
+      minX: b.minX - padX,
+      maxX: b.maxX + padX,
+      minY: b.minY - padY,
+      maxY: b.maxY + padY,
+    };
+  }, [dispersion, bentoBbox, spreadBbox]);
   const clampedZoom = useCallback(
     (
       t: Transform,
@@ -142,18 +166,18 @@ export function useCanvas(
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
     if (bentoBbox) {
-      // Initial framing matches the user's "200%" reference: bento sits
-      // small and compact in the middle of the viewport. Then auto-eases
-      // to a tighter "100%" where the bento fills more of the screen.
+      // Initial framing: bento at 75% of its fit scale. Tiles are packed and
+      // sit small with breathing room around them so the whole mound reads at
+      // a glance while there's room for an auto-zoom to follow.
       const v = viewportRect();
-      const fit = fitBboxTransform(bentoBbox, v, 1.05);
+      const fit = fitBboxTransform(bentoBbox, v).scale;
       const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
       const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
-      const farScale = fit.scale * 0.4;
+      const startScale = fit * 0.75;
       setTransform({
-        tx: v.w / 2 - cx * farScale,
-        ty: v.h / 2 - cy * farScale,
-        scale: farScale,
+        tx: v.w / 2 - cx * startScale,
+        ty: v.h / 2 - cy * startScale,
+        scale: startScale,
       });
     } else {
       setTransform(fitAllTransform(works, viewportRect()));
@@ -203,34 +227,38 @@ export function useCanvas(
     [],
   );
 
-  const endIntro = useSelection((s) => s.endIntro);
-
-  // Slow approach from the user's "200%" wide-out framing all the way
-  // past natural fit so the bento fills the viewport and a bit beyond.
-  // The nav effect below ends the intro on tile/group click.
+  // Auto-zoom from 75% to 100% of bento fit, after all per-tile fade-ins
+  // have settled (~9.5s, matching the longest fade-delay + duration). Skipped
+  // if the user has already interacted in that window.
   useEffect(() => {
     if (!bentoBbox) return;
     const t1 = setTimeout(() => {
-      if (!introRef.current) return;
+      if (userInteractedRef.current) return;
       const v = viewportRect();
-      const fit = fitBboxTransform(bentoBbox, v, 1.05);
+      const fit = fitBboxTransform(bentoBbox, v).scale;
       const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
       const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
-      // Mobile gets a tighter zoom so each tile reads at a larger size
-      // on the smaller screen.
-      const isMobile = window.innerWidth < 768;
-      const closer = fit.scale * (isMobile ? 3.4 : 2.2);
       animateTransform(
         {
-          tx: v.w / 2 - cx * closer,
-          ty: v.h / 2 - cy * closer,
-          scale: closer,
+          tx: v.w / 2 - cx * fit,
+          ty: v.h / 2 - cy * fit,
+          scale: fit,
         },
-        7000,
+        4000,
       );
-    }, 800);
+    }, 9500);
     return () => clearTimeout(t1);
   }, [bentoBbox, animateTransform]);
+
+  // Drive dispersion from the current zoom level with hysteresis.
+  useEffect(() => {
+    if (!bentoFit) return;
+    if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
+      setDispersion(1);
+    } else if (transform.scale <= bentoFit * 0.75 && dispersion === 1) {
+      setDispersion(0);
+    }
+  }, [transform.scale, bentoFit, dispersion]);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -250,19 +278,23 @@ export function useCanvas(
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
+      userInteractedRef.current = true;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
+      // Sensitivity is dialled down (0.005 from 0.01) so the camera moves
+      // calmly; users had complained the zoom was twitchy.
       if (e.ctrlKey || e.metaKey) {
-        const factor = Math.exp(-e.deltaY * 0.01);
+        const factor = Math.exp(-e.deltaY * 0.005);
         setTransform(clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()));
         return;
       }
       // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
       // deltaY; Shift+wheel converts that into horizontal pan (Figma
-      // convention).
-      let dx = e.deltaX;
-      let dy = e.deltaY;
-      if (e.shiftKey && dx === 0) {
+      // convention). Pan sensitivity dialled to 60% for the same reason.
+      const PAN_SENS = 0.6;
+      let dx = e.deltaX * PAN_SENS;
+      let dy = e.deltaY * PAN_SENS;
+      if (e.shiftKey && Math.abs(e.deltaX) < 0.001) {
         dx = dy;
         dy = 0;
       }
@@ -294,6 +326,7 @@ export function useCanvas(
       if (isLeft && onWork && !spaceHeld) return;
       // Middle-click should always pan, even on a tile (Figma).
       if (isMiddle) e.preventDefault();
+      userInteractedRef.current = true;
       e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -305,14 +338,17 @@ export function useCanvas(
   const onPointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!isDragging || !dragOriginRef.current) return;
-      const dx = e.clientX - dragOriginRef.current.x;
-      const dy = e.clientY - dragOriginRef.current.y;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMovedRef.current = true;
+      const rawDx = e.clientX - dragOriginRef.current.x;
+      const rawDy = e.clientY - dragOriginRef.current.y;
+      if (Math.abs(rawDx) > 3 || Math.abs(rawDy) > 3) dragMovedRef.current = true;
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
+      // Drag sensitivity dialled to 70% so the camera tracks the cursor at
+      // a more measured pace (was 1:1).
+      const DRAG_SENS = 0.7;
       const t = transformRef.current;
       setTransform(
         clampedPan(
-          { tx: t.tx + dx, ty: t.ty + dy, scale: t.scale },
+          { tx: t.tx + rawDx * DRAG_SENS, ty: t.ty + rawDy * DRAG_SENS, scale: t.scale },
           viewportRect(),
         ),
       );
@@ -347,6 +383,7 @@ export function useCanvas(
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length === 2) {
         e.preventDefault();
+        userInteractedRef.current = true;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
@@ -437,13 +474,10 @@ export function useCanvas(
   const clearNav = useSelection((s) => s.clearNav);
   useEffect(() => {
     // Tile / group clicks count as the first interaction. The animations
-    // below transition us straight to the target from the overview, and
-    // endIntro tells the tiles to spread alongside.
+    // below take the camera past the spread threshold, which then drives
+    // dispersion from the scale-watcher above.
     if (navTargetWorkId || navTargetGroupKey) {
-      if (introRef.current) {
-        introRef.current = false;
-        endIntro();
-      }
+      userInteractedRef.current = true;
     }
     if (navTargetWorkId) {
       const target = works.find((w) => w.id === navTargetWorkId);
@@ -485,7 +519,7 @@ export function useCanvas(
       }
       clearNav();
     }
-  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, endIntro, destOffsets]);
+  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, destOffsets]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 
@@ -502,6 +536,8 @@ export function useCanvas(
     spaceHeld,
     isAnimating,
     animDuration,
+    /** 0 (bento) or 1 (spread). Driven by zoom level with hysteresis. */
+    dispersion,
     /** Did the most recent pointer interaction move beyond the click threshold? */
     dragMovedRef,
   };
