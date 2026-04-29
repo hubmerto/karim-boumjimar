@@ -179,6 +179,42 @@ export function clampTransform(
   return { tx, ty, scale };
 }
 
+/** Clamp pan only; preserve the input scale. Use this in pure-pan paths
+ * (wheel scroll, drag) where the user shouldn't have their zoom level
+ * snapped to a fit floor mid-gesture. */
+export function clampPan(
+  t: Transform,
+  viewport: { x: number; y: number; w: number; h: number },
+  bbox: { minX: number; minY: number; maxX: number; maxY: number },
+): Transform {
+  const bboxW = Math.max(1, bbox.maxX - bbox.minX);
+  const bboxH = Math.max(1, bbox.maxY - bbox.minY);
+  const scaledW = bboxW * t.scale;
+  const scaledH = bboxH * t.scale;
+  const bboxCx = (bbox.minX + bbox.maxX) / 2;
+  const bboxCy = (bbox.minY + bbox.maxY) / 2;
+
+  let tx: number;
+  if (scaledW > viewport.w + 0.5) {
+    const minTx = viewport.w - bbox.maxX * t.scale;
+    const maxTx = -bbox.minX * t.scale;
+    tx = Math.min(maxTx, Math.max(minTx, t.tx));
+  } else {
+    tx = viewport.w / 2 - bboxCx * t.scale;
+  }
+
+  let ty: number;
+  if (scaledH > viewport.h + 0.5) {
+    const minTy = viewport.h - bbox.maxY * t.scale;
+    const maxTy = -bbox.minY * t.scale;
+    ty = Math.min(maxTy, Math.max(minTy, t.ty));
+  } else {
+    ty = viewport.h / 2 - bboxCy * t.scale;
+  }
+
+  return { tx, ty, scale: t.scale };
+}
+
 /** Fit an arbitrary bbox into the viewport at `padding` (default 0.9). */
 export function fitBboxTransform(
   bbox: { minX: number; minY: number; maxX: number; maxY: number },

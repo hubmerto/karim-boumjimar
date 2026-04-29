@@ -184,6 +184,40 @@ export function Canvas() {
     return { minX, minY, maxX, maxY };
   }, [tileOffsets]);
 
+  // Spread bbox: where tiles end up after the user interacts. Differs
+  // from the true works bbox on mobile (groups packed into a 2-col
+  // vertical stack via baseOffsets).
+  const spreadBbox = useMemo(() => {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const w of WORKS) {
+      const wb = workBounds(w);
+      const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
+      minX = Math.min(minX, wb.minX + off.x);
+      minY = Math.min(minY, wb.minY + off.y);
+      maxX = Math.max(maxX, wb.maxX + off.x);
+      maxY = Math.max(maxY, wb.maxY + off.y);
+    }
+    return { minX, minY, maxX, maxY };
+  }, [baseOffsets]);
+
+  // Soft pan/zoom bound — switches between bento and spread depending
+  // on whether the user has interacted. Some breathing room added so
+  // the edges aren't a hard wall.
+  const activeBbox = useMemo(() => {
+    const b = intro ? bentoBbox : spreadBbox;
+    const padX = (b.maxX - b.minX) * 0.15;
+    const padY = (b.maxY - b.minY) * 0.15;
+    return {
+      minX: b.minX - padX,
+      maxX: b.maxX + padX,
+      minY: b.minY - padY,
+      maxY: b.maxY + padY,
+    };
+  }, [intro, bentoBbox, spreadBbox]);
+
   const {
     containerRef,
     transform,
@@ -194,7 +228,7 @@ export function Canvas() {
     dragMovedRef,
     isAnimating,
     animDuration,
-  } = useCanvas(WORKS, bentoBbox);
+  } = useCanvas(WORKS, bentoBbox, activeBbox);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

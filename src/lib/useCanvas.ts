@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   centerOn,
+  clampPan,
   clampScale,
+  clampTransform,
   fitAllTransform,
   fitBboxTransform,
   type Transform,
@@ -68,7 +70,12 @@ function viewportRect() {
 
 type Bbox = { minX: number; minY: number; maxX: number; maxY: number };
 
-export function useCanvas(works: Work[], bentoBbox?: Bbox) {
+export function useCanvas(
+  works: Work[],
+  bentoBbox?: Bbox,
+  /** Soft pan/zoom limit (with padding) for the current state. */
+  panBbox?: Bbox,
+) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Identical initial state on server and client to keep hydration deterministic.
   // fitAll is applied via useLayoutEffect below - runs synchronously after mount,
@@ -110,9 +117,18 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
         Math.min(userScaleBounds.max, t.scale * rawFactor),
       );
       const effective = target / t.scale;
-      return zoomAt(t, effective, sx, sy, vp);
+      const next = zoomAt(t, effective, sx, sy, vp);
+      return panBbox ? clampTransform(next, vp, panBbox) : next;
     },
-    [userScaleBounds],
+    [userScaleBounds, panBbox],
+  );
+  // Clamp a pure-pan transform so the user can't drift into white space.
+  // Uses clampPan (not clampTransform) so the user's scale is never
+  // snapped mid-gesture: only tx/ty are constrained.
+  const clampedPan = useCallback(
+    (next: Transform, vp: { x: number; y: number; w: number; h: number }) =>
+      panBbox ? clampPan(next, vp, panBbox) : next,
+    [panBbox],
   );
 
   useLayoutEffect(() => {
@@ -252,15 +268,16 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
         dx = dy;
         dy = 0;
       }
-      setTransform({
-        tx: t.tx - dx,
-        ty: t.ty - dy,
-        scale: t.scale,
-      });
+      setTransform(
+        clampedPan(
+          { tx: t.tx - dx, ty: t.ty - dy, scale: t.scale },
+          viewportRect(),
+        ),
+      );
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [clampedZoom]);
+  }, [clampedZoom, clampedPan]);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -295,9 +312,14 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMovedRef.current = true;
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       const t = transformRef.current;
-      setTransform({ tx: t.tx + dx, ty: t.ty + dy, scale: t.scale });
+      setTransform(
+        clampedPan(
+          { tx: t.tx + dx, ty: t.ty + dy, scale: t.scale },
+          viewportRect(),
+        ),
+      );
     },
-    [isDragging],
+    [isDragging, clampedPan],
   );
 
   const onPointerUp = useCallback(
