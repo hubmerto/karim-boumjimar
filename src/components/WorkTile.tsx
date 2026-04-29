@@ -25,6 +25,7 @@ function WorkTileImpl({ work }: Props) {
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const activeGroupKey = useSelection((s) => s.selectedGroupKey);
+  const splashGone = useSelection((s) => s.splashGone);
   const { dispersion, tileOffsets, baseOffsets } = useDispersion();
   const bounds = workBounds(work);
   const img = work.images[0];
@@ -41,14 +42,16 @@ function WorkTileImpl({ work }: Props) {
   const dy = Math.round(
     introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
   );
-  // tile-fade-in: gradual entrance, varied delay (0-1.4s) and duration
-  // (1-1.6s) so all 41 tiles drift in within the first 3s.
+  // tile-fade-in: gradual entrance with varied delay (0-1.4s) and duration
+  // (1-1.6s) so all 41 tiles drift in within ~3s. Only applied once the
+  // splash has cleared, otherwise the animation runs invisibly behind it.
   const innerAnimation = useMemo(() => {
+    if (!splashGone) return undefined;
     const { r1, r2 } = tileSeed(work.id);
     const fadeDelay = Math.round(r1 * 1400);
     const fadeDuration = Math.round(1000 + r2 * 600);
     return `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`;
-  }, [work.id]);
+  }, [splashGone, work.id]);
 
   return (
     <button
@@ -74,17 +77,20 @@ function WorkTileImpl({ work }: Props) {
         height: Math.round(bounds.height),
         transform: `translate(${dx}px, ${dy}px)`,
         // Slow + soft so the spread reads as a settle, not a jump.
-        // Duration matches the camera nav animation so tiles and camera
-        // settle together.
-        transition: "transform 2200ms cubic-bezier(0.22, 1, 0.36, 1)",
+        // Duration matches the camera nav animation (4000ms) so tiles
+        // and camera settle together.
+        transition: "transform 4000ms cubic-bezier(0.22, 1, 0.36, 1)",
         willChange: "transform",
       }}
     >
       {/* Inner wrapper carries the fade-in animation so it doesn't
-          conflict with the parent button's bento-spread transform. */}
+          conflict with the parent button's bento-spread transform.
+          Inline opacity:0 keeps the tile hidden until the splash is gone
+          and the animation gets applied (which fades it back in). */}
       <span
         className="block h-full w-full"
         style={{
+          opacity: 0,
           animation: innerAnimation,
           willChange: "opacity",
         }}

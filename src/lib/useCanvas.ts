@@ -227,11 +227,12 @@ export function useCanvas(
     [],
   );
 
-  // Auto-zoom from 75% to 100% of bento fit, after all per-tile fade-ins
-  // have settled (~3s, matching the longest fade-delay + duration). Skipped
-  // if the user has already interacted in that window.
+  // Auto-zoom from 75% to 100% of bento fit, starting once the splash has
+  // cleared and all per-tile fade-ins have settled (~3s after that).
+  // Skipped if the user has already interacted in that window.
+  const splashGone = useSelection((s) => s.splashGone);
   useEffect(() => {
-    if (!bentoBbox) return;
+    if (!bentoBbox || !splashGone) return;
     const t1 = setTimeout(() => {
       if (userInteractedRef.current) return;
       const v = viewportRect();
@@ -248,7 +249,7 @@ export function useCanvas(
       );
     }, 3000);
     return () => clearTimeout(t1);
-  }, [bentoBbox, animateTransform]);
+  }, [bentoBbox, splashGone, animateTransform]);
 
   // Drive dispersion from the current zoom level with hysteresis.
   useEffect(() => {
@@ -453,7 +454,7 @@ export function useCanvas(
   }, [works]);
 
   const fitAll = useCallback(() => {
-    animateTransform(fitAllTransform(works, viewportRect()), 2200);
+    animateTransform(fitAllTransform(works, viewportRect()), 4000);
   }, [works, animateTransform]);
 
   const zoomToWork = useCallback(
@@ -462,7 +463,7 @@ export function useCanvas(
       const off = destOffsets?.get(work.id) ?? { x: 0, y: 0 };
       animateTransform(
         centerOn(v, work.position.x + off.x, work.position.y + off.y, scale),
-        2200,
+        4000,
       );
     },
     [animateTransform, destOffsets],
@@ -509,11 +510,12 @@ export function useCanvas(
         const groupBbox = { minX, minY, maxX, maxY };
         // Defer one frame so the canvas container has begun its CSS
         // transition (left/right changing as toolbar slides + right
-        // panels mount). 2200ms keeps the camera move calm and gentle.
+        // panels mount). 4000ms keeps the focus move calm; the previous
+        // 2200ms felt rushed.
         requestAnimationFrame(() => {
           animateTransform(
             fitBboxTransform(groupBbox, viewportRect(), 0.6),
-            2200,
+            4000,
           );
         });
       }

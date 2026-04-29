@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ARTIST_NAME } from "@/data/bio";
 import { asset } from "@/lib/paths";
+import { useSelection } from "@/lib/store";
 
 const HOLD_MS = 700;
 const FADE_MS = 900;
@@ -14,15 +15,18 @@ export function Splash() {
   // sometimes reload the page (back-forward cache, address-bar gesture,
   // memory pressure); replaying the splash mid-session is jarring.
   const [phase, setPhase] = useState<"in" | "out" | "gone">("in");
+  const setSplashGone = useSelection((s) => s.setSplashGone);
 
   useEffect(() => {
     if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(SESSION_KEY)) {
       setPhase("gone");
+      setSplashGone(true);
       return;
     }
     const t1 = setTimeout(() => setPhase("out"), HOLD_MS);
     const t2 = setTimeout(() => {
       setPhase("gone");
+      setSplashGone(true);
       try {
         sessionStorage.setItem(SESSION_KEY, "1");
       } catch {
@@ -33,7 +37,7 @@ export function Splash() {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, []);
+  }, [setSplashGone]);
 
   if (phase === "gone") return null;
 

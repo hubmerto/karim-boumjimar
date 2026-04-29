@@ -18,6 +18,11 @@ type CanvasState = {
    * mobile menu can open it too. */
   indexOpen: boolean;
   setIndexOpen: (open: boolean) => void;
+  /** True once the splash logo has fully faded out (or was skipped via the
+   * sessionStorage cache). Tiles wait on this to start their fade-in so the
+   * animation isn't wasted behind the splash. */
+  splashGone: boolean;
+  setSplashGone: (v: boolean) => void;
   select: (id: string | null) => void;
   /** Click a tile: highlights that tile, pins its group, and zooms to the group. */
   selectWork: (id: string, groupKey: string) => void;
@@ -49,6 +54,8 @@ export const useSelection = create<CanvasState>((set) => ({
   navTargetGroupKey: null,
   indexOpen: false,
   setIndexOpen: (open) => set({ indexOpen: open }),
+  splashGone: false,
+  setSplashGone: (v) => set({ splashGone: v }),
   select: (id) => set({ selectedId: id }),
   selectWork: (id, groupKey) =>
     set({
