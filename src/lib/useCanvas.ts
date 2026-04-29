@@ -90,11 +90,19 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
     if (bentoBbox) {
-      // Open zoomed FAR (whole bento visible with breathing room), then
-      // slowly approach over a few seconds. User input still cuts in via
-      // consumeIntro and supersedes the auto-zoom.
+      // Initial framing matches the user's "200%" reference: bento sits
+      // small and compact in the middle of the viewport (lots of white
+      // around it). Then auto-eases to "100%" where the bento fills.
       const v = viewportRect();
-      setTransform(fitBboxTransform(bentoBbox, v, 0.85));
+      const fit = fitBboxTransform(bentoBbox, v);
+      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+      const farScale = fit.scale * 0.4;
+      setTransform({
+        tx: v.w / 2 - cx * farScale,
+        ty: v.h / 2 - cy * farScale,
+        scale: farScale,
+      });
     } else {
       setTransform(fitAllTransform(works, viewportRect()));
     }
@@ -152,26 +160,14 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     return true;
   }, [works, animateTransform, endIntro]);
 
-  // Slow approach: from the wide opening (whole bento visible) to a
-  // tighter framing where tiles read larger. User input cancels this
-  // via consumeIntro (which calls another animateTransform that wins).
+  // Slow approach from the user's "200%" wide-out framing to "100%"
+  // where the bento fills the viewport. User input cancels this via
+  // consumeIntro (whose animateTransform supersedes).
   useEffect(() => {
     if (!bentoBbox) return;
     const t1 = setTimeout(() => {
       if (!introRef.current) return;
-      const v = viewportRect();
-      const fit = fitBboxTransform(bentoBbox, v, 0.85);
-      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
-      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
-      const closer = fit.scale * 1.35;
-      animateTransform(
-        {
-          tx: v.w / 2 - cx * closer,
-          ty: v.h / 2 - cy * closer,
-          scale: closer,
-        },
-        7000,
-      );
+      animateTransform(fitBboxTransform(bentoBbox, viewportRect()), 7000);
     }, 800);
     return () => clearTimeout(t1);
   }, [bentoBbox, animateTransform]);
