@@ -3,40 +3,34 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
-import { groupTilesByTitle, workBounds } from "@/lib/canvas-math";
+import { fitAllTransform, groupTilesByTitle, workBounds } from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 
-// Diamond / rhombus arrangement: rows widen toward the middle, narrow
-// to single tiles at the points. 1+3+5+7+9+7+5+3+1 = 41 (matches WORKS).
-export const BENTO_ROW_COUNTS = [1, 3, 5, 7, 9, 7, 5, 3, 1];
-// Cells sized to comfortably fit the largest tile so neighbours don't
-// clip into each other. Tiles vary widely in aspect (480x720 portraits
-// up to 1500x900 landscapes).
-export const BENTO_CELL_W = 1700;
-export const BENTO_CELL_H = 1300;
-export const BENTO_GAP = 60;
-// Light jitter so the diamond reads as hand-laid, not a strict lattice,
-// but small enough that tiles never overlap.
-export const BENTO_JITTER_X = 40;
-export const BENTO_JITTER_Y = 40;
+// 7-column Pinterest-style masonry, matching the user's Figma reference
+// (each column packs tiles top-down with their natural heights). Column
+// horizontal spacing is set by the widest tile so columns never overlap.
+export const BENTO_COLS = 7;
+// Horizontal gap between columns (canvas-space).
+export const BENTO_COL_GAP = 80;
+// Vertical gap between tiles within a column.
+export const BENTO_ROW_GAP = 60;
+// Per-tile jitter in canvas-space, kept small so tiles never overlap.
+export const BENTO_JITTER_X = 25;
+export const BENTO_JITTER_Y = 25;
 
-// Pre-computed diamond bbox in canvas space (centred on origin). Width
-// is set by the widest row; height by the number of rows.
-const BENTO_MAX_COLS = Math.max(...BENTO_ROW_COUNTS);
-const BENTO_TOTAL_W =
-  BENTO_MAX_COLS * BENTO_CELL_W + (BENTO_MAX_COLS - 1) * BENTO_GAP;
-const BENTO_TOTAL_H =
-  BENTO_ROW_COUNTS.length * BENTO_CELL_H +
-  (BENTO_ROW_COUNTS.length - 1) * BENTO_GAP;
+// Pre-computed bento bbox in canvas space (centred on origin). Static
+// estimate sized for the worst case (widest tiles + tallest stacks);
+// the camera fits to this so the whole masonry is visible at the
+// "100%" view from the user's reference.
 const BENTO_BBOX = {
-  minX: -BENTO_TOTAL_W / 2,
-  maxX: BENTO_TOTAL_W / 2,
-  minY: -BENTO_TOTAL_H / 2,
-  maxY: BENTO_TOTAL_H / 2,
+  minX: -5800,
+  maxX: 5800,
+  minY: -4400,
+  maxY: 4400,
 };
 
 export function Canvas() {
@@ -78,32 +72,48 @@ export function Canvas() {
       return by - ay || a.label.localeCompare(b.label);
     });
     for (const g of sorted) ordered.push(...g.works);
-    // Build the diamond's flat list of slots (row, col-within-row).
-    type Slot = { row: number; col: number; rowCount: number };
-    const slots: Slot[] = [];
-    BENTO_ROW_COUNTS.forEach((rowCount, row) => {
-      for (let col = 0; col < rowCount; col++) {
-        slots.push({ row, col, rowCount });
-      }
-    });
-    const middleRow = (BENTO_ROW_COUNTS.length - 1) / 2;
-    const map = new Map<string, { x: number; y: number }>();
+    // Pinterest-style masonry: pick the column with the lowest current
+    // y for each tile, place it there, then advance that column's y by
+    // the tile's natural height + gap. Columns are spaced wide enough
+    // for the widest tile so they never overlap.
+    const tileBounds = ordered.map((w) => workBounds(w));
+    const maxTileW = tileBounds.reduce((m, b) => Math.max(m, b.width), 0);
+    const colSpacing = maxTileW + BENTO_COL_GAP;
+    const colCenters = Array.from(
+      { length: BENTO_COLS },
+      (_, i) => (i - (BENTO_COLS - 1) / 2) * colSpacing,
+    );
+    const colYs = new Array(BENTO_COLS).fill(0);
+    const placements: Array<{ id: string; cx: number; cy: number }> = [];
     const rand = (seed: number) => {
       const x = Math.sin(seed * 9301 + 49297) * 233280;
       return x - Math.floor(x);
     };
     ordered.forEach((work, i) => {
-      const slot = slots[i];
-      if (!slot) return;
+      // Shortest-column packing for a hand-laid masonry feel.
+      let col = 0;
+      for (let c = 1; c < BENTO_COLS; c++)
+        if (colYs[c] < colYs[col]) col = c;
+      const wb = tileBounds[i];
+      const cy = colYs[col] + wb.height / 2;
+      placements.push({ id: work.id, cx: colCenters[col], cy });
+      colYs[col] += wb.height + BENTO_ROW_GAP;
+    });
+    // Centre the masonry vertically: shift everything by -avg height.
+    const totalH = Math.max(...colYs) - BENTO_ROW_GAP;
+    const yShift = -totalH / 2;
+    const map = new Map<string, { x: number; y: number }>();
+    placements.forEach((p, i) => {
+      const work = ordered[i];
+      const wb = tileBounds[i];
       const jx = (rand(i + 1) - 0.5) * 2 * BENTO_JITTER_X;
       const jy = (rand(i + 17) - 0.5) * 2 * BENTO_JITTER_Y;
-      const slotCx =
-        (slot.col - (slot.rowCount - 1) / 2) * (BENTO_CELL_W + BENTO_GAP) + jx;
-      const slotCy = (slot.row - middleRow) * (BENTO_CELL_H + BENTO_GAP) + jy;
-      const wb = workBounds(work);
       const tileCx = wb.minX + wb.width / 2;
       const tileCy = wb.minY + wb.height / 2;
-      map.set(work.id, { x: slotCx - tileCx, y: slotCy - tileCy });
+      map.set(work.id, {
+        x: p.cx + jx - tileCx,
+        y: p.cy + yShift + jy - tileCy,
+      });
     });
     return map;
   }, [groups]);
@@ -132,6 +142,20 @@ export function Canvas() {
     },
     [deselect, dragMovedRef],
   );
+
+  // Zoom indicator: 100% = fit-all of the true works bbox. Computed
+  // once from a viewport approximation; the indicator updates as the
+  // user zooms.
+  const fitScale = useMemo(() => {
+    if (typeof window === "undefined") return 1;
+    return fitAllTransform(WORKS, {
+      x: 0,
+      y: 0,
+      w: window.innerWidth,
+      h: window.innerHeight,
+    }).scale;
+  }, []);
+  const zoomPct = Math.round((transform.scale / fitScale) * 100);
 
   return (
     <div
@@ -187,6 +211,14 @@ export function Canvas() {
         </div>
       </DispersionContext.Provider>
       <ExpandedGroup />
+      {/* Zoom indicator: bottom-right of the canvas, hidden during the
+          gallery view. Shows current scale relative to fit-all. */}
+      <div
+        aria-live="polite"
+        className="pointer-events-none absolute bottom-4 right-4 z-10 italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute"
+      >
+        {zoomPct}%
+      </div>
     </div>
   );
 }
