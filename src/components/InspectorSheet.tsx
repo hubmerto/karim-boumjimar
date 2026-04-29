@@ -28,6 +28,7 @@ function snapToOffsetPx(snap: Snap, vh: number) {
 export function InspectorSheet() {
   const view = useSelection((s) => s.view);
   const selectedId = useSelection((s) => s.selectedId);
+  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const selected = selectedId
     ? WORKS.find((w) => w.id === selectedId) ?? null
@@ -120,6 +121,10 @@ export function InspectorSheet() {
   // Hide entirely while the gallery view is open so the horizontal strip
   // gets the full canvas height on mobile.
   if (expandedGroupKey) return null;
+  // Hide unless the user has actively selected something. The default
+  // (no-selection) sheet was clutter; site navigation lives in the top
+  // menu now.
+  if (!selected && !selectedGroupKey) return null;
 
   return (
     <div

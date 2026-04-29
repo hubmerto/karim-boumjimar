@@ -21,6 +21,7 @@ export function MobileMenu({
 }) {
   const view = useSelection((s) => s.view);
   const setView = useSelection((s) => s.setView);
+  const setIndexOpen = useSelection((s) => s.setIndexOpen);
 
   useEffect(() => {
     if (!open) return;
@@ -41,6 +42,18 @@ export function MobileMenu({
     >
       <div className="flex h-full flex-col">
         <ul className="flex-1 overflow-y-auto py-4">
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setIndexOpen(true);
+                onClose();
+              }}
+              className="flex w-full items-center justify-between border-b border-line px-6 py-4 text-left text-[18px] text-ink"
+            >
+              <span>Index</span>
+            </button>
+          </li>
           {ITEMS.map((item) => {
             const active = view === item.key;
             return (

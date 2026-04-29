@@ -14,6 +14,10 @@ type CanvasState = {
   navTargetWorkId: string | null;
   /** Pan/zoom request to a group's bounding box (set by group outline click). */
   navTargetGroupKey: string | null;
+  /** Whether the Works Index drawer is open. Lifted out of LeftToolbar so the
+   * mobile menu can open it too. */
+  indexOpen: boolean;
+  setIndexOpen: (open: boolean) => void;
   select: (id: string | null) => void;
   /** Click a tile: highlights that tile, pins its group, and zooms to the group. */
   selectWork: (id: string, groupKey: string) => void;
@@ -43,6 +47,8 @@ export const useSelection = create<CanvasState>((set) => ({
   expandedGroupKey: null,
   navTargetWorkId: null,
   navTargetGroupKey: null,
+  indexOpen: false,
+  setIndexOpen: (open) => set({ indexOpen: open }),
   select: (id) => set({ selectedId: id }),
   selectWork: (id, groupKey) =>
     set({

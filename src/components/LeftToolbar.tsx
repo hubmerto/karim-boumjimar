@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { useSelection, type View } from "@/lib/store";
-import { Index } from "@/components/Index";
 
 const ITEMS: { key: View; label: string }[] = [
   { key: "exhibitions", label: "Exhibitions" },
@@ -21,7 +19,8 @@ export function LeftToolbar() {
     (s) => !!(s.selectedId || s.selectedGroupKey),
   );
   const deselect = useSelection((s) => s.deselect);
-  const [indexOpen, setIndexOpen] = useState(false);
+  const indexOpen = useSelection((s) => s.indexOpen);
+  const setIndexOpen = useSelection((s) => s.setIndexOpen);
 
   return (
     <>
@@ -47,7 +46,7 @@ export function LeftToolbar() {
         <div>
           <button
             type="button"
-            onClick={() => setIndexOpen((v) => !v)}
+            onClick={() => setIndexOpen(!indexOpen)}
             aria-haspopup="dialog"
             aria-expanded={indexOpen}
             className="flex w-full items-center border-b border-line px-6 py-3 text-left text-[13px] text-ink hover:text-mute"
@@ -101,7 +100,6 @@ export function LeftToolbar() {
           </div>
         </div>
       </nav>
-      <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
     </>
   );
 }

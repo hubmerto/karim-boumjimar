@@ -17,7 +17,6 @@ export const LEFT_TOOLBAR_W_FULL = 200;
 export const LEFT_TOOLBAR_W_CONDENSED = 24;
 const INSPECTOR_W = 300;
 const PROJECT_PANEL_W = 360;
-const SHEET_PEEK_H = 56; // mobile bottom-sheet peek height (matches InspectorSheet)
 const SHEET_TOP_RESERVE = 64; // matches InspectorSheet TOP_RESERVE_PX
 const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
 
@@ -44,19 +43,18 @@ function viewportRect() {
   const rightW = isDesktop
     ? (selectedId ? INSPECTOR_W : 0) + (selectedGroupKey ? PROJECT_PANEL_W : 0)
     : 0;
-  // Mobile bottom sheet: at "peek" only the 56px header is visible; when a
-  // selection is active the sheet auto-expands to "mid" (~55% of its full
-  // height showing). Subtract the matching height so groups center in the
-  // actually-visible canvas area, not behind the sheet.
+  // Mobile bottom sheet: only renders when the user has actively selected
+  // something AND the gallery isn't open. When it's visible it sits at
+  // "mid" snap (~55% of its full height showing), so subtract the matching
+  // height so groups center in the actually-visible canvas area above it.
   let bottomChrome = 0;
   if (!isDesktop) {
-    const hasSelection = !!(selectedId || selectedGroupKey);
-    if (hasSelection && !expandedGroupKey) {
+    const sheetVisible =
+      !!(selectedId || selectedGroupKey) && !expandedGroupKey;
+    if (sheetVisible) {
       const sheetH = Math.max(200, window.innerHeight - SHEET_TOP_RESERVE);
       bottomChrome =
         window.innerHeight - (SHEET_TOP_RESERVE + sheetH * SHEET_MID_FRACTION);
-    } else {
-      bottomChrome = SHEET_PEEK_H;
     }
   }
   return {
