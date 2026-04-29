@@ -58,11 +58,6 @@ a {
   outline-offset: 2px;
 }
 
-@keyframes splash-fill {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
 /* Bento entrance: each tile has its own delay + duration applied
    inline so they fade in at varied times within ~10s. */
 @keyframes tile-fade-in {

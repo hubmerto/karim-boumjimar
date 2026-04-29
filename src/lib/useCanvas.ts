@@ -160,20 +160,23 @@ export function useCanvas(
     }
   }, [works, bentoBbox]);
 
-  // When the left toolbar slides out / back in, the canvas container's left
-  // edge shifts by (LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED).
-  // Compensate the tx so tile screen positions stay anchored.
+  // When the left toolbar slides out / back in (desktop only), the canvas
+  // container's left edge shifts by (LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED).
+  // Compensate the tx so tile screen positions stay anchored. The toolbar is
+  // hidden on mobile (md:flex), so this compensation must NOT run there or
+  // the canvas content jumps 176px every time the user makes a selection.
   const condensed = useSelection(
     (s) => !!(s.selectedId || s.selectedGroupKey),
   );
   const prevCondensedRef = useRef(condensed);
   useEffect(() => {
     if (prevCondensedRef.current === condensed) return;
+    prevCondensedRef.current = condensed;
+    if (!window.matchMedia("(min-width: 768px)").matches) return;
     const widthDelta = LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED; // 176
-    // Toolbar shrinking → container shifts left → bump tx right to compensate.
+    // Toolbar shrinking, container shifts left, bump tx right to compensate.
     const txDelta = condensed ? widthDelta : -widthDelta;
     setTransform((t) => ({ ...t, tx: t.tx + txDelta }));
-    prevCondensedRef.current = condensed;
   }, [condensed]);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -200,23 +203,11 @@ export function useCanvas(
     [],
   );
 
-  // First-interaction handler: ease from the bento intro into the
-  // standard fit-all view (and tell the store so tiles also spread).
-  // Returns true if the intro was just consumed. The 2200ms duration
-  // here matches the WorkTile transform transition so camera and tiles
-  // settle together without a "snap" feel.
   const endIntro = useSelection((s) => s.endIntro);
-  const consumeIntro = useCallback(() => {
-    if (!introRef.current) return false;
-    introRef.current = false;
-    endIntro();
-    animateTransform(fitAllTransform(works, viewportRect()), 2200);
-    return true;
-  }, [works, animateTransform, endIntro]);
 
   // Slow approach from the user's "200%" wide-out framing all the way
   // past natural fit so the bento fills the viewport and a bit beyond.
-  // User input cancels this via consumeIntro.
+  // The nav effect below ends the intro on tile/group click.
   useEffect(() => {
     if (!bentoBbox) return;
     const t1 = setTimeout(() => {

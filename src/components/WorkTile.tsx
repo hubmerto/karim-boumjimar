@@ -82,7 +82,8 @@ function WorkTileImpl({ work }: Props) {
         height: Math.round(bounds.height),
         transform: `translate(${dx}px, ${dy}px)`,
         // Slow + soft so the spread reads as a settle, not a jump.
-        // Matches the camera animation duration in consumeIntro.
+        // Duration matches the camera nav animation so tiles and camera
+        // settle together.
         transition: "transform 2200ms cubic-bezier(0.22, 1, 0.36, 1)",
         willChange: "transform",
       }}
