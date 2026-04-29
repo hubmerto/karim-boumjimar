@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import { useDispersion } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 
 type Props = {
@@ -39,7 +38,6 @@ function GroupOutlineImpl({
     if (s.selectedId && workIds.includes(s.selectedId)) return true;
     return false;
   });
-  const { dispersion, centerX, centerY, isAnimating } = useDispersion();
 
   const x = minX - pad;
   const y = minY - pad;
@@ -48,26 +46,10 @@ function GroupOutlineImpl({
   // Counter-scale the label so it stays readable across zoom levels, but clamp
   // to a range so it doesn't dominate at extreme zoom-out / vanish at extreme zoom-in.
   const counter = Math.max(0.6, Math.min(2.4, 1 / canvasScale));
-  // Pull the outline toward the bbox centre at low dispersion (matches WorkTile).
-  const factor = 1 - dispersion;
-  const groupCx = (minX + maxX) / 2;
-  const groupCy = (minY + maxY) / 2;
-  const dx = (centerX - groupCx) * factor;
-  const dy = (centerY - groupCy) * factor;
   return (
     <div
       className="absolute"
-      style={{
-        left: x,
-        top: y,
-        width: w,
-        height: h,
-        transform: `translate(${dx}px, ${dy}px)`,
-        transition: isAnimating
-          ? "transform 400ms cubic-bezier(0.32, 0.72, 0, 1)"
-          : "none",
-        willChange: "transform",
-      }}
+      style={{ left: x, top: y, width: w, height: h }}
       onClick={(e) => {
         // Only fire if the click landed on the outline itself (not on a child tile).
         if (e.target === e.currentTarget) {

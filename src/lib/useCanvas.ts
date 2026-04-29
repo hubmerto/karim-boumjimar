@@ -152,10 +152,9 @@ export function useCanvas(works: Work[]) {
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
-      // Wheel zoom is the natural way out of the blob view — let scale
-      // rise smoothly so the dispersion follows. Just mark the intro
-      // consumed so further refits don't auto-fire, but don't snap.
-      introRef.current = false;
+      // First wheel out of the blob view: snap to fit-all instead of
+      // applying this delta on top of the very small starting scale.
+      if (consumeIntro()) return;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
