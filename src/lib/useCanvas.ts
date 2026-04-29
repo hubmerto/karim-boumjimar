@@ -5,8 +5,8 @@ import {
   centerOn,
   clampScale,
   fitAllTransform,
+  fitBboxTransform,
   type Transform,
-  worksBounds,
   zoomAt,
 } from "@/lib/canvas-math";
 import { useSelection } from "@/lib/store";
@@ -66,7 +66,9 @@ function viewportRect() {
   };
 }
 
-export function useCanvas(works: Work[]) {
+type Bbox = { minX: number; minY: number; maxX: number; maxY: number };
+
+export function useCanvas(works: Work[], bentoBbox?: Bbox) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Identical initial state on server and client to keep hydration deterministic.
   // fitAll is applied via useLayoutEffect below - runs synchronously after mount,
@@ -87,11 +89,25 @@ export function useCanvas(works: Work[]) {
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
-    // Camera framed for the true bbox; tiles render compressed via the
-    // intro dispersion until the first user interaction, so they read as
-    // a blob in the middle of the viewport with white space around.
-    setTransform(fitAllTransform(works, viewportRect()));
-  }, [works]);
+    if (bentoBbox) {
+      // Open at 200% of the bento fit, then auto-zoom out to 100% over a
+      // few seconds. Done via an immediate setTransform (200%) and a
+      // queued animateTransform (100%). User input still cuts in via
+      // consumeIntro and supersedes the auto-zoom.
+      const v = viewportRect();
+      const fit100 = fitBboxTransform(bentoBbox, v);
+      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+      const scale200 = fit100.scale * 2;
+      setTransform({
+        tx: v.w / 2 - cx * scale200,
+        ty: v.h / 2 - cy * scale200,
+        scale: scale200,
+      });
+    } else {
+      setTransform(fitAllTransform(works, viewportRect()));
+    }
+  }, [works, bentoBbox]);
 
   // When the left toolbar slides out / back in, the canvas container's left
   // edge shifts by (LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED).
@@ -118,15 +134,22 @@ export function useCanvas(works: Work[]) {
   const dragMovedRef = useRef(false);
   const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const animateTransform = useCallback((next: Transform) => {
-    if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
-    setIsAnimating(true);
-    setTransform(next);
-    // Match the longest CSS transition (tile spread, 1100ms) plus a touch.
-    animateTimerRef.current = setTimeout(() => setIsAnimating(false), 1180);
-  }, []);
+  const [animDuration, setAnimDuration] = useState(1100);
+  const animateTransform = useCallback(
+    (next: Transform, duration = 1100) => {
+      if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+      setIsAnimating(true);
+      setAnimDuration(duration);
+      setTransform(next);
+      animateTimerRef.current = setTimeout(
+        () => setIsAnimating(false),
+        duration + 80,
+      );
+    },
+    [],
+  );
 
-  // First-interaction handler: ease from the compact blob view into the
+  // First-interaction handler: ease from the bento intro into the
   // standard fit-all view (and tell the store so tiles also spread).
   // Returns true if the intro was just consumed.
   const endIntro = useSelection((s) => s.endIntro);
@@ -134,9 +157,21 @@ export function useCanvas(works: Work[]) {
     if (!introRef.current) return false;
     introRef.current = false;
     endIntro();
-    animateTransform(fitAllTransform(works, viewportRect()));
+    animateTransform(fitAllTransform(works, viewportRect()), 1100);
     return true;
   }, [works, animateTransform, endIntro]);
+
+  // Auto-zoom out from 200% bento to 100% bento after a brief settle.
+  // User input cancels this via consumeIntro (which calls another
+  // animateTransform that supersedes).
+  useEffect(() => {
+    if (!bentoBbox) return;
+    const t1 = setTimeout(() => {
+      if (!introRef.current) return;
+      animateTransform(fitBboxTransform(bentoBbox, viewportRect()), 5000);
+    }, 600);
+    return () => clearTimeout(t1);
+  }, [bentoBbox, animateTransform]);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -385,6 +420,7 @@ export function useCanvas(works: Work[]) {
     isDragging,
     spaceHeld,
     isAnimating,
+    animDuration,
     /** Did the most recent pointer interaction move beyond the click threshold? */
     dragMovedRef,
   };

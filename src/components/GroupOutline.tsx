@@ -39,7 +39,7 @@ function GroupOutlineImpl({
     if (s.selectedId && workIds.includes(s.selectedId)) return true;
     return false;
   });
-  const { dispersion, blobOffsets } = useDispersion();
+  const { dispersion } = useDispersion();
 
   const x = minX - pad;
   const y = minY - pad;
@@ -48,11 +48,7 @@ function GroupOutlineImpl({
   // Counter-scale the label so it stays readable across zoom levels, but clamp
   // to a range so it doesn't dominate at extreme zoom-out / vanish at extreme zoom-in.
   const counter = Math.max(0.6, Math.min(2.4, 1 / canvasScale));
-  // Track the group's tiles into the blob layout at intro.
-  const offset = blobOffsets.get(groupKey) ?? { x: 0, y: 0 };
-  const factor = 1 - dispersion;
-  const dx = offset.x * factor;
-  const dy = offset.y * factor;
+  // Outline + title fade in only after the intro spread completes.
   return (
     <div
       className="absolute"
@@ -61,9 +57,11 @@ function GroupOutlineImpl({
         top: y,
         width: w,
         height: h,
-        transform: `translate(${dx}px, ${dy}px)`,
-        transition: "transform 1100ms cubic-bezier(0.16, 1, 0.3, 1)",
-        willChange: "transform",
+        opacity: dispersion,
+        // Slight delay on the fade-in so the spread reads first.
+        transition:
+          "opacity 600ms cubic-bezier(0.16, 1, 0.3, 1) 400ms",
+        pointerEvents: dispersion === 0 ? "none" : "auto",
       }}
       onClick={(e) => {
         // Only fire if the click landed on the outline itself (not on a child tile).

@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   // Allow LAN-IP access during dev so the site can be tested from another
   // device on the same network (phone, tablet, second machine).
   allowedDevOrigins: ["192.168.178.75"],
+  // Hide the N / build-activity indicator that pops in the corner during
+  // dev (it never ships to production but distracts during local review).
+  devIndicators: false,
 };
 
 export default nextConfig;

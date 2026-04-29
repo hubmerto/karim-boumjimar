@@ -3,17 +3,38 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
-import { groupTilesByTitle, worksBounds } from "@/lib/canvas-math";
+import { groupTilesByTitle, workBounds } from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 
-// Intro compression factor: each group's centre is moved to
-//   bboxCenter + (origCentre - bboxCentre) * COMPRESS
-// at intro. 0.3 = groups sit at 30% of their true distance from centre.
-const INTRO_COMPRESS = 0.3;
+// Bento layout dimensions (canvas-space). Tiles keep their natural
+// width/height; only the centre of each tile is snapped to its slot.
+// Cells are sized just barely larger than the largest tile so
+// 20-50px gaps remain between neighbours after the natural-width
+// jitter is applied.
+export const BENTO_COLS = 7;
+export const BENTO_ROWS = 6;
+export const BENTO_CELL_W = 950;
+export const BENTO_CELL_H = 720;
+export const BENTO_GAP = 30;
+// Per-tile jitter on bento positions (canvas-space). Adds a small
+// imperfect feel: not every tile is on the same line.
+export const BENTO_JITTER = 60;
+
+// Pre-computed bento bbox in canvas space (centred on origin).
+const BENTO_TOTAL_W =
+  BENTO_COLS * BENTO_CELL_W + (BENTO_COLS - 1) * BENTO_GAP;
+const BENTO_TOTAL_H =
+  BENTO_ROWS * BENTO_CELL_H + (BENTO_ROWS - 1) * BENTO_GAP;
+const BENTO_BBOX = {
+  minX: -BENTO_TOTAL_W / 2,
+  maxX: BENTO_TOTAL_W / 2,
+  minY: -BENTO_TOTAL_H / 2,
+  maxY: BENTO_TOTAL_H / 2,
+};
 
 export function Canvas() {
   const {
@@ -25,7 +46,8 @@ export function Canvas() {
     onPointerUp,
     dragMovedRef,
     isAnimating,
-  } = useCanvas(WORKS);
+    animDuration,
+  } = useCanvas(WORKS, BENTO_BBOX);
   const deselect = useSelection((s) => s.deselect);
   const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
@@ -41,27 +63,48 @@ export function Canvas() {
         : "md:right-0";
   const groups = useMemo(() => groupTilesByTitle(WORKS), []);
 
-  // Per-group blob offset: at intro the whole group shifts by this,
-  // pulling it toward the canvas centre while preserving its internal
-  // arrangement.
-  const blobOffsets = useMemo(() => {
-    const b = worksBounds(WORKS);
-    const allCx = (b.minX + b.maxX) / 2;
-    const allCy = (b.minY + b.maxY) / 2;
+  // Bento layout: every tile gets a slot in a packed grid centred on
+  // (0,0). Order is reverse-chronological by group, then by tile index
+  // within group, so adjacent works tend to be from the same era — but
+  // group identity is ignored in the layout, as requested.
+  const tileOffsets = useMemo(() => {
+    const ordered: typeof WORKS = [];
+    const sorted = [...groups].sort((a, b) => {
+      const ay = typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
+      const by = typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
+      return by - ay || a.label.localeCompare(b.label);
+    });
+    for (const g of sorted) ordered.push(...g.works);
+    const totalW = BENTO_COLS * BENTO_CELL_W + (BENTO_COLS - 1) * BENTO_GAP;
+    const totalH = BENTO_ROWS * BENTO_CELL_H + (BENTO_ROWS - 1) * BENTO_GAP;
+    const startX = -totalW / 2 + BENTO_CELL_W / 2;
+    const startY = -totalH / 2 + BENTO_CELL_H / 2;
     const map = new Map<string, { x: number; y: number }>();
-    for (const g of groups) {
-      const gCx = (g.minX + g.maxX) / 2;
-      const gCy = (g.minY + g.maxY) / 2;
-      const newCx = allCx + (gCx - allCx) * INTRO_COMPRESS;
-      const newCy = allCy + (gCy - allCy) * INTRO_COMPRESS;
-      map.set(g.key, { x: newCx - gCx, y: newCy - gCy });
-    }
+    // Deterministic pseudo-random jitter so the layout reads as a tight
+    // packed bento, not a perfectly aligned grid.
+    const rand = (seed: number) => {
+      const x = Math.sin(seed * 9301 + 49297) * 233280;
+      return x - Math.floor(x);
+    };
+    ordered.forEach((work, i) => {
+      const col = i % BENTO_COLS;
+      const row = Math.floor(i / BENTO_COLS);
+      const jx = (rand(i + 1) - 0.5) * 2 * BENTO_JITTER;
+      const jy = (rand(i + 17) - 0.5) * 2 * BENTO_JITTER;
+      const slotCx = startX + col * (BENTO_CELL_W + BENTO_GAP) + jx;
+      const slotCy = startY + row * (BENTO_CELL_H + BENTO_GAP) + jy;
+      const wb = workBounds(work);
+      const tileCx = wb.minX + wb.width / 2;
+      const tileCy = wb.minY + wb.height / 2;
+      map.set(work.id, { x: slotCx - tileCx, y: slotCy - tileCy });
+    });
     return map;
   }, [groups]);
+
   const intro = useSelection((s) => s.intro);
   const dispCtx = useMemo(
-    () => ({ dispersion: intro ? 0 : 1, blobOffsets }),
-    [intro, blobOffsets],
+    () => ({ dispersion: intro ? 0 : 1, tileOffsets }),
+    [intro, tileOffsets],
   );
 
   useEffect(() => {
@@ -109,9 +152,10 @@ export function Canvas() {
           style={{
             transformOrigin: "0 0",
             transform: `translate3d(${transform.tx}px, ${transform.ty}px, 0) scale(${transform.scale})`,
-            // Slow + soft easing for nav animations (intro snap, group fits).
+            // Slow + soft easing for nav animations. Duration varies:
+            // 5000ms for the auto-zoom 200→100%, 1100ms otherwise.
             transition: isAnimating
-              ? "transform 1100ms cubic-bezier(0.16, 1, 0.3, 1)"
+              ? `transform ${animDuration}ms cubic-bezier(0.16, 1, 0.3, 1)`
               : "none",
             willChange: "transform",
           }}

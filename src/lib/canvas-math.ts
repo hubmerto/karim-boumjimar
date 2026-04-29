@@ -178,6 +178,24 @@ export function clampTransform(
   return { tx, ty, scale };
 }
 
+/** Fit an arbitrary bbox into the viewport at `padding` (default 0.9). */
+export function fitBboxTransform(
+  bbox: { minX: number; minY: number; maxX: number; maxY: number },
+  viewport: { x: number; y: number; w: number; h: number },
+  padding = 0.9,
+): Transform {
+  const w = Math.max(1, bbox.maxX - bbox.minX);
+  const h = Math.max(1, bbox.maxY - bbox.minY);
+  const scale = clampScale(Math.min(viewport.w / w, viewport.h / h) * padding);
+  const cx = (bbox.minX + bbox.maxX) / 2;
+  const cy = (bbox.minY + bbox.maxY) / 2;
+  return {
+    tx: viewport.w / 2 - cx * scale,
+    ty: viewport.h / 2 - cy * scale,
+    scale,
+  };
+}
+
 /** Centre the viewport on a canvas point at the given scale. tx/ty in container-local coords. */
 export function centerOn(
   viewport: { x: number; y: number; w: number; h: number },

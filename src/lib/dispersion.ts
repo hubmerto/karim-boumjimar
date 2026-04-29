@@ -1,26 +1,26 @@
 import { createContext, useContext } from "react";
 
 /**
- * Two-state opening: at intro every group's position is compressed toward
- * the canvas bbox centre by a fixed factor, so all groups read as a tight
- * blob. After the first interaction, dispersion = 1 and tiles return to
- * their true canvas positions.
+ * Two-state opening:
+ *   intro   = every tile sits in a packed bento grid (group identity
+ *             ignored), group outlines + titles hidden
+ *   spread  = tiles at their true canvas positions, group outlines visible
  *
- * Each group has a precomputed offset = (compressedCenter - origCenter).
- * Tiles within a group all share that offset, so each group keeps its
- * internal arrangement; only the group as a whole moves.
+ * Each tile has a precomputed offset to translate it from its true
+ * canvas-space position into its bento slot. dispersion=0 applies the
+ * full offset; dispersion=1 applies none.
  */
-export type GroupBlobOffset = { x: number; y: number };
+export type TileOffset = { x: number; y: number };
 
 export type DispersionState = {
   dispersion: number; // 0 at intro, 1 after
-  /** key = `${title}|${year}` (matches WorkTile's groupKey). */
-  blobOffsets: Map<string, GroupBlobOffset>;
+  /** key = work.id */
+  tileOffsets: Map<string, TileOffset>;
 };
 
 export const DispersionContext = createContext<DispersionState>({
   dispersion: 1,
-  blobOffsets: new Map(),
+  tileOffsets: new Map(),
 });
 
 export function useDispersion() {
