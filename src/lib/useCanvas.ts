@@ -213,16 +213,23 @@ export function useCanvas(
   const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [animDuration, setAnimDuration] = useState(1800);
+  // True while a programmatic camera animation is in flight. The
+  // zoom-driven dispersion and gallery effects skip when this is true,
+  // otherwise they'd fire as the camera sweeps through their thresholds
+  // mid-animation (eg. opening the gallery briefly during a nav-to-group
+  // before settling below threshold).
+  const programmaticAnimRef = useRef(false);
   const animateTransform = useCallback(
     (next: Transform, duration = 1800) => {
       if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+      programmaticAnimRef.current = true;
       setIsAnimating(true);
       setAnimDuration(duration);
       setTransform(next);
-      animateTimerRef.current = setTimeout(
-        () => setIsAnimating(false),
-        duration + 80,
-      );
+      animateTimerRef.current = setTimeout(() => {
+        setIsAnimating(false);
+        programmaticAnimRef.current = false;
+      }, duration + 80);
     },
     [],
   );
@@ -251,26 +258,36 @@ export function useCanvas(
     return () => clearTimeout(t1);
   }, [bentoBbox, splashGone, animateTransform]);
 
-  // Drive dispersion from the current zoom level with hysteresis.
+  // Drive dispersion from the current zoom level with hysteresis. Skipped
+  // while the camera is doing a programmatic animation -- the in-flight
+  // sweep through thresholds shouldn't trigger layout swaps. When dispersion
+  // collapses back to bento, we also deselect any active group: the user
+  // has zoomed out of "group focus" territory back into canvas browsing.
+  const deselect = useSelection((s) => s.deselect);
   useEffect(() => {
     if (!bentoFit) return;
+    if (programmaticAnimRef.current) return;
     if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
       setDispersion(1);
     } else if (transform.scale <= bentoFit * 0.75 && dispersion === 1) {
       setDispersion(0);
+      deselect();
     }
-  }, [transform.scale, bentoFit, dispersion]);
+  }, [transform.scale, bentoFit, dispersion, deselect]);
 
   // Drive gallery open/close from zoom level when a group is focused.
   // Past where the group "just fits" the visible canvas, open the gallery.
   // Pull back below 70% of fit and the gallery collapses again. Hysteresis
-  // keeps it from flickering near the threshold.
+  // keeps it from flickering near the threshold. Skipped during programmatic
+  // animations so a nav-to-group doesn't transiently open the gallery as
+  // the camera sweeps through the threshold on its way to the focus scale.
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const expandGroup = useSelection((s) => s.expandGroup);
   const collapseGroup = useSelection((s) => s.collapseGroup);
   useEffect(() => {
     if (!selectedGroupKey) return;
+    if (programmaticAnimRef.current) return;
     const groupWorks = works.filter(
       (w) => `${w.title}|${w.year}` === selectedGroupKey,
     );
@@ -326,6 +343,7 @@ export function useCanvas(
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
       userInteractedRef.current = true;
+      programmaticAnimRef.current = false;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       // Sensitivity is dialled down (0.005 from 0.01) so the camera moves
@@ -374,6 +392,7 @@ export function useCanvas(
       // Middle-click should always pan, even on a tile (Figma).
       if (isMiddle) e.preventDefault();
       userInteractedRef.current = true;
+      programmaticAnimRef.current = false;
       e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -431,6 +450,7 @@ export function useCanvas(
       if (e.touches.length === 2) {
         e.preventDefault();
         userInteractedRef.current = true;
+        programmaticAnimRef.current = false;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
@@ -500,7 +520,7 @@ export function useCanvas(
   }, [works]);
 
   const fitAll = useCallback(() => {
-    animateTransform(fitAllTransform(works, viewportRect()), 4000);
+    animateTransform(fitAllTransform(works, viewportRect()), 2800);
   }, [works, animateTransform]);
 
   const zoomToWork = useCallback(
@@ -509,7 +529,7 @@ export function useCanvas(
       const off = destOffsets?.get(work.id) ?? { x: 0, y: 0 };
       animateTransform(
         centerOn(v, work.position.x + off.x, work.position.y + off.y, scale),
-        4000,
+        2800,
       );
     },
     [animateTransform, destOffsets],
@@ -556,12 +576,12 @@ export function useCanvas(
         const groupBbox = { minX, minY, maxX, maxY };
         // Defer one frame so the canvas container has begun its CSS
         // transition (left/right changing as toolbar slides + right
-        // panels mount). 4000ms keeps the focus move calm; the previous
-        // 2200ms felt rushed.
+        // panels mount). 2800ms is the sweet spot: calm without feeling
+        // sluggish on mobile.
         requestAnimationFrame(() => {
           animateTransform(
             fitBboxTransform(groupBbox, viewportRect(), 0.6),
-            4000,
+            2800,
           );
         });
       }
