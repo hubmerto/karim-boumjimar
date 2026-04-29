@@ -90,20 +90,11 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
     if (bentoBbox) {
-      // Open at 200% of the bento fit, then auto-zoom out to 100% over a
-      // few seconds. Done via an immediate setTransform (200%) and a
-      // queued animateTransform (100%). User input still cuts in via
+      // Open zoomed FAR (whole bento visible with breathing room), then
+      // slowly approach over a few seconds. User input still cuts in via
       // consumeIntro and supersedes the auto-zoom.
       const v = viewportRect();
-      const fit100 = fitBboxTransform(bentoBbox, v);
-      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
-      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
-      const scale200 = fit100.scale * 2;
-      setTransform({
-        tx: v.w / 2 - cx * scale200,
-        ty: v.h / 2 - cy * scale200,
-        scale: scale200,
-      });
+      setTransform(fitBboxTransform(bentoBbox, v, 0.85));
     } else {
       setTransform(fitAllTransform(works, viewportRect()));
     }
@@ -161,15 +152,27 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     return true;
   }, [works, animateTransform, endIntro]);
 
-  // Auto-zoom out from 200% bento to 100% bento after a brief settle.
-  // User input cancels this via consumeIntro (which calls another
-  // animateTransform that supersedes).
+  // Slow approach: from the wide opening (whole bento visible) to a
+  // tighter framing where tiles read larger. User input cancels this
+  // via consumeIntro (which calls another animateTransform that wins).
   useEffect(() => {
     if (!bentoBbox) return;
     const t1 = setTimeout(() => {
       if (!introRef.current) return;
-      animateTransform(fitBboxTransform(bentoBbox, viewportRect()), 5000);
-    }, 600);
+      const v = viewportRect();
+      const fit = fitBboxTransform(bentoBbox, v, 0.85);
+      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+      const closer = fit.scale * 1.35;
+      animateTransform(
+        {
+          tx: v.w / 2 - cx * closer,
+          ty: v.h / 2 - cy * closer,
+          scale: closer,
+        },
+        7000,
+      );
+    }, 800);
     return () => clearTimeout(t1);
   }, [bentoBbox, animateTransform]);
 
