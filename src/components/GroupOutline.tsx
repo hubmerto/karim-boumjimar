@@ -39,7 +39,7 @@ function GroupOutlineImpl({
     if (s.selectedId && workIds.includes(s.selectedId)) return true;
     return false;
   });
-  const { dispersion, centerX, centerY, isAnimating } = useDispersion();
+  const { dispersion, blobOffsets } = useDispersion();
 
   const x = minX - pad;
   const y = minY - pad;
@@ -48,12 +48,12 @@ function GroupOutlineImpl({
   // Counter-scale the label so it stays readable across zoom levels, but clamp
   // to a range so it doesn't dominate at extreme zoom-out / vanish at extreme zoom-in.
   const counter = Math.max(0.6, Math.min(2.4, 1 / canvasScale));
-  // Pull the outline toward the bbox centre at low dispersion (matches WorkTile).
+  // Move the whole outline by the group's blobOffset at intro, so it
+  // tracks its tiles into the compact grid slot.
+  const offset = blobOffsets.get(groupKey) ?? { x: 0, y: 0 };
   const factor = 1 - dispersion;
-  const groupCx = (minX + maxX) / 2;
-  const groupCy = (minY + maxY) / 2;
-  const dx = (centerX - groupCx) * factor;
-  const dy = (centerY - groupCy) * factor;
+  const dx = offset.x * factor;
+  const dy = offset.y * factor;
   return (
     <div
       className="absolute"
@@ -63,9 +63,7 @@ function GroupOutlineImpl({
         width: w,
         height: h,
         transform: `translate(${dx}px, ${dy}px)`,
-        transition: isAnimating
-          ? "transform 400ms cubic-bezier(0.32, 0.72, 0, 1)"
-          : "none",
+        transition: "transform 700ms cubic-bezier(0.32, 0.72, 0, 1)",
         willChange: "transform",
       }}
       onClick={(e) => {

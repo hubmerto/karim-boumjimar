@@ -14,19 +14,19 @@ function WorkTileImpl({ work }: Props) {
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const activeGroupKey = useSelection((s) => s.selectedGroupKey);
-  const { dispersion, centerX, centerY, isAnimating } = useDispersion();
+  const { dispersion, blobOffsets } = useDispersion();
   const bounds = workBounds(work);
   const img = work.images[0];
   const groupKey = `${work.title}|${work.year}`;
 
-  // Tiles are laid out at their true canvas coords via left/top, then
-  // pulled toward the bbox centre by (1 - dispersion). At dispersion=0
-  // every tile sits at the centre; at 1 they're at their true positions.
+  // At intro (dispersion=0) every tile in a group shifts by its group's
+  // blobOffset, putting the whole group in its compact-grid slot near
+  // the canvas centre. The internal layout of each group is preserved.
+  // At dispersion=1 there's no offset and tiles sit at their true coords.
+  const offset = blobOffsets.get(groupKey) ?? { x: 0, y: 0 };
   const factor = 1 - dispersion;
-  const tileCx = bounds.minX + bounds.width / 2;
-  const tileCy = bounds.minY + bounds.height / 2;
-  const dx = (centerX - tileCx) * factor;
-  const dy = (centerY - tileCy) * factor;
+  const dx = offset.x * factor;
+  const dy = offset.y * factor;
 
   return (
     <button
@@ -51,9 +51,9 @@ function WorkTileImpl({ work }: Props) {
         width: bounds.width,
         height: bounds.height,
         transform: `translate(${dx}px, ${dy}px)`,
-        transition: isAnimating
-          ? "transform 400ms cubic-bezier(0.32, 0.72, 0, 1)"
-          : "none",
+        // Dispersion only flips once per session (intro → exploration),
+        // so a permanent transition is fine and fires only on that flip.
+        transition: "transform 700ms cubic-bezier(0.32, 0.72, 0, 1)",
         willChange: "transform",
       }}
     >

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
-import { fitAllTransform, groupTilesByTitle, worksBounds } from "@/lib/canvas-math";
+import { groupTilesByTitle } from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
@@ -36,44 +36,42 @@ export function Canvas() {
         : "md:right-0";
   const groups = useMemo(() => groupTilesByTitle(WORKS), []);
 
-  // Dispersion: tiles compress toward the bbox center at low zoom and
-  // fan out to their true positions as the camera scales up. Anchored
-  // between an arbitrary "blob" scale (camera-only fit, no dispersion)
-  // and the standard fit-all scale (full dispersion).
-  const dispersionState = useMemo(() => {
-    if (typeof window === "undefined") {
-      return { dispersion: 1, centerX: 0, centerY: 0, isAnimating: false };
-    }
-    const b = worksBounds(WORKS);
-    const centerX = (b.minX + b.maxX) / 2;
-    const centerY = (b.minY + b.maxY) / 2;
-    return { dispersion: 0, centerX, centerY, isAnimating };
-    // We compute dispersion below using the live transform; the memo
-    // only fixes the centre.
-  }, [isAnimating]);
-  const fitAndBlobScales = useMemo(() => {
-    if (typeof window === "undefined") return { fit: 1, blob: 0.5 };
-    const v = {
-      x: 0,
-      y: 0,
-      w: window.innerWidth,
-      h: window.innerHeight,
-    };
-    const fit = fitAllTransform(WORKS, v).scale;
-    const blob = fitAllTransform(WORKS, v, 0.35).scale;
-    return { fit, blob };
-  }, []);
-  const dispersion = useMemo(() => {
-    const { fit, blob } = fitAndBlobScales;
-    if (fit <= blob) return 1;
-    const t = (transform.scale - blob) / (fit - blob);
-    // Minimum 0.18 so groups are compact but still distinct, never
-    // overlapping into a single point. Top of 1 = true positions.
-    return Math.max(0.18, Math.min(1, t));
-  }, [transform.scale, fitAndBlobScales]);
+  // Blob layout: each group has a target position in a compact grid
+  // near the canvas centre. Tiles in the same group all share the same
+  // offset, preserving the group's internal arrangement.
+  const blobOffsets = useMemo(() => {
+    const sorted = [...groups].sort((a, b) => {
+      const ay = typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
+      const by = typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
+      return by - ay || a.label.localeCompare(b.label);
+    });
+    const cellW = 1900;
+    const cellH = 1500;
+    const gap = 200;
+    const cols = Math.ceil(Math.sqrt(sorted.length));
+    const rows = Math.ceil(sorted.length / cols);
+    const totalW = cols * (cellW + gap) - gap;
+    const totalH = rows * (cellH + gap) - gap;
+    const startX = -totalW / 2 + cellW / 2;
+    const startY = -totalH / 2 + cellH / 2;
+    const map = new Map<string, { x: number; y: number }>();
+    sorted.forEach((g, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const blobCx = startX + col * (cellW + gap);
+      const blobCy = startY + row * (cellH + gap);
+      const origCx = (g.minX + g.maxX) / 2;
+      const origCy = (g.minY + g.maxY) / 2;
+      map.set(g.key, { x: blobCx - origCx, y: blobCy - origCy });
+    });
+    return map;
+  }, [groups]);
+
+  const intro = useSelection((s) => s.intro);
+  const dispersion = intro ? 0 : 1;
   const dispCtx = useMemo(
-    () => ({ ...dispersionState, dispersion }),
-    [dispersionState, dispersion],
+    () => ({ dispersion, blobOffsets }),
+    [dispersion, blobOffsets],
   );
 
   useEffect(() => {
