@@ -65,13 +65,17 @@ export function Canvas() {
   // within group, so adjacent works tend to be from the same era — but
   // group identity is ignored in the layout, as requested.
   const tileOffsets = useMemo(() => {
-    const ordered: typeof WORKS = [];
-    const sorted = [...groups].sort((a, b) => {
-      const ay = typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
-      const by = typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
-      return by - ay || a.label.localeCompare(b.label);
-    });
-    for (const g of sorted) ordered.push(...g.works);
+    // Deterministic shuffle by tile-id hash so works from the same
+    // group don't cluster in the bento. Same order across renders.
+    const seedSort = (id: string) => {
+      let h = 0;
+      for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+      const x = Math.sin(h * 0.0001) * 10000;
+      return x - Math.floor(x);
+    };
+    const ordered = [...WORKS].sort(
+      (a, b) => seedSort(a.id) - seedSort(b.id),
+    );
     // 7-column masonry with tile counts per column matching the Figma's
     // mound shape. Each column is centred vertically so the middle
     // columns extend further up + down than the outer ones.
@@ -111,7 +115,7 @@ export function Canvas() {
       cursor += count;
     });
     return map;
-  }, [groups]);
+  }, []);
 
   const intro = useSelection((s) => s.intro);
   const dispCtx = useMemo(
