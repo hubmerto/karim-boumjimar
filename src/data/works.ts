@@ -21,8 +21,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-01.webp",
         alt: "An art gallery featuring wall murals of mythical creatures and cherubs drawn in black with colorful accents, along with three large decorated vases placed on the floor.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -44,8 +44,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-02.webp",
         alt: "Wall mural featuring black line drawings of women, a snake, and abstract figures, with some parts colored in red and purple.",
-        width: 1500,
-        height: 1016,
+        width: 800,
+        height: 542,
       },
     ],
     position: {
@@ -67,8 +67,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-03.webp",
         alt: "A large white wall covered with a mural of various black and colored line drawings of people, animals, and mythical creatures, some with colored accents like pink, yellow, and red.",
-        width: 1500,
-        height: 971,
+        width: 800,
+        height: 518,
       },
     ],
     position: {
@@ -90,8 +90,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-04.webp",
         alt: "Colorful, abstract painting on a ceramic vase depicting human-like faces and mythical creatures with vibrant colors and detailed patterns.",
-        width: 1500,
-        height: 2244,
+        width: 535,
+        height: 800,
       },
     ],
     position: {
@@ -113,8 +113,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-05.webp",
         alt: "A topless woman with long, curly hair crouches on the floor while holding a colorful, painted sculpture or canvas. In the background, a group of people sit at tables in a gallery or art space, with a large mural or artwork on the wall featuring abstract and figurative line drawings and a large face with vivid eyes and lips.",
-        width: 1134,
-        height: 1507,
+        width: 602,
+        height: 800,
       },
     ],
     position: {
@@ -135,8 +135,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-01.webp",
         alt: "Art installation featuring four decorative vases with intricate designs on wooden pedestals, and a piece of art with a pink tufted leather cushion and black and white striped background on the back wall.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -157,8 +157,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-02.webp",
         alt: "Interior of an art gallery with colorful paintings on white walls and sculpture on a white pedestal.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -179,8 +179,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-03.webp",
         alt: "Ceramic vase decorated with a detailed illustration of a blue and black bird with red eyes, surrounded by orange and black accents.",
-        width: 1500,
-        height: 2250,
+        width: 533,
+        height: 800,
       },
     ],
     position: {
@@ -201,8 +201,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-04.webp",
         alt: "Colorful ceramic vase with a painted nude woman and abstract designs, displayed on a white pedestal.",
-        width: 1500,
-        height: 2250,
+        width: 533,
+        height: 800,
       },
     ],
     position: {
@@ -223,8 +223,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-05.webp",
         alt: "A decorative vase displayed on a white pedestal against a plain, light-colored background in an art gallery.",
-        width: 1500,
-        height: 2250,
+        width: 533,
+        height: 800,
       },
     ],
     position: {
@@ -245,8 +245,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-01.webp",
         alt: "Bodies Under Construction, 2026",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -267,8 +267,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-02.webp",
         alt: "Bodies Under Construction, 2026",
-        width: 1500,
-        height: 2249,
+        width: 534,
+        height: 800,
       },
     ],
     position: {
@@ -289,8 +289,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-03.webp",
         alt: "Bodies Under Construction, 2026",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -311,8 +311,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-04.webp",
         alt: "Bodies Under Construction, 2026",
-        width: 1500,
-        height: 2100,
+        width: 571,
+        height: 800,
       },
     ],
     position: {
@@ -333,8 +333,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-01.webp",
         alt: "Art installation with wooden frames and colorful ceramic vases displayed on multiple levels in a gallery with white walls and wooden floors.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -355,8 +355,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-02.webp",
         alt: "An art gallery room with a red accent wall, a framed artwork of two colorful animals, wooden flooring, and windows with natural light.",
-        width: 1500,
-        height: 1001,
+        width: 800,
+        height: 534,
       },
     ],
     position: {
@@ -377,8 +377,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-03.webp",
         alt: "Art gallery with white walls, framed drawings, and a wooden structure in the middle of the room. The room has wooden floors and ceiling lights, with a window in the background providing natural light.",
-        width: 1500,
-        height: 1001,
+        width: 800,
+        height: 534,
       },
     ],
     position: {
@@ -399,8 +399,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-01.webp",
         alt: "A display of decorated ceramic vases arranged on wooden platforms in an art gallery with white walls and a large skylight ceiling.",
-        width: 1500,
-        height: 2038,
+        width: 589,
+        height: 800,
       },
     ],
     position: {
@@ -421,8 +421,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-02.webp",
         alt: "Artistic ceramic vases with colorful, expressive portraits and scenes, displayed on wooden shelves with a light wood grain background.",
-        width: 1500,
-        height: 1875,
+        width: 640,
+        height: 800,
       },
     ],
     position: {
@@ -443,8 +443,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-03.webp",
         alt: "A person lies on the floor with their eyes closed, wearing a beige ripped outfit, with many spectators standing around watching.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -465,8 +465,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-04.webp",
         alt: "A performer with a torn shirt and draped cloth around his waist dances barefoot in an art gallery, holding a painted object, while a diverse group of spectators watch and smile in front of a colorful painting.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -486,8 +486,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/mouths-01.webp",
         alt: "Art installation in a gallery featuring colorful painted vases on wooden shelving units in front of a white art piece with a colorful face design.",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -507,8 +507,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/mouths-02.webp",
         alt: "Colorful sketch of women and a peacock hanging on a dark red gallery wall",
-        width: 1500,
-        height: 2248,
+        width: 534,
+        height: 800,
       },
     ],
     position: {
@@ -528,8 +528,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/mouths-03.webp",
         alt: "Colorful ceramic vases displayed on wooden shelves in an art gallery.",
-        width: 1500,
-        height: 2250,
+        width: 533,
+        height: 800,
       },
     ],
     position: {
@@ -550,8 +550,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/deepcuts-01.webp",
         alt: "An art gallery featuring colorful ceramic vases and pottery displayed on blue pedestals and shelves, with paintings on the wall and large sculptural vases in the center.",
-        width: 1500,
-        height: 1160,
+        width: 800,
+        height: 619,
       },
     ],
     position: {
@@ -572,8 +572,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/deepcuts-02.webp",
         alt: "Two tall ceramic vases with colorful, detailed, and expressive painted dragons and mythical creatures on a wooden floor in an art gallery, with a red backdrop and spotlights overhead.",
-        width: 1500,
-        height: 2000,
+        width: 600,
+        height: 800,
       },
     ],
     position: {
@@ -594,8 +594,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/deepcuts-03.webp",
         alt: "Artistic sculpture of a tall, slender vessel with colorful, intricate paintings of human faces and figures, placed on a tiled floor in a gallery.",
-        width: 1500,
-        height: 2017,
+        width: 595,
+        height: 800,
       },
     ],
     position: {
@@ -615,8 +615,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-01.webp",
         alt: "Two large artistic vases displayed on round pedestals in an art gallery, with a fabric wall hanging and a rock formation in the background.",
-        width: 1500,
-        height: 1125,
+        width: 800,
+        height: 600,
       },
     ],
     position: {
@@ -636,8 +636,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-02.webp",
         alt: "Two large, decorated ceramic vases on round black pedestals in an art gallery, with paintings on the walls and wooden flooring.",
-        width: 1500,
-        height: 1125,
+        width: 800,
+        height: 600,
       },
     ],
     position: {
@@ -657,8 +657,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-01.webp",
         alt: "Installation view",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -678,8 +678,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-02.webp",
         alt: "Two Lovers on a Stallion, 2025 Glazed earthenware 43.5 x 32 x 32 cm",
-        width: 1500,
-        height: 2100,
+        width: 571,
+        height: 800,
       },
     ],
     position: {
@@ -697,8 +697,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-01.webp",
         alt: "Forbidden Colours II, 2025 Ink, crayons and watercolour on mulberry paper 67 x 97 cm",
-        width: 1500,
-        height: 1124,
+        width: 800,
+        height: 599,
       },
     ],
     position: {
@@ -716,8 +716,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-02.webp",
         alt: "Trace becoming form II, 2025 Watercolour and crayon on paper 42 x 29,7 cm",
-        width: 1500,
-        height: 2001,
+        width: 600,
+        height: 800,
       },
     ],
     position: {
@@ -735,8 +735,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-03.webp",
         alt: "Cruising Parks II, 2024 Watercolour and ink on mulberry paper 100 x 142 cm",
-        width: 1500,
-        height: 1001,
+        width: 800,
+        height: 534,
       },
     ],
     position: {
@@ -754,8 +754,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-04.webp",
         alt: "Paradise Land, 2024 Watercolour and ink on mulberry paper 66 x 98 cm",
-        width: 1500,
-        height: 1001,
+        width: 800,
+        height: 534,
       },
     ],
     position: {
@@ -775,8 +775,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-01.webp",
         alt: "Spring Has Arrived, 2023. Installation view. Mixed media on the wall. Dag Hammarskjölds Allé 42D, 4. sal. Photography by Malle Madsen.",
-        width: 1500,
-        height: 994,
+        width: 800,
+        height: 530,
       },
     ],
     position: {
@@ -796,8 +796,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-02.webp",
         alt: "Spring Has Arrived: Exhibition Walkthrough, 2023. Performance documented by Furkan Dönmezer.",
-        width: 1500,
-        height: 2250,
+        width: 533,
+        height: 800,
       },
     ],
     position: {
@@ -818,8 +818,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-01.webp",
         alt: "Glory on Earth, 2024. Photography by Robert Damisch",
-        width: 1500,
-        height: 1000,
+        width: 800,
+        height: 533,
       },
     ],
     position: {
@@ -840,8 +840,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-02.webp",
         alt: "Glory on Earth, 2024",
-        width: 1080,
-        height: 1620,
+        width: 533,
+        height: 800,
       },
     ],
     position: {
@@ -861,8 +861,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/overgaden-01.webp",
         alt: "Psychopathia Sexualis, installation view. O - Overgaden. Photography by Anders Sune Berg. 2021",
-        width: 1500,
-        height: 1145,
+        width: 800,
+        height: 611,
       },
     ],
     position: {
@@ -882,8 +882,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/overgaden-02.webp",
         alt: "Psychopathia Sexualis, installation view. O - Overgaden. Photography by Anders Sune Berg. 2021",
-        width: 1500,
-        height: 1178,
+        width: 800,
+        height: 628,
       },
     ],
     position: {

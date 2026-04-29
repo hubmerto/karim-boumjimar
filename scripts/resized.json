@@ -1,0 +1,371 @@
+[
+  {
+    "id": "beauty-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "74",
+    "afterKB": "23"
+  },
+  {
+    "id": "beauty-02",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "110",
+    "afterKB": "33"
+  },
+  {
+    "id": "beauty-03",
+    "beforeDim": "1500x2250",
+    "afterDim": "533x800",
+    "width": 533,
+    "height": 800,
+    "beforeKB": "216",
+    "afterKB": "38"
+  },
+  {
+    "id": "beauty-04",
+    "beforeDim": "1500x2250",
+    "afterDim": "533x800",
+    "width": 533,
+    "height": 800,
+    "beforeKB": "144",
+    "afterKB": "26"
+  },
+  {
+    "id": "beauty-05",
+    "beforeDim": "1500x2250",
+    "afterDim": "533x800",
+    "width": 533,
+    "height": 800,
+    "beforeKB": "238",
+    "afterKB": "28"
+  },
+  {
+    "id": "birdsofparadise-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "123",
+    "afterKB": "43"
+  },
+  {
+    "id": "birdsofparadise-02",
+    "beforeDim": "1500x1001",
+    "afterDim": "800x534",
+    "width": 800,
+    "height": 534,
+    "beforeKB": "41",
+    "afterKB": "15"
+  },
+  {
+    "id": "birdsofparadise-03",
+    "beforeDim": "1500x1001",
+    "afterDim": "800x534",
+    "width": 800,
+    "height": 534,
+    "beforeKB": "76",
+    "afterKB": "27"
+  },
+  {
+    "id": "deepcuts-01",
+    "beforeDim": "1500x1160",
+    "afterDim": "800x619",
+    "width": 800,
+    "height": 619,
+    "beforeKB": "121",
+    "afterKB": "36"
+  },
+  {
+    "id": "deepcuts-02",
+    "beforeDim": "1500x2000",
+    "afterDim": "600x800",
+    "width": 600,
+    "height": 800,
+    "beforeKB": "273",
+    "afterKB": "45"
+  },
+  {
+    "id": "deepcuts-03",
+    "beforeDim": "1500x2017",
+    "afterDim": "595x800",
+    "width": 595,
+    "height": 800,
+    "beforeKB": "176",
+    "afterKB": "28"
+  },
+  {
+    "id": "drawing-01",
+    "beforeDim": "1500x1124",
+    "afterDim": "800x599",
+    "width": 800,
+    "height": 599,
+    "beforeKB": "144",
+    "afterKB": "50"
+  },
+  {
+    "id": "drawing-02",
+    "beforeDim": "1500x2001",
+    "afterDim": "600x800",
+    "width": 600,
+    "height": 800,
+    "beforeKB": "45",
+    "afterKB": "10"
+  },
+  {
+    "id": "drawing-03",
+    "beforeDim": "1500x1001",
+    "afterDim": "800x534",
+    "width": 800,
+    "height": 534,
+    "beforeKB": "268",
+    "afterKB": "85"
+  },
+  {
+    "id": "drawing-04",
+    "beforeDim": "1500x1001",
+    "afterDim": "800x534",
+    "width": 800,
+    "height": 534,
+    "beforeKB": "241",
+    "afterKB": "77"
+  },
+  {
+    "id": "fearandfauna-01",
+    "beforeDim": "1500x994",
+    "afterDim": "800x530",
+    "width": 800,
+    "height": 530,
+    "beforeKB": "233",
+    "afterKB": "66"
+  },
+  {
+    "id": "fearandfauna-02",
+    "beforeDim": "1500x2250",
+    "afterDim": "533x800",
+    "width": 533,
+    "height": 800,
+    "beforeKB": "350",
+    "afterKB": "80"
+  },
+  {
+    "id": "glory-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "218",
+    "afterKB": "68"
+  },
+  {
+    "id": "glory-02",
+    "beforeDim": "1080x1620",
+    "afterDim": "533x800",
+    "width": 533,
+    "height": 800,
+    "beforeKB": "105",
+    "afterKB": "32"
+  },
+  {
+    "id": "kultuur-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "87",
+    "afterKB": "29"
+  },
+  {
+    "id": "kultuur-02",
+    "beforeDim": "1500x2100",
+    "afterDim": "571x800",
+    "width": 571,
+    "height": 800,
+    "beforeKB": "229",
+    "afterKB": "39"
+  },
+  {
+    "id": "liljevalchs-01",
+    "beforeDim": "1500x1125",
+    "afterDim": "800x600",
+    "width": 800,
+    "height": 600,
+    "beforeKB": "95",
+    "afterKB": "28"
+  },
+  {
+    "id": "liljevalchs-02",
+    "beforeDim": "1500x1125",
+    "afterDim": "800x600",
+    "width": 800,
+    "height": 600,
+    "beforeKB": "78",
+    "afterKB": "26"
+  },
+  {
+    "id": "moestings-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "179",
+    "afterKB": "62"
+  },
+  {
+    "id": "moestings-02",
+    "beforeDim": "1500x2249",
+    "afterDim": "534x800",
+    "width": 534,
+    "height": 800,
+    "beforeKB": "238",
+    "afterKB": "53"
+  },
+  {
+    "id": "moestings-03",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "160",
+    "afterKB": "53"
+  },
+  {
+    "id": "moestings-04",
+    "beforeDim": "1500x2100",
+    "afterDim": "571x800",
+    "width": 571,
+    "height": 800,
+    "beforeKB": "93",
+    "afterKB": "21"
+  },
+  {
+    "id": "mouths-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "67",
+    "afterKB": "24"
+  },
+  {
+    "id": "mouths-02",
+    "beforeDim": "1500x2248",
+    "afterDim": "534x800",
+    "width": 534,
+    "height": 800,
+    "beforeKB": "65",
+    "afterKB": "12"
+  },
+  {
+    "id": "mouths-03",
+    "beforeDim": "1500x2250",
+    "afterDim": "533x800",
+    "width": 533,
+    "height": 800,
+    "beforeKB": "117",
+    "afterKB": "26"
+  },
+  {
+    "id": "overgaden-01",
+    "beforeDim": "1500x1145",
+    "afterDim": "800x611",
+    "width": 800,
+    "height": 611,
+    "beforeKB": "148",
+    "afterKB": "46"
+  },
+  {
+    "id": "overgaden-02",
+    "beforeDim": "1500x1178",
+    "afterDim": "800x628",
+    "width": 800,
+    "height": 628,
+    "beforeKB": "149",
+    "afterKB": "46"
+  },
+  {
+    "id": "pandemonium-01",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "180",
+    "afterKB": "58"
+  },
+  {
+    "id": "pandemonium-02",
+    "beforeDim": "1500x1016",
+    "afterDim": "800x542",
+    "width": 800,
+    "height": 542,
+    "beforeKB": "209",
+    "afterKB": "68"
+  },
+  {
+    "id": "pandemonium-03",
+    "beforeDim": "1500x971",
+    "afterDim": "800x518",
+    "width": 800,
+    "height": 518,
+    "beforeKB": "173",
+    "afterKB": "60"
+  },
+  {
+    "id": "pandemonium-04",
+    "beforeDim": "1500x2244",
+    "afterDim": "535x800",
+    "width": 535,
+    "height": 800,
+    "beforeKB": "779",
+    "afterKB": "133"
+  },
+  {
+    "id": "pandemonium-05",
+    "beforeDim": "1134x1507",
+    "afterDim": "602x800",
+    "width": 602,
+    "height": 800,
+    "beforeKB": "119",
+    "afterKB": "52"
+  },
+  {
+    "id": "symbiosis-01",
+    "beforeDim": "1500x2038",
+    "afterDim": "589x800",
+    "width": 589,
+    "height": 800,
+    "beforeKB": "182",
+    "afterKB": "35"
+  },
+  {
+    "id": "symbiosis-02",
+    "beforeDim": "1500x1875",
+    "afterDim": "640x800",
+    "width": 640,
+    "height": 800,
+    "beforeKB": "330",
+    "afterKB": "75"
+  },
+  {
+    "id": "symbiosis-03",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "105",
+    "afterKB": "41"
+  },
+  {
+    "id": "symbiosis-04",
+    "beforeDim": "1500x1000",
+    "afterDim": "800x533",
+    "width": 800,
+    "height": 533,
+    "beforeKB": "109",
+    "afterKB": "42"
+  }
+]
