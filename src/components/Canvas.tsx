@@ -17,7 +17,7 @@ export const BENTO_COL_COUNTS = [3, 5, 9, 9, 6, 5, 4];
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
-export const BENTO_ROW_GAP = 60;
+export const BENTO_ROW_GAP = 130;
 // Per-tile jitter in canvas-space, kept small so tiles never overlap.
 export const BENTO_JITTER_X = 25;
 export const BENTO_JITTER_Y = 25;

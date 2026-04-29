@@ -56,9 +56,17 @@ a {
 }
 
 /* Bento entrance: each tile has its own delay + duration applied
-   inline, so they fade in at varied times within ~7s. */
+   inline so they fade in at varied times within ~10s. */
 @keyframes tile-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Subtle floating wobble: tiles drift a few px up and down on a long,
+   per-tile period to feel like they're hovering instead of nailed
+   to the canvas. */
+@keyframes tile-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
 }
 

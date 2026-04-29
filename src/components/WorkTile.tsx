@@ -37,13 +37,21 @@ function WorkTileImpl({ work }: Props) {
   // and React doesn't fire a hydration mismatch.
   const dx = Math.round(offset.x * factor);
   const dy = Math.round(offset.y * factor);
-  // Random per-tile fade-in (0-5500ms delay, 800-1800ms duration) so all
-  // 41 tiles arrive within ~7s in a varied, non-sequential order.
-  const fadeIn = useMemo(() => {
+  // Two animations on the inner image wrapper:
+  //   1. tile-fade-in: gradual entrance, varied delay (0-6s) and
+  //      duration (1.8-3.5s), so 41 tiles drift in over ~9s.
+  //   2. tile-float: continuous gentle hover up/down on a 5-9s period
+  //      with a varied negative delay (so tiles aren't synced).
+  const innerAnimation = useMemo(() => {
     const { r1, r2 } = tileSeed(work.id);
-    const delay = Math.round(r1 * 5500);
-    const duration = Math.round(800 + r2 * 1000);
-    return `tile-fade-in ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms both`;
+    const fadeDelay = Math.round(r1 * 6000);
+    const fadeDuration = Math.round(1800 + r2 * 1700);
+    const floatDuration = Math.round(5000 + r1 * 4000);
+    const floatDelay = -Math.round(r2 * floatDuration);
+    return [
+      `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`,
+      `tile-float ${floatDuration}ms ease-in-out ${floatDelay}ms infinite`,
+    ].join(", ");
   }, [work.id]);
 
   return (
@@ -72,22 +80,31 @@ function WorkTileImpl({ work }: Props) {
         // Slow + soft so the spread reads as a settle, not a jump.
         // Matches the camera animation duration in consumeIntro.
         transition: "transform 2200ms cubic-bezier(0.22, 1, 0.36, 1)",
-        animation: fadeIn,
-        willChange: "transform, opacity",
+        willChange: "transform",
       }}
     >
-      {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={asset(img.src)}
-        alt={img.alt}
-        width={img.width}
-        height={img.height}
-        loading="lazy"
-        decoding="async"
-        draggable={false}
-        className="block h-full w-full object-cover"
-      />
+      {/* Inner wrapper carries the fade-in + float animations so they
+          don't conflict with the parent button's bento-spread transform. */}
+      <span
+        className="block h-full w-full"
+        style={{
+          animation: innerAnimation,
+          willChange: "transform, opacity",
+        }}
+      >
+        {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={asset(img.src)}
+          alt={img.alt}
+          width={img.width}
+          height={img.height}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="block h-full w-full object-cover"
+        />
+      </span>
     </button>
   );
 }
