@@ -258,20 +258,22 @@ export function useCanvas(
     return () => clearTimeout(t1);
   }, [bentoBbox, splashGone, animateTransform]);
 
-  // Drive dispersion from the current zoom level with hysteresis. Skipped
-  // while the camera is doing a programmatic animation -- the in-flight
-  // sweep through thresholds shouldn't trigger layout swaps. When dispersion
-  // collapses back to bento, we also deselect any active group: the user
-  // has zoomed out of "group focus" territory back into canvas browsing.
+  // Drive dispersion from the current zoom level with hysteresis. Runs
+  // during programmatic animations too: when nav-to-group sweeps the
+  // camera up past the spread threshold, the tiles need to spread along
+  // with it. Deselecting the group on the 1->0 path keeps the layered
+  // zoom-out (gallery -> group -> canvas) flowing.
   const deselect = useSelection((s) => s.deselect);
   useEffect(() => {
     if (!bentoFit) return;
-    if (programmaticAnimRef.current) return;
     if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
       setDispersion(1);
     } else if (transform.scale <= bentoFit * 0.75 && dispersion === 1) {
       setDispersion(0);
-      deselect();
+      // Only deselect on user-driven zoom-out, not when an animation is
+      // mid-flight (eg. fitAll); otherwise we'd nuke the selection the
+      // user just made via the nav animation that's still in progress.
+      if (!programmaticAnimRef.current) deselect();
     }
   }, [transform.scale, bentoFit, dispersion, deselect]);
 
@@ -343,7 +345,15 @@ export function useCanvas(
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
       userInteractedRef.current = true;
+      // Cancel any in-flight programmatic animation: the user is taking
+      // over the camera, the long CSS transition would make their input
+      // feel laggy.
+      if (animateTimerRef.current) {
+        clearTimeout(animateTimerRef.current);
+        animateTimerRef.current = null;
+      }
       programmaticAnimRef.current = false;
+      setIsAnimating(false);
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       // Sensitivity is dialled down (0.005 from 0.01) so the camera moves
@@ -392,7 +402,12 @@ export function useCanvas(
       // Middle-click should always pan, even on a tile (Figma).
       if (isMiddle) e.preventDefault();
       userInteractedRef.current = true;
+      if (animateTimerRef.current) {
+        clearTimeout(animateTimerRef.current);
+        animateTimerRef.current = null;
+      }
       programmaticAnimRef.current = false;
+      setIsAnimating(false);
       e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -450,7 +465,12 @@ export function useCanvas(
       if (e.touches.length === 2) {
         e.preventDefault();
         userInteractedRef.current = true;
+        if (animateTimerRef.current) {
+          clearTimeout(animateTimerRef.current);
+          animateTimerRef.current = null;
+        }
         programmaticAnimRef.current = false;
+        setIsAnimating(false);
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
