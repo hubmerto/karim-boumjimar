@@ -258,73 +258,18 @@ export function useCanvas(
     return () => clearTimeout(t1);
   }, [bentoBbox, splashGone, animateTransform]);
 
-  // Drive dispersion from the current zoom level with hysteresis. Runs
-  // during programmatic animations too: when nav-to-group sweeps the
-  // camera up past the spread threshold, the tiles need to spread along
-  // with it. Deselecting the group on the 1->0 path keeps the layered
-  // zoom-out (gallery -> group -> canvas) flowing.
-  const deselect = useSelection((s) => s.deselect);
+  // Drive dispersion from the current zoom level with hysteresis. The
+  // tiles spread out (groups apart) once the camera passes 125% of the
+  // bento fit, and re-pack to bento once it drops back below 75%. The
+  // 50% gap is hysteresis so the layout doesn't flicker near a threshold.
   useEffect(() => {
     if (!bentoFit) return;
     if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
       setDispersion(1);
     } else if (transform.scale <= bentoFit * 0.75 && dispersion === 1) {
       setDispersion(0);
-      // Only deselect on user-driven zoom-out, not when an animation is
-      // mid-flight (eg. fitAll); otherwise we'd nuke the selection the
-      // user just made via the nav animation that's still in progress.
-      if (!programmaticAnimRef.current) deselect();
     }
-  }, [transform.scale, bentoFit, dispersion, deselect]);
-
-  // Drive gallery open/close from zoom level when a group is focused.
-  // Past where the group "just fits" the visible canvas, open the gallery.
-  // Pull back below 70% of fit and the gallery collapses again. Hysteresis
-  // keeps it from flickering near the threshold. Skipped during programmatic
-  // animations so a nav-to-group doesn't transiently open the gallery as
-  // the camera sweeps through the threshold on its way to the focus scale.
-  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
-  const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
-  const expandGroup = useSelection((s) => s.expandGroup);
-  const collapseGroup = useSelection((s) => s.collapseGroup);
-  useEffect(() => {
-    if (!selectedGroupKey) return;
-    if (programmaticAnimRef.current) return;
-    const groupWorks = works.filter(
-      (w) => `${w.title}|${w.year}` === selectedGroupKey,
-    );
-    if (!groupWorks.length) return;
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const w of groupWorks) {
-      const wb = workBounds(w);
-      const off = destOffsets?.get(w.id) ?? { x: 0, y: 0 };
-      minX = Math.min(minX, wb.minX + off.x);
-      minY = Math.min(minY, wb.minY + off.y);
-      maxX = Math.max(maxX, wb.maxX + off.x);
-      maxY = Math.max(maxY, wb.maxY + off.y);
-    }
-    const v = viewportRect();
-    const groupRawFit = Math.min(
-      v.w / Math.max(1, maxX - minX),
-      v.h / Math.max(1, maxY - minY),
-    );
-    if (!expandedGroupKey && transform.scale > groupRawFit * 1.0) {
-      expandGroup(selectedGroupKey);
-    } else if (expandedGroupKey && transform.scale < groupRawFit * 0.7) {
-      collapseGroup();
-    }
-  }, [
-    transform.scale,
-    selectedGroupKey,
-    expandedGroupKey,
-    works,
-    destOffsets,
-    expandGroup,
-    collapseGroup,
-  ]);
+  }, [transform.scale, bentoFit, dispersion]);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -423,13 +368,14 @@ export function useCanvas(
       const rawDy = e.clientY - dragOriginRef.current.y;
       if (Math.abs(rawDx) > 3 || Math.abs(rawDy) > 3) dragMovedRef.current = true;
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
-      // Drag sensitivity dialled to 70% so the camera tracks the cursor at
-      // a more measured pace (was 1:1).
-      const DRAG_SENS = 0.7;
+      // Drag pan is 1:1 with the cursor/finger so the canvas follows the
+      // pointer exactly -- otherwise it feels uncalibrated, especially
+      // on touch where the user expects the tile under their finger to
+      // stay there.
       const t = transformRef.current;
       setTransform(
         clampedPan(
-          { tx: t.tx + rawDx * DRAG_SENS, ty: t.ty + rawDy * DRAG_SENS, scale: t.scale },
+          { tx: t.tx + rawDx, ty: t.ty + rawDy, scale: t.scale },
           viewportRect(),
         ),
       );
