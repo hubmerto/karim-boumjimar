@@ -78,18 +78,11 @@ export function useCanvas(works: Work[]) {
   const transformRef = useRef(transform);
   transformRef.current = transform;
   const initializedRef = useRef(false);
-  // Two-stage opening: start at a "blob" zoom-out where all groups are
-  // legible as a constellation, then animate to the working fit on the
-  // first user interaction. Stays true until something happens.
-  const introRef = useRef(true);
 
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
-    // Open at the blob view: fit-all with much heavier padding so the
-    // bbox occupies less of the viewport and the groups read as a
-    // constellation in white space.
-    setTransform(fitAllTransform(works, viewportRect(), 0.35));
+    setTransform(fitAllTransform(works, viewportRect()));
   }, [works]);
 
   // When the left toolbar slides out / back in, the canvas container's left
@@ -124,16 +117,6 @@ export function useCanvas(works: Work[]) {
     animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
   }, []);
 
-  // First-interaction handler: animate from the blob view to the working
-  // fit-all view. Returns true if the intro was just consumed (caller
-  // should skip applying its own input this tick).
-  const consumeIntro = useCallback(() => {
-    if (!introRef.current) return false;
-    introRef.current = false;
-    animateTransform(fitAllTransform(works, viewportRect()));
-    return true;
-  }, [works, animateTransform]);
-
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
   // We DO clamp scale on resize so the user doesn't get stranded with empty space.
@@ -152,9 +135,6 @@ export function useCanvas(works: Work[]) {
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
-      // First wheel out of the blob view: snap to fit-all instead of
-      // applying this delta on top of the very small starting scale.
-      if (consumeIntro()) return;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
@@ -179,7 +159,7 @@ export function useCanvas(works: Work[]) {
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [consumeIntro]);
+  }, []);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -194,9 +174,6 @@ export function useCanvas(works: Work[]) {
       const isLeft = isMouse && e.button === 0;
       // Skip non-left/middle mouse buttons (right-click etc).
       if (isMouse && !isLeft && !isMiddle) return;
-      // First pan-drag out of the blob view: snap to fit-all and
-      // skip starting a drag this tick.
-      if (!onWork && consumeIntro()) return;
       // For left-click, let tile clicks through unless space is held.
       if (isLeft && onWork && !spaceHeld) return;
       // Middle-click should always pan, even on a tile (Figma).
@@ -206,7 +183,7 @@ export function useCanvas(works: Work[]) {
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       dragMovedRef.current = false;
     },
-    [spaceHeld, consumeIntro],
+    [spaceHeld],
   );
 
   const onPointerMove = useCallback(
@@ -249,7 +226,6 @@ export function useCanvas(works: Work[]) {
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length === 2) {
         e.preventDefault();
-        if (consumeIntro()) return;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
@@ -285,7 +261,7 @@ export function useCanvas(works: Work[]) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [consumeIntro]);
+  }, []);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {
@@ -297,11 +273,9 @@ export function useCanvas(works: Work[]) {
         e.preventDefault();
         setSpaceHeld(true);
       } else if (e.key === "1") {
-        introRef.current = false;
         setTransform(fitAllTransform(works, viewportRect()));
       } else if (e.key === "0") {
         // 100% zoom centred on the current view centre.
-        introRef.current = false;
         const t = transformRef.current;
         const v = viewportRect();
         const centerCanvasX = (v.x + v.w / 2 - t.tx) / t.scale;
@@ -337,11 +311,6 @@ export function useCanvas(works: Work[]) {
   const navTargetGroupKey = useSelection((s) => s.navTargetGroupKey);
   const clearNav = useSelection((s) => s.clearNav);
   useEffect(() => {
-    if (navTargetWorkId || navTargetGroupKey) {
-      // First nav out of the blob view counts as the "first interaction".
-      // The nav animation below transitions us straight to the target.
-      introRef.current = false;
-    }
     if (navTargetWorkId) {
       const target = works.find((w) => w.id === navTargetWorkId);
       if (target) zoomToWork(target, 0.6);
