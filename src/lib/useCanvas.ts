@@ -236,9 +236,6 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
-      // First wheel/pinch out of the overview: snap to fit-all and
-      // swallow this delta so the camera doesn't combine with the snap.
-      if (consumeIntro()) return;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
@@ -263,7 +260,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [consumeIntro, clampedZoom]);
+  }, [clampedZoom]);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -278,9 +275,6 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       const isLeft = isMouse && e.button === 0;
       // Skip non-left/middle mouse buttons (right-click etc).
       if (isMouse && !isLeft && !isMiddle) return;
-      // First background drag out of the overview: snap to fit-all and
-      // skip starting a drag this tick.
-      if (!onWork && consumeIntro()) return;
       // For left-click, let tile clicks through unless space is held.
       if (isLeft && onWork && !spaceHeld) return;
       // Middle-click should always pan, even on a tile (Figma).
@@ -290,7 +284,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       dragMovedRef.current = false;
     },
-    [spaceHeld, consumeIntro],
+    [spaceHeld],
   );
 
   const onPointerMove = useCallback(
@@ -333,7 +327,6 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length === 2) {
         e.preventDefault();
-        if (consumeIntro()) return;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
@@ -369,7 +362,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [consumeIntro, clampedZoom]);
+  }, [clampedZoom]);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {

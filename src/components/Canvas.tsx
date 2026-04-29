@@ -25,29 +25,8 @@ export const BENTO_ROW_GAP = 130;
 export const BENTO_JITTER_X = 25;
 export const BENTO_JITTER_Y = 25;
 
-// Pre-computed bento bbox in canvas space (centred on origin). Static
-// estimate sized for the worst case (widest tiles + tallest stacks);
-// the camera fits to this so the whole masonry is visible at the
-// "100%" view from the user's reference.
-const BENTO_BBOX = {
-  minX: -5800,
-  maxX: 5800,
-  minY: -4400,
-  maxY: 4400,
-};
 
 export function Canvas() {
-  const {
-    containerRef,
-    transform,
-    cursor,
-    onPointerDown,
-    onPointerMove,
-    onPointerUp,
-    dragMovedRef,
-    isAnimating,
-    animDuration,
-  } = useCanvas(WORKS, BENTO_BBOX);
   const deselect = useSelection((s) => s.deselect);
   const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
@@ -185,6 +164,37 @@ export function Canvas() {
     () => ({ dispersion: intro ? 0 : 1, tileOffsets, baseOffsets }),
     [intro, tileOffsets, baseOffsets],
   );
+
+  // Dynamic bento bbox: derive from the actual tile offsets so the
+  // camera frames whatever layout (desktop 7-col or mobile 4-col) is
+  // currently active without overflow.
+  const bentoBbox = useMemo(() => {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const w of WORKS) {
+      const wb = workBounds(w);
+      const off = tileOffsets.get(w.id) ?? { x: 0, y: 0 };
+      minX = Math.min(minX, wb.minX + off.x);
+      minY = Math.min(minY, wb.minY + off.y);
+      maxX = Math.max(maxX, wb.maxX + off.x);
+      maxY = Math.max(maxY, wb.maxY + off.y);
+    }
+    return { minX, minY, maxX, maxY };
+  }, [tileOffsets]);
+
+  const {
+    containerRef,
+    transform,
+    cursor,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    dragMovedRef,
+    isAnimating,
+    animDuration,
+  } = useCanvas(WORKS, bentoBbox);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
