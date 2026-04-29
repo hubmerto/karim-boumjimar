@@ -228,7 +228,7 @@ export function useCanvas(
   );
 
   // Auto-zoom from 75% to 100% of bento fit, after all per-tile fade-ins
-  // have settled (~9.5s, matching the longest fade-delay + duration). Skipped
+  // have settled (~3s, matching the longest fade-delay + duration). Skipped
   // if the user has already interacted in that window.
   useEffect(() => {
     if (!bentoBbox) return;
@@ -246,7 +246,7 @@ export function useCanvas(
         },
         4000,
       );
-    }, 9500);
+    }, 3000);
     return () => clearTimeout(t1);
   }, [bentoBbox, animateTransform]);
 

@@ -41,12 +41,12 @@ function WorkTileImpl({ work }: Props) {
   const dy = Math.round(
     introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
   );
-  // tile-fade-in: gradual entrance, varied delay (0-6s) and duration
-  // (1.8-3.5s) so all 41 tiles drift in over the first ~9s.
+  // tile-fade-in: gradual entrance, varied delay (0-1.4s) and duration
+  // (1-1.6s) so all 41 tiles drift in within the first 3s.
   const innerAnimation = useMemo(() => {
     const { r1, r2 } = tileSeed(work.id);
-    const fadeDelay = Math.round(r1 * 6000);
-    const fadeDuration = Math.round(1800 + r2 * 1700);
+    const fadeDelay = Math.round(r1 * 1400);
+    const fadeDuration = Math.round(1000 + r2 * 600);
     return `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`;
   }, [work.id]);
 

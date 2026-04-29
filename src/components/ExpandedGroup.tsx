@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 import { WORKS } from "@/data/works";
+import { workBounds } from "@/lib/canvas-math";
+import { useDispersion } from "@/lib/dispersion";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 
@@ -25,6 +27,7 @@ type Phase = "opening" | "open" | "closing";
 export function ExpandedGroup() {
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const collapseGroup = useSelection((s) => s.collapseGroup);
+  const { baseOffsets, transformRef, containerRef } = useDispersion();
   const [displayKey, setDisplayKey] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("opening");
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -32,15 +35,34 @@ export function ExpandedGroup() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
+  // Compute the SETTLED screen rect for each tile in a group, derived from
+  // canvas math (workBounds + baseOffset) projected through the live canvas
+  // transform. We avoid getBoundingClientRect because it returns the rect
+  // mid-transition, so the FLIP would land at an in-progress position and
+  // the tiles would visibly shift afterwards. Using the math gives us the
+  // FINAL position the tile is animating toward, so the FLIP completes on
+  // exactly the right spot.
   const captureSourceRects = useCallback((groupKey: string) => {
     const map = new Map<string, DOMRect>();
+    const container = containerRef?.current;
+    const t = transformRef?.current;
+    if (!container || !t) {
+      sourceRectsRef.current = map;
+      return;
+    }
+    const cr = container.getBoundingClientRect();
     for (const w of WORKS) {
       if (`${w.title}|${w.year}` !== groupKey) continue;
-      const el = document.querySelector(`button[data-work-id="${w.id}"]`);
-      if (el) map.set(w.id, el.getBoundingClientRect());
+      const wb = workBounds(w);
+      const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
+      const left = cr.left + (wb.minX + off.x) * t.scale + t.tx;
+      const top = cr.top + (wb.minY + off.y) * t.scale + t.ty;
+      const width = wb.width * t.scale;
+      const height = wb.height * t.scale;
+      map.set(w.id, new DOMRect(left, top, width, height));
     }
     sourceRectsRef.current = map;
-  }, []);
+  }, [baseOffsets, transformRef, containerRef]);
 
   // Sync internal display state with the store. Open: capture canvas-tile
   // rects, mount the gallery, run FLIP-open. Close: capture rects again

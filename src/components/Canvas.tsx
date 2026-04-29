@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
-import { groupTilesByTitle, workBounds } from "@/lib/canvas-math";
+import { groupTilesByTitle, workBounds, type Transform } from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
@@ -214,9 +214,20 @@ export function Canvas() {
     dispersion,
   } = useCanvas(WORKS, bentoBbox, spreadBbox, baseOffsets);
 
+  // Mirror the live transform in a ref so the gallery FLIP can read the
+  // settled values without re-rendering ExpandedGroup on every pan/zoom.
+  const transformRef = useRef<Transform>(transform);
+  transformRef.current = transform;
+
   const dispCtx = useMemo(
-    () => ({ dispersion, tileOffsets, baseOffsets }),
-    [dispersion, tileOffsets, baseOffsets],
+    () => ({
+      dispersion,
+      tileOffsets,
+      baseOffsets,
+      transformRef,
+      containerRef,
+    }),
+    [dispersion, tileOffsets, baseOffsets, containerRef],
   );
 
   useEffect(() => {
@@ -290,8 +301,8 @@ export function Canvas() {
             <WorkTile key={w.id} work={w} />
           ))}
         </div>
+        <ExpandedGroup />
       </DispersionContext.Provider>
-      <ExpandedGroup />
     </div>
   );
 }

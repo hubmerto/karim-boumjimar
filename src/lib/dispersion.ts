@@ -1,4 +1,5 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, type RefObject } from "react";
+import type { Transform } from "@/lib/canvas-math";
 
 /**
  * Two-state opening:
@@ -19,12 +20,21 @@ export type DispersionState = {
   /** Offset applied after spread, used for the mobile compact stack
    * layout. Empty on desktop (= true canvas positions). key = work.id */
   baseOffsets: Map<string, TileOffset>;
+  /** Mirror of the live canvas transform (tx, ty, scale). Refs let
+   * consumers (eg. the gallery FLIP) read settled values without
+   * re-rendering on every pan/zoom frame. */
+  transformRef: RefObject<Transform> | null;
+  /** The canvas container element, for converting between canvas-space
+   * and screen-space coordinates. */
+  containerRef: RefObject<HTMLDivElement | null> | null;
 };
 
 export const DispersionContext = createContext<DispersionState>({
   dispersion: 1,
   tileOffsets: new Map(),
   baseOffsets: new Map(),
+  transformRef: null,
+  containerRef: null,
 });
 
 export function useDispersion() {
