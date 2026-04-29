@@ -2,7 +2,8 @@ import type { Work } from "@/types/work";
 
 export type Transform = { tx: number; ty: number; scale: number };
 
-export const SCALE_MIN = 0.25;
+// Lower min lets users zoom way out for a global overview of the works.
+export const SCALE_MIN = 0.04;
 export const SCALE_MAX = 4;
 
 export function clampScale(s: number) {
