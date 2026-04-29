@@ -228,7 +228,7 @@ export function useCanvas(
   );
 
   // Auto-zoom from 75% to 100% of bento fit, starting once the splash has
-  // cleared and all per-tile fade-ins have settled (~3s after that).
+  // cleared and the per-tile fade-ins have all completed (~1.1s after).
   // Skipped if the user has already interacted in that window.
   const splashGone = useSelection((s) => s.splashGone);
   useEffect(() => {
@@ -247,7 +247,7 @@ export function useCanvas(
         },
         4000,
       );
-    }, 3000);
+    }, 1200);
     return () => clearTimeout(t1);
   }, [bentoBbox, splashGone, animateTransform]);
 

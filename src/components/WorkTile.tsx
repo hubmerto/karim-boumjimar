@@ -42,14 +42,15 @@ function WorkTileImpl({ work }: Props) {
   const dy = Math.round(
     introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
   );
-  // tile-fade-in: gradual entrance with varied delay (0-1.4s) and duration
-  // (1-1.6s) so all 41 tiles drift in within ~3s. Only applied once the
-  // splash has cleared, otherwise the animation runs invisibly behind it.
+  // tile-fade-in: snappy entrance with varied delay (0-300ms) and duration
+  // (500-800ms) so all 41 tiles are fully visible within ~1.1s of the
+  // splash clearing. Only applied once the splash has cleared, otherwise
+  // the animation runs invisibly behind it.
   const innerAnimation = useMemo(() => {
     if (!splashGone) return undefined;
     const { r1, r2 } = tileSeed(work.id);
-    const fadeDelay = Math.round(r1 * 1400);
-    const fadeDuration = Math.round(1000 + r2 * 600);
+    const fadeDelay = Math.round(r1 * 300);
+    const fadeDuration = Math.round(500 + r2 * 300);
     return `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`;
   }, [splashGone, work.id]);
 
