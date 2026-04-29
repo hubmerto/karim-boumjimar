@@ -3,6 +3,7 @@
 import { memo } from "react";
 import type { Work } from "@/types/work";
 import { workBounds } from "@/lib/canvas-math";
+import { useDispersion } from "@/lib/dispersion";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 
@@ -13,9 +14,16 @@ function WorkTileImpl({ work }: Props) {
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const activeGroupKey = useSelection((s) => s.selectedGroupKey);
+  const { dispersion, blobOffsets } = useDispersion();
   const bounds = workBounds(work);
   const img = work.images[0];
   const groupKey = `${work.title}|${work.year}`;
+  // At intro every tile in a group shifts by its group's blobOffset
+  // (compressed toward the canvas centre). At dispersion=1, no offset.
+  const offset = blobOffsets.get(groupKey) ?? { x: 0, y: 0 };
+  const factor = 1 - dispersion;
+  const dx = offset.x * factor;
+  const dy = offset.y * factor;
 
   return (
     <button
@@ -39,6 +47,10 @@ function WorkTileImpl({ work }: Props) {
         top: bounds.minY,
         width: bounds.width,
         height: bounds.height,
+        transform: `translate(${dx}px, ${dy}px)`,
+        // Slow + soft so the spread reads as a settle, not a jump.
+        transition: "transform 1100ms cubic-bezier(0.16, 1, 0.3, 1)",
+        willChange: "transform",
       }}
     >
       {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}

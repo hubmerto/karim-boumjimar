@@ -87,18 +87,10 @@ export function useCanvas(works: Work[]) {
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
-    const v = viewportRect();
-    const fit = fitAllTransform(works, v);
-    // Same camera centre, half the scale = zoomed-out overview.
-    const halfScale = fit.scale * 0.5;
-    const b = worksBounds(works);
-    const cx = (b.minX + b.maxX) / 2;
-    const cy = (b.minY + b.maxY) / 2;
-    setTransform({
-      tx: v.w / 2 - cx * halfScale,
-      ty: v.h / 2 - cy * halfScale,
-      scale: halfScale,
-    });
+    // Camera framed for the true bbox; tiles render compressed via the
+    // intro dispersion until the first user interaction, so they read as
+    // a blob in the middle of the viewport with white space around.
+    setTransform(fitAllTransform(works, viewportRect()));
   }, [works]);
 
   // When the left toolbar slides out / back in, the canvas container's left
@@ -130,18 +122,21 @@ export function useCanvas(works: Work[]) {
     if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
     setIsAnimating(true);
     setTransform(next);
-    animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
+    // Match the longest CSS transition (tile spread, 1100ms) plus a touch.
+    animateTimerRef.current = setTimeout(() => setIsAnimating(false), 1180);
   }, []);
 
-  // First-interaction handler: snap from the 50% overview view to the
-  // standard fit-all view, swallowing the input that triggered it.
+  // First-interaction handler: ease from the compact blob view into the
+  // standard fit-all view (and tell the store so tiles also spread).
   // Returns true if the intro was just consumed.
+  const endIntro = useSelection((s) => s.endIntro);
   const consumeIntro = useCallback(() => {
     if (!introRef.current) return false;
     introRef.current = false;
+    endIntro();
     animateTransform(fitAllTransform(works, viewportRect()));
     return true;
-  }, [works, animateTransform]);
+  }, [works, animateTransform, endIntro]);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -345,8 +340,14 @@ export function useCanvas(works: Work[]) {
   const clearNav = useSelection((s) => s.clearNav);
   useEffect(() => {
     // Tile / group clicks count as the first interaction. The animations
-    // below transition us straight to the target from the overview.
-    if (navTargetWorkId || navTargetGroupKey) introRef.current = false;
+    // below transition us straight to the target from the overview, and
+    // endIntro tells the tiles to spread alongside.
+    if (navTargetWorkId || navTargetGroupKey) {
+      if (introRef.current) {
+        introRef.current = false;
+        endIntro();
+      }
+    }
     if (navTargetWorkId) {
       const target = works.find((w) => w.id === navTargetWorkId);
       if (target) zoomToWork(target, 0.6);
@@ -368,7 +369,7 @@ export function useCanvas(works: Work[]) {
       }
       clearNav();
     }
-  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform]);
+  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, endIntro]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 
