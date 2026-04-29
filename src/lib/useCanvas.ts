@@ -202,7 +202,10 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       const fit = fitBboxTransform(bentoBbox, v, 1.05);
       const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
       const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
-      const closer = fit.scale * 1.4;
+      // Mobile gets a tighter zoom so each tile reads at a larger size
+      // on the smaller screen.
+      const isMobile = window.innerWidth < 768;
+      const closer = fit.scale * (isMobile ? 3.4 : 2.2);
       animateTransform(
         {
           tx: v.w / 2 - cx * closer,

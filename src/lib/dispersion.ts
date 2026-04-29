@@ -14,13 +14,17 @@ export type TileOffset = { x: number; y: number };
 
 export type DispersionState = {
   dispersion: number; // 0 at intro, 1 after
-  /** key = work.id */
+  /** Offset applied at intro (bento). key = work.id */
   tileOffsets: Map<string, TileOffset>;
+  /** Offset applied after spread, used for the mobile compact stack
+   * layout. Empty on desktop (= true canvas positions). key = work.id */
+  baseOffsets: Map<string, TileOffset>;
 };
 
 export const DispersionContext = createContext<DispersionState>({
   dispersion: 1,
   tileOffsets: new Map(),
+  baseOffsets: new Map(),
 });
 
 export function useDispersion() {

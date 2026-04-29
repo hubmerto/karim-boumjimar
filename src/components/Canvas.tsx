@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
 import { groupTilesByTitle, workBounds } from "@/lib/canvas-math";
@@ -13,7 +13,10 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // 7-column masonry matching the Figma reference. Column counts taper
 // toward the edges so the silhouette is a soft mound, not a square.
 // Sum = 41 (matches WORKS.length).
-export const BENTO_COL_COUNTS = [3, 5, 9, 9, 6, 5, 4];
+export const BENTO_COL_COUNTS_DESKTOP = [3, 5, 9, 9, 6, 5, 4];
+// 4-column elongated variant for portrait phones. Same mound shape
+// but rotated long-axis vertical. Sum = 41.
+export const BENTO_COL_COUNTS_MOBILE = [7, 14, 14, 6];
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
@@ -60,6 +63,21 @@ export function Canvas() {
         : "md:right-0";
   const groups = useMemo(() => groupTilesByTitle(WORKS), []);
 
+  // Pick a column-count distribution based on viewport. Default to
+  // desktop on the server (and on the client first render) so SSR and
+  // CSR strings match; useEffect below switches to mobile after mount.
+  const [colCounts, setColCounts] = useState<number[]>(
+    BENTO_COL_COUNTS_DESKTOP,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () =>
+      setColCounts(mq.matches ? BENTO_COL_COUNTS_MOBILE : BENTO_COL_COUNTS_DESKTOP);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   // Bento layout: every tile gets a slot in a packed grid centred on
   // (0,0). Order is reverse-chronological by group, then by tile index
   // within group, so adjacent works tend to be from the same era — but
@@ -76,13 +94,13 @@ export function Canvas() {
     const ordered = [...WORKS].sort(
       (a, b) => seedSort(a.id) - seedSort(b.id),
     );
-    // 7-column masonry with tile counts per column matching the Figma's
-    // mound shape. Each column is centred vertically so the middle
-    // columns extend further up + down than the outer ones.
+    // Per-column masonry: tile counts come from the chosen distribution
+    // (desktop = 7-col mound; mobile = 4-col elongated). Each column is
+    // centred vertically so middle columns extend further up + down.
     const tileBounds = ordered.map((w) => workBounds(w));
     const maxTileW = tileBounds.reduce((m, b) => Math.max(m, b.width), 0);
     const colSpacing = maxTileW + BENTO_COL_GAP;
-    const cols = BENTO_COL_COUNTS.length;
+    const cols = colCounts.length;
     const colCenters = Array.from(
       { length: cols },
       (_, i) => (i - (cols - 1) / 2) * colSpacing,
@@ -93,7 +111,7 @@ export function Canvas() {
     };
     const map = new Map<string, { x: number; y: number }>();
     let cursor = 0;
-    BENTO_COL_COUNTS.forEach((count, col) => {
+    colCounts.forEach((count, col) => {
       // Sum heights for this column so we can centre the stack.
       let stackH = 0;
       for (let j = 0; j < count; j++) stackH += tileBounds[cursor + j].height;
@@ -115,12 +133,57 @@ export function Canvas() {
       cursor += count;
     });
     return map;
-  }, []);
+  }, [colCounts]);
+
+  // On mobile, after the spread, lay groups out in a 2-column vertical
+  // stack so the canvas reads tall instead of wide. Per-tile offset =
+  // (mobile group slot centre - original group centre). Empty on
+  // desktop (=> tiles end at their true canvas positions).
+  const baseOffsets = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    if (colCounts !== BENTO_COL_COUNTS_MOBILE) return map;
+    const sortedGroups = [...groups].sort((a, b) => {
+      const ay = typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
+      const by = typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
+      return by - ay || a.label.localeCompare(b.label);
+    });
+    const maxGroupW = sortedGroups.reduce(
+      (m, g) => Math.max(m, g.maxX - g.minX),
+      0,
+    );
+    const COLS = 2;
+    const COL_GAP = 200;
+    const ROW_GAP = 300;
+    const colWidth = maxGroupW + COL_GAP;
+    let yCursor = 0;
+    let rowH = 0;
+    sortedGroups.forEach((g, i) => {
+      const col = i % COLS;
+      const slotCx = (col - (COLS - 1) / 2) * colWidth;
+      const gH = g.maxY - g.minY;
+      const slotCy = yCursor + gH / 2;
+      const origCx = (g.minX + g.maxX) / 2;
+      const origCy = (g.minY + g.maxY) / 2;
+      const offset = { x: slotCx - origCx, y: slotCy - origCy };
+      for (const w of g.works) map.set(w.id, offset);
+      rowH = Math.max(rowH, gH);
+      if (col === COLS - 1 || i === sortedGroups.length - 1) {
+        yCursor += rowH + ROW_GAP;
+        rowH = 0;
+      }
+    });
+    // Centre the whole stack vertically.
+    const totalH = yCursor - ROW_GAP;
+    const yShift = -totalH / 2;
+    for (const [id, off] of map)
+      map.set(id, { x: off.x, y: off.y + yShift });
+    return map;
+  }, [groups, colCounts]);
 
   const intro = useSelection((s) => s.intro);
   const dispCtx = useMemo(
-    () => ({ dispersion: intro ? 0 : 1, tileOffsets }),
-    [intro, tileOffsets],
+    () => ({ dispersion: intro ? 0 : 1, tileOffsets, baseOffsets }),
+    [intro, tileOffsets, baseOffsets],
   );
 
   useEffect(() => {

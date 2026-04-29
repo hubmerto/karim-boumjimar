@@ -39,7 +39,11 @@ function GroupOutlineImpl({
     if (s.selectedId && workIds.includes(s.selectedId)) return true;
     return false;
   });
-  const { dispersion } = useDispersion();
+  const { dispersion, baseOffsets } = useDispersion();
+  // All tiles in a group share the same baseOffset, so peek at the first.
+  const baseOffset = baseOffsets.get(workIds[0]) ?? { x: 0, y: 0 };
+  const dx = Math.round(baseOffset.x * dispersion);
+  const dy = Math.round(baseOffset.y * dispersion);
 
   const x = minX - pad;
   const y = minY - pad;
@@ -57,11 +61,12 @@ function GroupOutlineImpl({
         top: Math.round(y),
         width: Math.round(w),
         height: Math.round(h),
+        transform: `translate(${dx}px, ${dy}px)`,
         opacity: dispersion,
-        // Wait until the tile spread is mostly done, then fade in
-        // gently (longer + later than the tile motion).
+        // Outline + label position track the group's baseOffset (mobile
+        // 2-col stack); fade in after the spread settles.
         transition:
-          "opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms",
+          "transform 2200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms",
         pointerEvents: dispersion === 0 ? "none" : "auto",
       }}
       onClick={(e) => {

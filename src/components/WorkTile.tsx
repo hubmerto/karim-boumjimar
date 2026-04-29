@@ -25,18 +25,22 @@ function WorkTileImpl({ work }: Props) {
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const activeGroupKey = useSelection((s) => s.selectedGroupKey);
-  const { dispersion, tileOffsets } = useDispersion();
+  const { dispersion, tileOffsets, baseOffsets } = useDispersion();
   const bounds = workBounds(work);
   const img = work.images[0];
   const groupKey = `${work.title}|${work.year}`;
-  // At intro each tile shifts to its bento slot. At dispersion=1, no
-  // offset and tiles sit at their true canvas positions.
-  const offset = tileOffsets.get(work.id) ?? { x: 0, y: 0 };
-  const factor = 1 - dispersion;
+  // Two end states: intro = bento position, spread = baseOffset (mobile
+  // 2-col group stack on phones, zero on desktop = true canvas position).
+  const introOffset = tileOffsets.get(work.id) ?? { x: 0, y: 0 };
+  const baseOffset = baseOffsets.get(work.id) ?? { x: 0, y: 0 };
   // Round to whole pixels so SSR and CSR string-format these identically
   // and React doesn't fire a hydration mismatch.
-  const dx = Math.round(offset.x * factor);
-  const dy = Math.round(offset.y * factor);
+  const dx = Math.round(
+    introOffset.x * (1 - dispersion) + baseOffset.x * dispersion,
+  );
+  const dy = Math.round(
+    introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
+  );
   // Two animations on the inner image wrapper:
   //   1. tile-fade-in: gradual entrance, varied delay (0-6s) and
   //      duration (1.8-3.5s), so 41 tiles drift in over ~9s.
