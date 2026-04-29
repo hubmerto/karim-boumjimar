@@ -3,17 +3,17 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
-import { fitAllTransform, groupTilesByTitle, workBounds } from "@/lib/canvas-math";
+import { groupTilesByTitle, workBounds } from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 
-// 7-column Pinterest-style masonry, matching the user's Figma reference
-// (each column packs tiles top-down with their natural heights). Column
-// horizontal spacing is set by the widest tile so columns never overlap.
-export const BENTO_COLS = 7;
+// 7-column masonry matching the Figma reference. Column counts taper
+// toward the edges so the silhouette is a soft mound, not a square.
+// Sum = 41 (matches WORKS.length).
+export const BENTO_COL_COUNTS = [3, 5, 9, 9, 6, 5, 4];
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
@@ -72,48 +72,43 @@ export function Canvas() {
       return by - ay || a.label.localeCompare(b.label);
     });
     for (const g of sorted) ordered.push(...g.works);
-    // Pinterest-style masonry: pick the column with the lowest current
-    // y for each tile, place it there, then advance that column's y by
-    // the tile's natural height + gap. Columns are spaced wide enough
-    // for the widest tile so they never overlap.
+    // 7-column masonry with tile counts per column matching the Figma's
+    // mound shape. Each column is centred vertically so the middle
+    // columns extend further up + down than the outer ones.
     const tileBounds = ordered.map((w) => workBounds(w));
     const maxTileW = tileBounds.reduce((m, b) => Math.max(m, b.width), 0);
     const colSpacing = maxTileW + BENTO_COL_GAP;
+    const cols = BENTO_COL_COUNTS.length;
     const colCenters = Array.from(
-      { length: BENTO_COLS },
-      (_, i) => (i - (BENTO_COLS - 1) / 2) * colSpacing,
+      { length: cols },
+      (_, i) => (i - (cols - 1) / 2) * colSpacing,
     );
-    const colYs = new Array(BENTO_COLS).fill(0);
-    const placements: Array<{ id: string; cx: number; cy: number }> = [];
     const rand = (seed: number) => {
       const x = Math.sin(seed * 9301 + 49297) * 233280;
       return x - Math.floor(x);
     };
-    ordered.forEach((work, i) => {
-      // Shortest-column packing for a hand-laid masonry feel.
-      let col = 0;
-      for (let c = 1; c < BENTO_COLS; c++)
-        if (colYs[c] < colYs[col]) col = c;
-      const wb = tileBounds[i];
-      const cy = colYs[col] + wb.height / 2;
-      placements.push({ id: work.id, cx: colCenters[col], cy });
-      colYs[col] += wb.height + BENTO_ROW_GAP;
-    });
-    // Centre the masonry vertically: shift everything by -avg height.
-    const totalH = Math.max(...colYs) - BENTO_ROW_GAP;
-    const yShift = -totalH / 2;
     const map = new Map<string, { x: number; y: number }>();
-    placements.forEach((p, i) => {
-      const work = ordered[i];
-      const wb = tileBounds[i];
-      const jx = (rand(i + 1) - 0.5) * 2 * BENTO_JITTER_X;
-      const jy = (rand(i + 17) - 0.5) * 2 * BENTO_JITTER_Y;
-      const tileCx = wb.minX + wb.width / 2;
-      const tileCy = wb.minY + wb.height / 2;
-      map.set(work.id, {
-        x: p.cx + jx - tileCx,
-        y: p.cy + yShift + jy - tileCy,
-      });
+    let cursor = 0;
+    BENTO_COL_COUNTS.forEach((count, col) => {
+      // Sum heights for this column so we can centre the stack.
+      let stackH = 0;
+      for (let j = 0; j < count; j++) stackH += tileBounds[cursor + j].height;
+      stackH += (count - 1) * BENTO_ROW_GAP;
+      let y = -stackH / 2;
+      for (let j = 0; j < count; j++) {
+        const idx = cursor + j;
+        const work = ordered[idx];
+        const wb = tileBounds[idx];
+        const jx = (rand(idx + 1) - 0.5) * 2 * BENTO_JITTER_X;
+        const jy = (rand(idx + 17) - 0.5) * 2 * BENTO_JITTER_Y;
+        const slotCx = colCenters[col] + jx;
+        const slotCy = y + wb.height / 2 + jy;
+        const tileCx = wb.minX + wb.width / 2;
+        const tileCy = wb.minY + wb.height / 2;
+        map.set(work.id, { x: slotCx - tileCx, y: slotCy - tileCy });
+        y += wb.height + BENTO_ROW_GAP;
+      }
+      cursor += count;
     });
     return map;
   }, [groups]);
@@ -142,20 +137,6 @@ export function Canvas() {
     },
     [deselect, dragMovedRef],
   );
-
-  // Zoom indicator: 100% = fit-all of the true works bbox. Computed
-  // once from a viewport approximation; the indicator updates as the
-  // user zooms.
-  const fitScale = useMemo(() => {
-    if (typeof window === "undefined") return 1;
-    return fitAllTransform(WORKS, {
-      x: 0,
-      y: 0,
-      w: window.innerWidth,
-      h: window.innerHeight,
-    }).scale;
-  }, []);
-  const zoomPct = Math.round((transform.scale / fitScale) * 100);
 
   return (
     <div
@@ -211,14 +192,6 @@ export function Canvas() {
         </div>
       </DispersionContext.Provider>
       <ExpandedGroup />
-      {/* Zoom indicator: bottom-right of the canvas, hidden during the
-          gallery view. Shows current scale relative to fit-all. */}
-      <div
-        aria-live="polite"
-        className="pointer-events-none absolute bottom-4 right-4 z-10 italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute"
-      >
-        {zoomPct}%
-      </div>
     </div>
   );
 }

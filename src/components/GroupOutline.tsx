@@ -53,10 +53,10 @@ function GroupOutlineImpl({
     <div
       className="absolute"
       style={{
-        left: x,
-        top: y,
-        width: w,
-        height: h,
+        left: Math.round(x),
+        top: Math.round(y),
+        width: Math.round(w),
+        height: Math.round(h),
         opacity: dispersion,
         // Wait until the tile spread is mostly done, then fade in
         // gently (longer + later than the tile motion).

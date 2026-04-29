@@ -76,14 +76,11 @@ export const useSelection = create<CanvasState>((set) => ({
   deselect: () =>
     set({ selectedId: null, selectedGroupKey: null, expandedGroupKey: null }),
   expandGroup: (key) => set({ expandedGroupKey: key, selectedGroupKey: key }),
-  // Closing the gallery returns to the group view. Re-fire the camera fit
-  // so any incidental panning that slipped through is reset. We don't touch
-  // selectedGroupKey/selectedId, so sidebars the user closed stay closed.
-  collapseGroup: () =>
-    set((s) => ({
-      expandedGroupKey: null,
-      navTargetGroupKey: s.expandedGroupKey,
-    })),
+  // Closing the gallery just unmounts it. The FLIP-close in
+  // ExpandedGroup already animates each tile back to its canvas-tile
+  // rect; the camera stays put so the user lands exactly where the
+  // group already is, no re-zoom.
+  collapseGroup: () => set({ expandedGroupKey: null }),
   navigateTo: (id) =>
     set({
       navTargetWorkId: id,

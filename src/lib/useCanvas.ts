@@ -85,16 +85,45 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
   // groups read as a small overview, then animate to fit-all on the
   // user's first wheel / pinch / click.
   const introRef = useRef(true);
+  // Soft zoom bounds (75% .. 750% of fit-all). Computed once from a
+  // viewport-derived fit; stable across the session.
+  const userScaleBounds = useMemo(() => {
+    if (typeof window === "undefined") return { min: 0.05, max: 1 };
+    const fit = fitAllTransform(works, {
+      x: 0,
+      y: 0,
+      w: window.innerWidth,
+      h: window.innerHeight,
+    }).scale;
+    return { min: fit * 0.75, max: fit * 7.5 };
+  }, [works]);
+  const clampedZoom = useCallback(
+    (
+      t: Transform,
+      rawFactor: number,
+      sx: number,
+      sy: number,
+      vp: { x: number; y: number; w: number; h: number },
+    ) => {
+      const target = Math.max(
+        userScaleBounds.min,
+        Math.min(userScaleBounds.max, t.scale * rawFactor),
+      );
+      const effective = target / t.scale;
+      return zoomAt(t, effective, sx, sy, vp);
+    },
+    [userScaleBounds],
+  );
 
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
     if (bentoBbox) {
       // Initial framing matches the user's "200%" reference: bento sits
-      // small and compact in the middle of the viewport (lots of white
-      // around it). Then auto-eases to "100%" where the bento fills.
+      // small and compact in the middle of the viewport. Then auto-eases
+      // to a tighter "100%" where the bento fills more of the screen.
       const v = viewportRect();
-      const fit = fitBboxTransform(bentoBbox, v);
+      const fit = fitBboxTransform(bentoBbox, v, 1.05);
       const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
       const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
       const farScale = fit.scale * 0.4;
@@ -162,14 +191,26 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     return true;
   }, [works, animateTransform, endIntro]);
 
-  // Slow approach from the user's "200%" wide-out framing to "100%"
-  // where the bento fills the viewport. User input cancels this via
-  // consumeIntro (whose animateTransform supersedes).
+  // Slow approach from the user's "200%" wide-out framing all the way
+  // past natural fit so the bento fills the viewport and a bit beyond.
+  // User input cancels this via consumeIntro.
   useEffect(() => {
     if (!bentoBbox) return;
     const t1 = setTimeout(() => {
       if (!introRef.current) return;
-      animateTransform(fitBboxTransform(bentoBbox, viewportRect()), 7000);
+      const v = viewportRect();
+      const fit = fitBboxTransform(bentoBbox, v, 1.05);
+      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+      const closer = fit.scale * 1.4;
+      animateTransform(
+        {
+          tx: v.w / 2 - cx * closer,
+          ty: v.h / 2 - cy * closer,
+          scale: closer,
+        },
+        7000,
+      );
     }, 800);
     return () => clearTimeout(t1);
   }, [bentoBbox, animateTransform]);
@@ -199,7 +240,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.01);
-        setTransform(zoomAt(t, factor, e.clientX, e.clientY, viewportRect()));
+        setTransform(clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()));
         return;
       }
       // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
@@ -219,7 +260,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [consumeIntro]);
+  }, [consumeIntro, clampedZoom]);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -309,7 +350,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       const factor = scaleTarget / t.scale;
       if (factor !== 1) {
         setTransform(
-          zoomAt(t, factor, pinchCenter.x, pinchCenter.y, viewportRect()),
+          clampedZoom(t, factor, pinchCenter.x, pinchCenter.y, viewportRect()),
         );
       }
     }
@@ -325,7 +366,7 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [consumeIntro]);
+  }, [consumeIntro, clampedZoom]);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {
@@ -359,13 +400,16 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
   }, [works]);
 
   const fitAll = useCallback(() => {
-    animateTransform(fitAllTransform(works, viewportRect()));
+    animateTransform(fitAllTransform(works, viewportRect()), 2200);
   }, [works, animateTransform]);
 
   const zoomToWork = useCallback(
     (work: Work, scale = 1) => {
       const v = viewportRect();
-      animateTransform(centerOn(v, work.position.x, work.position.y, scale));
+      animateTransform(
+        centerOn(v, work.position.x, work.position.y, scale),
+        2200,
+      );
     },
     [animateTransform],
   );
@@ -395,12 +439,14 @@ export function useCanvas(works: Work[], bentoBbox?: Bbox) {
         (w) => `${w.title}|${w.year}` === navTargetGroupKey,
       );
       if (groupWorks.length) {
-        // Defer one frame so the canvas container has begun its CSS transition
-        // (left/right changing as toolbar slides + right panels mount). Reading
-        // viewportRect on the next frame gives the same target dimensions, but
-        // the visual animations stay in lockstep at 400ms each.
+        // Defer one frame so the canvas container has begun its CSS
+        // transition (left/right changing as toolbar slides + right
+        // panels mount). 2200ms keeps the camera move calm and gentle.
         requestAnimationFrame(() => {
-          animateTransform(fitAllTransform(groupWorks, viewportRect(), 0.6));
+          animateTransform(
+            fitAllTransform(groupWorks, viewportRect(), 0.6),
+            2200,
+          );
         });
       }
       clearNav();

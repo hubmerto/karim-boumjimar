@@ -33,8 +33,10 @@ function WorkTileImpl({ work }: Props) {
   // offset and tiles sit at their true canvas positions.
   const offset = tileOffsets.get(work.id) ?? { x: 0, y: 0 };
   const factor = 1 - dispersion;
-  const dx = offset.x * factor;
-  const dy = offset.y * factor;
+  // Round to whole pixels so SSR and CSR string-format these identically
+  // and React doesn't fire a hydration mismatch.
+  const dx = Math.round(offset.x * factor);
+  const dy = Math.round(offset.y * factor);
   // Random per-tile fade-in (0-5500ms delay, 800-1800ms duration) so all
   // 41 tiles arrive within ~7s in a varied, non-sequential order.
   const fadeIn = useMemo(() => {
@@ -62,10 +64,10 @@ function WorkTileImpl({ work }: Props) {
         selected ? "outline outline-1 outline-offset-0 outline-selection" : ""
       }`}
       style={{
-        left: bounds.minX,
-        top: bounds.minY,
-        width: bounds.width,
-        height: bounds.height,
+        left: Math.round(bounds.minX),
+        top: Math.round(bounds.minY),
+        width: Math.round(bounds.width),
+        height: Math.round(bounds.height),
         transform: `translate(${dx}px, ${dy}px)`,
         // Slow + soft so the spread reads as a settle, not a jump.
         // Matches the camera animation duration in consumeIntro.

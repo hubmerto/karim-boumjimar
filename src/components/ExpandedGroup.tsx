@@ -12,7 +12,7 @@ import { WORKS } from "@/data/works";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 
-const TRANSITION_MS = 800;
+const TRANSITION_MS = 1500;
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 
 type Phase = "opening" | "open" | "closing";
