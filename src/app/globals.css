@@ -19,20 +19,24 @@ body {
   overscroll-behavior: none;
 }
 
-/* Lock the document viewport. All UI lives inside fixed-positioned panels,
-   so the body itself never needs to scroll. Without this, iOS Safari's
-   pull-to-refresh fires when the user drags down on the TopBar or any
-   non-canvas chrome and reloads the page mid-session. */
+/* Lock the document viewport via overflow + dvh sizing rather than
+   position: fixed. The combination of fixed body + viewport
+   user-scalable=no was crashing iOS Safari WebKit on initial paint
+   (page would briefly appear and then hit "Cannot open this page").
+   100dvh tracks the dynamic viewport so the address-bar reveal
+   doesn't push content around. */
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  position: fixed;
-  inset: 0;
+  width: 100%;
+  height: 100dvh;
   overflow: hidden;
   touch-action: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 * {

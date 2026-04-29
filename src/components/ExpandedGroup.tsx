@@ -107,8 +107,11 @@ export function ExpandedGroup() {
       el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
       el.style.opacity = "1";
     });
-    // Force reflow before transition kicks in.
-    void document.body.offsetHeight;
+    // Force reflow before transition kicks in. Scoped to the wrapper
+    // (not document.body) -- reading body.offsetHeight while the body
+    // is locked with overflow:hidden and viewport-constrained sizes
+    // can panic iOS Safari layout.
+    if (wrapperRef.current) void wrapperRef.current.offsetHeight;
     requestAnimationFrame(() => {
       items.forEach((el) => {
         el.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
