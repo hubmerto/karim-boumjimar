@@ -8,6 +8,7 @@ import {
   clampTransform,
   fitAllTransform,
   fitBboxTransform,
+  workBounds,
   type Transform,
   zoomAt,
 } from "@/lib/canvas-math";
@@ -75,6 +76,12 @@ export function useCanvas(
   bentoBbox?: Bbox,
   /** Soft pan/zoom limit (with padding) for the current state. */
   panBbox?: Bbox,
+  /** Per-tile offset from its natural position to where it actually
+   * renders post-spread. Mobile uses this to stack groups in a 2-col
+   * vertical layout; on desktop it's empty. The camera must apply it
+   * when navigating, otherwise nav-to-group lands on empty space where
+   * the bbox sits in canvas coords but no tile is rendered. */
+  destOffsets?: Map<string, { x: number; y: number }>,
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Identical initial state on server and client to keep hydration deterministic.
@@ -424,12 +431,13 @@ export function useCanvas(
   const zoomToWork = useCallback(
     (work: Work, scale = 1) => {
       const v = viewportRect();
+      const off = destOffsets?.get(work.id) ?? { x: 0, y: 0 };
       animateTransform(
-        centerOn(v, work.position.x, work.position.y, scale),
+        centerOn(v, work.position.x + off.x, work.position.y + off.y, scale),
         2200,
       );
     },
-    [animateTransform],
+    [animateTransform, destOffsets],
   );
 
   // Listen for nav requests from outside the canvas (Index dropdown, group click, etc.).
@@ -457,19 +465,36 @@ export function useCanvas(
         (w) => `${w.title}|${w.year}` === navTargetGroupKey,
       );
       if (groupWorks.length) {
+        // Build the shifted bbox: on mobile each tile renders at its
+        // workBounds plus the destination offset (2-col group stack).
+        // Without this, fitAllTransform centres the camera on the
+        // ORIGINAL canvas positions, which on mobile is empty space.
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const w of groupWorks) {
+          const wb = workBounds(w);
+          const off = destOffsets?.get(w.id) ?? { x: 0, y: 0 };
+          minX = Math.min(minX, wb.minX + off.x);
+          minY = Math.min(minY, wb.minY + off.y);
+          maxX = Math.max(maxX, wb.maxX + off.x);
+          maxY = Math.max(maxY, wb.maxY + off.y);
+        }
+        const groupBbox = { minX, minY, maxX, maxY };
         // Defer one frame so the canvas container has begun its CSS
         // transition (left/right changing as toolbar slides + right
         // panels mount). 2200ms keeps the camera move calm and gentle.
         requestAnimationFrame(() => {
           animateTransform(
-            fitAllTransform(groupWorks, viewportRect(), 0.6),
+            fitBboxTransform(groupBbox, viewportRect(), 0.6),
             2200,
           );
         });
       }
       clearNav();
     }
-  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, endIntro]);
+  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, endIntro, destOffsets]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 

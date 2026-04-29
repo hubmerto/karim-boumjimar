@@ -228,7 +228,7 @@ export function Canvas() {
     dragMovedRef,
     isAnimating,
     animDuration,
-  } = useCanvas(WORKS, bentoBbox, activeBbox);
+  } = useCanvas(WORKS, bentoBbox, activeBbox, baseOffsets);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
