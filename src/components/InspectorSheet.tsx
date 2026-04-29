@@ -5,6 +5,7 @@ import { ARTIST_NAME } from "@/data/bio";
 import { useSelection } from "@/lib/store";
 import { WORKS } from "@/data/works";
 import { DefaultView, SelectedView } from "@/components/InspectorContent";
+import { ProjectContent } from "@/components/ProjectPanel";
 
 type Snap = "peek" | "mid" | "full";
 type Mode = "default" | "index";
@@ -177,13 +178,22 @@ export function InspectorSheet() {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-5" style={{ overscrollBehavior: "contain" }}>
+        <div
+          className="flex-1 space-y-8 overflow-y-auto px-4 py-5"
+          style={{ overscrollBehavior: "contain" }}
+        >
           {mode === "index" ? (
             <SheetIndex onPick={() => setMode("default")} />
-          ) : selected ? (
-            <SelectedView work={selected} />
           ) : (
-            <DefaultView />
+            <>
+              {selected ? <SelectedView work={selected} /> : null}
+              {selectedGroupKey ? (
+                <div className="border-t border-line pt-6">
+                  <ProjectContent />
+                </div>
+              ) : null}
+              {!selected && !selectedGroupKey ? <DefaultView /> : null}
+            </>
           )}
         </div>
       </div>
