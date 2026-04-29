@@ -10,24 +10,28 @@ import { WorkTile } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 
-// Packed 7-column near-square masonry, matching the shape in the user's
-// reference SVG: 7 columns × 6 rows = 42 slots (one empty). Tiles keep
-// their natural width/height; only the centre is snapped to its slot.
-export const BENTO_COLS = 7;
-export const BENTO_ROWS = 6;
-export const BENTO_CELL_W = 850;
-export const BENTO_CELL_H = 620;
-export const BENTO_GAP = 8;
-// Per-tile jitter on bento positions (canvas-space). Mostly vertical so
-// each column reads as a slightly-staggered stack instead of a grid row.
-export const BENTO_JITTER_X = 30;
-export const BENTO_JITTER_Y = 110;
+// Diamond / rhombus arrangement: rows widen toward the middle, narrow
+// to single tiles at the points. 1+3+5+7+9+7+5+3+1 = 41 (matches WORKS).
+export const BENTO_ROW_COUNTS = [1, 3, 5, 7, 9, 7, 5, 3, 1];
+// Cells sized to comfortably fit the largest tile so neighbours don't
+// clip into each other. Tiles vary widely in aspect (480x720 portraits
+// up to 1500x900 landscapes).
+export const BENTO_CELL_W = 1700;
+export const BENTO_CELL_H = 1300;
+export const BENTO_GAP = 60;
+// Light jitter so the diamond reads as hand-laid, not a strict lattice,
+// but small enough that tiles never overlap.
+export const BENTO_JITTER_X = 40;
+export const BENTO_JITTER_Y = 40;
 
-// Pre-computed bento bbox in canvas space (centred on origin).
+// Pre-computed diamond bbox in canvas space (centred on origin). Width
+// is set by the widest row; height by the number of rows.
+const BENTO_MAX_COLS = Math.max(...BENTO_ROW_COUNTS);
 const BENTO_TOTAL_W =
-  BENTO_COLS * BENTO_CELL_W + (BENTO_COLS - 1) * BENTO_GAP;
+  BENTO_MAX_COLS * BENTO_CELL_W + (BENTO_MAX_COLS - 1) * BENTO_GAP;
 const BENTO_TOTAL_H =
-  BENTO_ROWS * BENTO_CELL_H + (BENTO_ROWS - 1) * BENTO_GAP;
+  BENTO_ROW_COUNTS.length * BENTO_CELL_H +
+  (BENTO_ROW_COUNTS.length - 1) * BENTO_GAP;
 const BENTO_BBOX = {
   minX: -BENTO_TOTAL_W / 2,
   maxX: BENTO_TOTAL_W / 2,
@@ -74,22 +78,28 @@ export function Canvas() {
       return by - ay || a.label.localeCompare(b.label);
     });
     for (const g of sorted) ordered.push(...g.works);
-    // Round-robin tiles into columns so each column gets a similar
-    // number, then offset within each column with vertical jitter.
+    // Build the diamond's flat list of slots (row, col-within-row).
+    type Slot = { row: number; col: number; rowCount: number };
+    const slots: Slot[] = [];
+    BENTO_ROW_COUNTS.forEach((rowCount, row) => {
+      for (let col = 0; col < rowCount; col++) {
+        slots.push({ row, col, rowCount });
+      }
+    });
+    const middleRow = (BENTO_ROW_COUNTS.length - 1) / 2;
+    const map = new Map<string, { x: number; y: number }>();
     const rand = (seed: number) => {
       const x = Math.sin(seed * 9301 + 49297) * 233280;
       return x - Math.floor(x);
     };
-    const map = new Map<string, { x: number; y: number }>();
-    const colCenter = (BENTO_COLS - 1) / 2;
-    const rowCenter = (BENTO_ROWS - 1) / 2;
     ordered.forEach((work, i) => {
-      const col = i % BENTO_COLS;
-      const row = Math.floor(i / BENTO_COLS);
+      const slot = slots[i];
+      if (!slot) return;
       const jx = (rand(i + 1) - 0.5) * 2 * BENTO_JITTER_X;
       const jy = (rand(i + 17) - 0.5) * 2 * BENTO_JITTER_Y;
-      const slotCx = (col - colCenter) * (BENTO_CELL_W + BENTO_GAP) + jx;
-      const slotCy = (row - rowCenter) * (BENTO_CELL_H + BENTO_GAP) + jy;
+      const slotCx =
+        (slot.col - (slot.rowCount - 1) / 2) * (BENTO_CELL_W + BENTO_GAP) + jx;
+      const slotCy = (slot.row - middleRow) * (BENTO_CELL_H + BENTO_GAP) + jy;
       const wb = workBounds(work);
       const tileCx = wb.minX + wb.width / 2;
       const tileCy = wb.minY + wb.height / 2;
