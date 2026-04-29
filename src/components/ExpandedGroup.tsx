@@ -242,7 +242,10 @@ export function ExpandedGroup() {
                 src={asset(img.src)}
                 alt={img.alt}
                 draggable={false}
-                className="block max-h-[88%] w-auto select-none"
+                // h-[88%] (not max-h) so all items render at the same height
+                // regardless of native dimensions. Source images are 800px max
+                // for memory; minor upscaling on landscape is acceptable.
+                className="block h-[88%] w-auto select-none"
               />
             </div>
           );
