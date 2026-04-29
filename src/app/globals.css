@@ -16,15 +16,23 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  overscroll-behavior: none;
 }
 
+/* Lock the document viewport. All UI lives inside fixed-positioned panels,
+   so the body itself never needs to scroll. Without this, iOS Safari's
+   pull-to-refresh fires when the user drags down on the TopBar or any
+   non-canvas chrome and reloads the page mid-session. */
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
 }
 
 * {

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Libre_Baskerville } from "next/font/google";
 import "./globals.css";
 
@@ -27,6 +27,17 @@ const OG_IMAGES = [
   // Square for iMessage tiny thumbs and platforms that re-crop to 1:1.
   { url: "/og-image-square.png", width: 1200, height: 1200 },
 ];
+
+// Disable the browser's own pinch-zoom: the canvas has its own pan/zoom
+// and the two compete on iOS. viewportFit: "cover" lets fixed UI extend
+// under the notch / home indicator on modern iPhones.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

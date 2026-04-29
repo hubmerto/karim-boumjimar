@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# image source archive — full-res originals not committed
+# image source archive - full-res originals not committed
 /public/images/originals/
+
+# local tool config (preview servers, agent settings)
+/.claude/
