@@ -79,35 +79,39 @@ function WorkTileImpl({ work }: Props) {
         transform: `translate(${dx}px, ${dy}px)`,
         // Slow + soft so the spread reads as a settle, not a jump.
         // Duration matches the camera nav animation (2800ms) so tiles
-        // and camera settle together.
+        // and camera settle together. No willChange: 41 always-promoted
+        // layers was contributing to iOS Safari OOM kills on mount.
         transition: "transform 2800ms cubic-bezier(0.22, 1, 0.36, 1)",
-        willChange: "transform",
       }}
     >
       {/* Inner wrapper carries the fade-in animation so it doesn't
           conflict with the parent button's bento-spread transform.
           Inline opacity:0 keeps the tile hidden until the splash is gone
-          and the animation gets applied (which fades it back in). */}
+          and the animation gets applied (which fades it back in). The
+          img itself only mounts after the splash so the browser doesn't
+          fetch + decode all 41 sources during the initial paint -- iOS
+          Safari was OOM-killing the tab on first load otherwise. */}
       <span
         className="block h-full w-full"
         style={{
           opacity: 0,
           animation: innerAnimation,
-          willChange: "opacity",
         }}
       >
-        {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={asset(img.src)}
-          alt={img.alt}
-          width={img.width}
-          height={img.height}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          className="block h-full w-full object-cover"
-        />
+        {splashGone ? (
+          // Plain <img> - next/image fights with arbitrary 2D transforms on the parent.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={asset(img.src)}
+            alt={img.alt}
+            width={img.width}
+            height={img.height}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="block h-full w-full object-cover"
+          />
+        ) : null}
       </span>
     </button>
   );
