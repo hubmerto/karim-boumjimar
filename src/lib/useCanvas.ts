@@ -261,6 +261,52 @@ export function useCanvas(
     }
   }, [transform.scale, bentoFit, dispersion]);
 
+  // Drive gallery open/close from zoom level when a group is focused.
+  // Past where the group "just fits" the visible canvas, open the gallery.
+  // Pull back below 70% of fit and the gallery collapses again. Hysteresis
+  // keeps it from flickering near the threshold.
+  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
+  const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
+  const expandGroup = useSelection((s) => s.expandGroup);
+  const collapseGroup = useSelection((s) => s.collapseGroup);
+  useEffect(() => {
+    if (!selectedGroupKey) return;
+    const groupWorks = works.filter(
+      (w) => `${w.title}|${w.year}` === selectedGroupKey,
+    );
+    if (!groupWorks.length) return;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const w of groupWorks) {
+      const wb = workBounds(w);
+      const off = destOffsets?.get(w.id) ?? { x: 0, y: 0 };
+      minX = Math.min(minX, wb.minX + off.x);
+      minY = Math.min(minY, wb.minY + off.y);
+      maxX = Math.max(maxX, wb.maxX + off.x);
+      maxY = Math.max(maxY, wb.maxY + off.y);
+    }
+    const v = viewportRect();
+    const groupRawFit = Math.min(
+      v.w / Math.max(1, maxX - minX),
+      v.h / Math.max(1, maxY - minY),
+    );
+    if (!expandedGroupKey && transform.scale > groupRawFit * 1.0) {
+      expandGroup(selectedGroupKey);
+    } else if (expandedGroupKey && transform.scale < groupRawFit * 0.7) {
+      collapseGroup();
+    }
+  }, [
+    transform.scale,
+    selectedGroupKey,
+    expandedGroupKey,
+    works,
+    destOffsets,
+    expandGroup,
+    collapseGroup,
+  ]);
+
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
   // We DO clamp scale on resize so the user doesn't get stranded with empty space.
