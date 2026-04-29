@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Libre_Baskerville } from "next/font/google";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const libre = Libre_Baskerville({
@@ -39,10 +40,18 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  // Disable iOS auto-linking of dates / numbers / addresses in text.
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+  },
   // Favicon is auto-discovered from src/app/icon.svg, so basePath is
   // applied correctly without us configuring icons here.
   openGraph: {
@@ -68,7 +77,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={libre.variable}>
-      <body>{children}</body>
+      <body>
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </body>
     </html>
   );
 }
