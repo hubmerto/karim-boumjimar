@@ -18,11 +18,6 @@ type CanvasState = {
    * mobile menu can open it too. */
   indexOpen: boolean;
   setIndexOpen: (open: boolean) => void;
-  /** True until the user's first interaction with the canvas. Drives the
-   * "blob" opening: groups sit in a compact grid near the centre, then
-   * snap to their true positions on first wheel/click. */
-  intro: boolean;
-  endIntro: () => void;
   select: (id: string | null) => void;
   /** Click a tile: highlights that tile, pins its group, and zooms to the group. */
   selectWork: (id: string, groupKey: string) => void;
@@ -54,8 +49,6 @@ export const useSelection = create<CanvasState>((set) => ({
   navTargetGroupKey: null,
   indexOpen: false,
   setIndexOpen: (open) => set({ indexOpen: open }),
-  intro: true,
-  endIntro: () => set({ intro: false }),
   select: (id) => set({ selectedId: id }),
   selectWork: (id, groupKey) =>
     set({

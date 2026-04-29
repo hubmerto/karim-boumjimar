@@ -86,9 +86,10 @@ export function useCanvas(works: Work[]) {
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
-    // Camera framed for the true bbox; tiles render compressed via the
-    // intro dispersion until the first user interaction.
-    setTransform(fitAllTransform(works, viewportRect()));
+    // Open at the blob view: fit-all with much heavier padding so the
+    // bbox occupies less of the viewport and the groups read as a
+    // constellation in white space.
+    setTransform(fitAllTransform(works, viewportRect(), 0.35));
   }, [works]);
 
   // When the left toolbar slides out / back in, the canvas container's left
@@ -123,16 +124,15 @@ export function useCanvas(works: Work[]) {
     animateTimerRef.current = setTimeout(() => setIsAnimating(false), 420);
   }, []);
 
-  // First-interaction handler: tell the store to end the intro so tiles
-  // spread to their true positions. Returns the previous intro state so
-  // callers can decide whether to apply their input or swallow it.
-  const endIntro = useSelection((s) => s.endIntro);
+  // First-interaction handler: animate from the blob view to the working
+  // fit-all view. Returns true if the intro was just consumed (caller
+  // should skip applying its own input this tick).
   const consumeIntro = useCallback(() => {
     if (!introRef.current) return false;
     introRef.current = false;
-    endIntro();
+    animateTransform(fitAllTransform(works, viewportRect()));
     return true;
-  }, [endIntro]);
+  }, [works, animateTransform]);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -152,10 +152,10 @@ export function useCanvas(works: Work[]) {
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
-      // First wheel/pinch ends the intro: tiles snap from blob layout
-      // to their true positions over 400ms. The wheel's own delta is
-      // applied normally on top, so the camera also nudges.
-      consumeIntro();
+      // Wheel zoom is the natural way out of the blob view — let scale
+      // rise smoothly so the dispersion follows. Just mark the intro
+      // consumed so further refits don't auto-fire, but don't snap.
+      introRef.current = false;
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       if (e.ctrlKey || e.metaKey) {
@@ -195,8 +195,9 @@ export function useCanvas(works: Work[]) {
       const isLeft = isMouse && e.button === 0;
       // Skip non-left/middle mouse buttons (right-click etc).
       if (isMouse && !isLeft && !isMiddle) return;
-      // Any click on the canvas counts as a first interaction.
-      consumeIntro();
+      // First pan-drag out of the blob view: snap to fit-all and
+      // skip starting a drag this tick.
+      if (!onWork && consumeIntro()) return;
       // For left-click, let tile clicks through unless space is held.
       if (isLeft && onWork && !spaceHeld) return;
       // Middle-click should always pan, even on a tile (Figma).
@@ -249,7 +250,7 @@ export function useCanvas(works: Work[]) {
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length === 2) {
         e.preventDefault();
-        consumeIntro();
+        if (consumeIntro()) return;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
@@ -339,12 +340,8 @@ export function useCanvas(works: Work[]) {
   useEffect(() => {
     if (navTargetWorkId || navTargetGroupKey) {
       // First nav out of the blob view counts as the "first interaction".
-      // The nav animation below transitions us straight to the target,
-      // and endIntro tells WorkTile / GroupOutline to spread.
-      if (introRef.current) {
-        introRef.current = false;
-        endIntro();
-      }
+      // The nav animation below transitions us straight to the target.
+      introRef.current = false;
     }
     if (navTargetWorkId) {
       const target = works.find((w) => w.id === navTargetWorkId);
@@ -367,7 +364,7 @@ export function useCanvas(works: Work[]) {
       }
       clearNav();
     }
-  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, endIntro]);
+  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 
