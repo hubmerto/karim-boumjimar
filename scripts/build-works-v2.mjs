@@ -23,59 +23,57 @@ const imported = JSON.parse(
 // so they're wider but not as tall, and rows are spaced ~3600 apart so
 // even the biggest cluster doesn't overlap its neighbour above/below.
 const CLUSTERS = {
-  // Top row (y ~ -3200) -- 2026 / smaller shows
-  beauty:          { x: -3400, y: -3200, tile: 460, cols: 2, medium: "ceramic",
+  // Row 1 (y -4500) -- 5 smaller / 2026 shows spread across
+  beauty:          { x: -6000, y: -4500, tile: 460, cols: 2, medium: "ceramic",
                      label: "Beauty is the Best Defense", year: 2026,
                      venue: "Jessica Silverman", city: "San Francisco",
                      date: "5 March - 11 April 2026", photo: "Phillip Maisel" },
-  liljevalchs:     { x: -1300, y: -3200, tile: 440, cols: 3, medium: "ceramic",
+  liljevalchs:     { x: -3500, y: -4500, tile: 440, cols: 3, medium: "ceramic",
                      label: "Stockholm Cosmologies", year: 2026,
                      venue: "Liljevalchs Konsthall", city: "Stockholm",
                      date: "21 Nov 2025 - 11 Jan 2026" },
-  birdsofparadise: { x:  1100, y: -3200, tile: 440, cols: 3, medium: "ceramic",
+  birdsofparadise: { x:     0, y: -4500, tile: 440, cols: 3, medium: "ceramic",
                      label: "Birds of Paradise", year: 2026,
                      venue: "Viborg Kunsthal", city: "Viborg",
                      date: "23 Jan - 10 May 2026" },
-  deepcuts:        { x:  3400, y: -3200, tile: 460, cols: 2, medium: "ceramic",
+  deepcuts:        { x:  3000, y: -4500, tile: 460, cols: 2, medium: "ceramic",
                      label: "Deep Cuts", year: 2025,
                      venue: "CFHILL", city: "Stockholm",
                      date: "14 Nov - 30 Dec 2025" },
+  glory:           { x:  6000, y: -4500, tile: 420, cols: 3, medium: "ceramic",
+                     label: "Glory on Earth", year: 2024,
+                     venue: "O Days Festival", city: "Copenhagen", photo: "Robert Damisch" },
 
-  // Middle row (y ~ 0) -- the headline solos
-  moestings:       { x: -3400, y:     0, tile: 460, cols: 4, medium: "ceramic",
+  // Row 2 (y 0) -- 3 big headline solos, well-spaced
+  moestings:       { x: -4500, y:     0, tile: 460, cols: 4, medium: "ceramic",
                      label: "Bodies Under Construction", year: 2026,
                      venue: "Møstings, The Frederiksberg Museums", city: "Copenhagen",
                      date: "28 March - 7 June 2026", photo: "Mikkel Kaldal" },
-  pandemonium:     { x:   200, y:     0, tile: 540, cols: 4, medium: "ceramic",
+  pandemonium:     { x:     0, y:     0, tile: 540, cols: 4, medium: "ceramic",
                      label: "Pandemonium Paradiso", year: 2025,
                      venue: "O-Overgaden Institute of Contemporary Art", city: "Copenhagen",
                      date: "29 Aug - 26 Oct 2025", photo: "David Stjernholm" },
-  rites:           { x:  3500, y:     0, tile: 460, cols: 3, medium: "ceramic",
+  rites:           { x:  4500, y:     0, tile: 460, cols: 3, medium: "ceramic",
                      label: "Rites of Affection", year: 2026,
                      venue: "Malva Museum", city: "Lahti",
                      date: "10 April - 13 September 2026", photo: "Juuso Noronkoski" },
 
-  // Bottom-middle row (y ~ 3300) -- drawings + symbiosis + glory
-  drawing:         { x: -3400, y:  3300, tile: 440, cols: 3, medium: "drawing",
+  // Row 3 (y 4500) -- 5 collaborative / earlier shows
+  drawing:         { x: -6500, y:  4500, tile: 440, cols: 3, medium: "drawing",
                      label: "Drawings", year: 2025 },
-  symbiosis:       { x:  -500, y:  3300, tile: 480, cols: 3, medium: "ceramic",
+  symbiosis:       { x: -3500, y:  4500, tile: 480, cols: 3, medium: "ceramic",
                      label: "Symbiosis (MFA)", year: 2025,
                      venue: "Kunsthal Charlottenborg / Royal Danish Academy", city: "Copenhagen",
                      date: "12 April - 10 August 2025", photo: "David Stjernholm" },
-  glory:           { x:  2500, y:  3300, tile: 420, cols: 3, medium: "ceramic",
-                     label: "Glory on Earth", year: 2024,
-                     venue: "O Days Festival", city: "Copenhagen", photo: "Robert Damisch" },
-
-  // Bottom row (y ~ 6000) -- earlier / collaborative shows
-  kultuur:         { x: -3400, y:  6000, tile: 420, cols: 3, medium: "ceramic",
+  kultuur:         { x:  -500, y:  4500, tile: 420, cols: 3, medium: "ceramic",
                      label: "Kultuur", year: 2025,
                      venue: "TINA Gallery", city: "London",
                      date: "16 January - 1 March 2025" },
-  fearandfauna:    { x:  -500, y:  6000, tile: 420, cols: 3, medium: "ceramic",
+  fearandfauna:    { x:  2500, y:  4500, tile: 420, cols: 3, medium: "ceramic",
                      label: "Spring Has Arrived", year: 2023,
                      venue: "Dag H 42 / ARIEL - Feminisms in the Aesthetics", city: "Copenhagen",
                      date: "4 May - 17 June 2023", photo: "Malle Madsen" },
-  queer:           { x:  2300, y:  6000, tile: 420, cols: 3, medium: "ceramic",
+  queer:           { x:  5500, y:  4500, tile: 420, cols: 3, medium: "ceramic",
                      label: "Queer Ecologies", year: 2023,
                      venue: "Centre d'Art La Panera", city: "Lleida",
                      date: "28 Oct 2023 - 28 Jan 2024" },
@@ -90,10 +88,14 @@ function hashJitter(seed) {
   return ((h >>> 0) / 4294967295) * 2 - 1;
 }
 
+// Max tile aspect (portrait): 800/533 ≈ 1.5. Cell height accommodates the
+// tallest possible tile so portrait images don't overflow into the row below.
+const MAX_ASPECT = 1.55;
+
 function gridSlot(n, total, cols, tile) {
   const gap = Math.round(tile * 0.22);
   const cellW = tile + gap;
-  const cellH = tile + gap;
+  const cellH = Math.round(tile * MAX_ASPECT) + gap;
   const rows = Math.ceil(total / cols);
   const col = n % cols;
   const row = Math.floor(n / cols);
@@ -101,7 +103,7 @@ function gridSlot(n, total, cols, tile) {
   const gridH = rows * cellH - gap;
   return {
     dx: col * cellW - gridW / 2 + tile / 2,
-    dy: row * cellH - gridH / 2 + tile / 2,
+    dy: row * cellH - gridH / 2 + Math.round(tile * MAX_ASPECT) / 2,
   };
 }
 
@@ -234,7 +236,7 @@ for (const exhibition of imported) {
   const total = exhibition.images.length;
   const gap = Math.round(c.tile * 0.22);
   const cellW = c.tile + gap;
-  const cellH = c.tile + gap;
+  const cellH = Math.round(c.tile * MAX_ASPECT) + gap;
   const rows = Math.ceil(total / c.cols);
   const usedCols = Math.min(c.cols, total);
   const gridW = usedCols * cellW - gap;
