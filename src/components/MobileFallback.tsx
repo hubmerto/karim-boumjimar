@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { ARTIST_NAME, BIO_PARAGRAPHS, ABOUT_PARAGRAPHS } from "@/data/bio";
+import {
+  CV_BIO,
+  CV_COLLECTIONS,
+  CV_EDUCATION,
+  CV_GRANTS,
+  CV_GROUP,
+  CV_PERFORMANCES,
+  CV_PRESS,
+  CV_RESIDENCIES,
+  CV_SOLO,
+  type CvEntry,
+} from "@/data/cv";
 import { WORKS } from "@/data/works";
 import { asset } from "@/lib/paths";
 
@@ -9,9 +21,9 @@ import { asset } from "@/lib/paths";
  * Mobile-safe fallback. The pan/zoom canvas was crashing iOS Safari on
  * mount; this renders the same works as a normal vertical-scroll grid
  * with no compositor tricks. Tap a tile to open it fullscreen, tap to
- * dismiss. About / bio sections live in a tab strip below the works.
+ * dismiss. Bio / CV / About sections live in a tab strip.
  */
-type Tab = "works" | "about" | "bio";
+type Tab = "works" | "about" | "bio" | "cv";
 
 export function MobileFallback() {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -36,7 +48,7 @@ export function MobileFallback() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={asset("/logo.svg")} alt={ARTIST_NAME} className="h-5 w-auto" draggable={false} />
         <nav className="flex gap-3 text-[11px] italic font-bold uppercase tracking-[0.1em] text-mute">
-          {(["works", "about", "bio"] as Tab[]).map((t) => (
+          {(["works", "bio", "cv", "about"] as Tab[]).map((t) => (
             <button
               key={t}
               type="button"
@@ -53,8 +65,10 @@ export function MobileFallback() {
         <WorksGrid onOpen={(id) => setOpenId(id)} />
       ) : tab === "about" ? (
         <Prose paragraphs={ABOUT_PARAGRAPHS} />
-      ) : (
+      ) : tab === "bio" ? (
         <Prose paragraphs={BIO_PARAGRAPHS} />
+      ) : (
+        <CVPanel />
       )}
 
       {open ? <FullscreenViewer work={open} onClose={() => setOpenId(null)} /> : null}
@@ -105,6 +119,72 @@ function Prose({ paragraphs }: { paragraphs: readonly string[] }) {
         <p key={i}>{p}</p>
       ))}
     </article>
+  );
+}
+
+function CVPanel() {
+  return (
+    <div className="px-5 py-6 pb-12 text-ink">
+      <header className="flex items-end justify-between gap-3 border-b border-line pb-4">
+        <div>
+          <div className="text-[15px] font-medium">{ARTIST_NAME}</div>
+          <div className="mt-1 text-[12px] text-mute">
+            b. {CV_BIO.born}, {CV_BIO.nationality}.
+          </div>
+        </div>
+        <a
+          href={asset("/cv.pdf")}
+          download="Karim_Boumjimar_CV.pdf"
+          className="inline-flex items-center gap-1 border border-ink px-3 py-1.5 text-[10px] italic font-bold uppercase tracking-[0.1em] text-ink hover:bg-ink hover:text-canvas"
+        >
+          Download CV <span aria-hidden>↓</span>
+        </a>
+      </header>
+      <CvSection label="Education" entries={CV_EDUCATION} />
+      <CvSection label="Solo Exhibitions" entries={CV_SOLO} />
+      <CvSection label="Group Exhibitions" entries={CV_GROUP} />
+      <CvSection label="Performances" entries={CV_PERFORMANCES} />
+      <CvSection label="Residencies" entries={CV_RESIDENCIES} />
+      <CvSection label="Grants & Prizes" entries={CV_GRANTS} />
+      <section className="mt-6 border-t border-line pt-4">
+        <h3 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+          Public Collections
+        </h3>
+        <ul className="mt-2 space-y-1 text-[13px]">
+          {CV_COLLECTIONS.map((c) => (
+            <li key={c}>{c}</li>
+          ))}
+        </ul>
+      </section>
+      <CvSection label="Press" entries={CV_PRESS} />
+    </div>
+  );
+}
+
+function CvSection({ label, entries }: { label: string; entries: CvEntry[] }) {
+  return (
+    <section className="mt-6 border-t border-line pt-4">
+      <h3 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+        {label}
+      </h3>
+      <ul className="mt-2 space-y-2 text-[13px] leading-[1.45]">
+        {entries.map((e, i) => (
+          <li key={i} className="grid grid-cols-[56px_1fr] items-baseline gap-x-2">
+            <span className="text-mute tabular-nums">{e.year}</span>
+            <span>
+              <span>{e.title}</span>
+              {e.venue ? <span>, {e.venue}</span> : null}
+              {e.city ? (
+                <span className="text-mute">
+                  , {e.city}
+                  {e.country ? `, ${e.country}` : ""}
+                </span>
+              ) : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
