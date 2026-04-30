@@ -10,14 +10,16 @@ import { WorkTile } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 
-// 7-column masonry matching the Figma reference. Column counts taper
-// toward the edges so the silhouette is a soft mound, not a square.
-// Sum = 41 (matches WORKS.length).
-export const BENTO_COL_COUNTS_DESKTOP = [3, 5, 9, 9, 6, 5, 4];
-// 9-column diamond for portrait phones. Column counts taper symmetrically
-// from a 9-tall middle column out to single-tile edges, producing a
-// rhombus silhouette. Sum = 41.
-export const BENTO_COL_COUNTS_MOBILE = [1, 3, 5, 7, 9, 7, 5, 3, 1];
+// Diamond layouts. Column counts taper symmetrically from a tall middle
+// column out toward shorter edges, producing a rhombus silhouette.
+// Both arrays sum to WORKS.length (123); change them together if the
+// number of works changes, otherwise the bento will leave tiles at
+// position (0, 0).
+//
+// Desktop is a wider diamond (17 cols) so the silhouette reads horizontal
+// in landscape; mobile is taller (11 cols) so it fits a phone in portrait.
+export const BENTO_COL_COUNTS_DESKTOP = [3, 4, 5, 6, 7, 8, 10, 12, 13, 12, 10, 8, 7, 6, 5, 4, 3];
+export const BENTO_COL_COUNTS_MOBILE  = [8, 10, 11, 12, 13, 15, 13, 12, 11, 10, 8];
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
