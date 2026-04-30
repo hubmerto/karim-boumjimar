@@ -12,17 +12,17 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Mobile gets a vertical-scroll fallback because the canvas was
- * crashing iOS Safari on mount. ?canvas=1 in the URL forces the canvas
- * on mobile too, for testing.
+ * The canvas now works on mobile (the iOS body-style fix did it), so
+ * the canvas is the default everywhere. ?simple=1 forces the
+ * vertical-scroll fallback as an escape hatch if the canvas regresses.
  */
-type Mode = "loading" | "mobile" | "desktop";
+type Mode = "loading" | "simple" | "canvas";
 
 function detectMode(): Mode {
   if (typeof window === "undefined") return "loading";
-  const force = new URLSearchParams(window.location.search).get("canvas");
-  if (force === "1") return "desktop";
-  return window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop";
+  const force = new URLSearchParams(window.location.search).get("simple");
+  if (force === "1") return "simple";
+  return "canvas";
 }
 
 export default function Home() {
@@ -38,9 +38,8 @@ export default function Home() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // Loading shell: just the splash + crash overlay until we know which
-  // mode to render. Avoids mounting the heavy canvas on a phone where it
-  // would crash before we get a chance to swap to the fallback.
+  // Loading shell: just the splash + crash overlay between SSR and the
+  // first useEffect tick (which decides simple vs canvas).
   if (mode === "loading") {
     return (
       <>
@@ -50,7 +49,7 @@ export default function Home() {
     );
   }
 
-  if (mode === "mobile") {
+  if (mode === "simple") {
     return (
       <>
         <MobileFallback />

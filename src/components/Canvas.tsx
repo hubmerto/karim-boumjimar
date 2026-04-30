@@ -14,10 +14,10 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // toward the edges so the silhouette is a soft mound, not a square.
 // Sum = 41 (matches WORKS.length).
 export const BENTO_COL_COUNTS_DESKTOP = [3, 5, 9, 9, 6, 5, 4];
-// 8-column mound for portrait phones. The wider distribution makes
-// the bento read more horizontally so the silhouette doesn't overflow
-// the phone's portrait height. Sum = 41.
-export const BENTO_COL_COUNTS_MOBILE = [3, 5, 6, 7, 7, 6, 4, 3];
+// 9-column diamond for portrait phones. Column counts taper symmetrically
+// from a 9-tall middle column out to single-tile edges, producing a
+// rhombus silhouette. Sum = 41.
+export const BENTO_COL_COUNTS_MOBILE = [1, 3, 5, 7, 9, 7, 5, 3, 1];
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
