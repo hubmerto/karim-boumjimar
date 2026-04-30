@@ -543,10 +543,11 @@ export function useCanvas(
         // Defer one frame so the canvas container has begun its CSS
         // transition (left/right changing as toolbar slides + right
         // panels mount). 2800ms is the sweet spot: calm without feeling
-        // sluggish on mobile.
+        // sluggish. fitPadding 0.92 lets the focused group fill almost
+        // the whole visible canvas area instead of sitting small.
         requestAnimationFrame(() => {
           animateTransform(
-            fitBboxTransform(groupBbox, viewportRect(), 0.6),
+            fitBboxTransform(groupBbox, viewportRect(), 0.92),
             2800,
           );
         });
