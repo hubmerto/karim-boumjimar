@@ -8,7 +8,8 @@ import { useSelection } from "@/lib/store";
 type ProjectData = {
   title: string;
   year: number | string;
-  description: string;
+  body: string;
+  credits: string[];
   venue?: string;
   city?: string;
   photoCredit?: string;
@@ -28,7 +29,8 @@ function useProjectData(): ProjectData | null {
     return {
       title,
       year,
-      description,
+      body: description.body,
+      credits: description.credits,
       venue: sample?.venue,
       city: sample?.city,
       photoCredit: sample?.photoCredit,
@@ -68,9 +70,20 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
         </div>
       </div>
       <div className="space-y-3 whitespace-pre-line text-[13px] leading-[1.6] text-ink">
-        {data.description}
+        {data.body}
       </div>
-      {data.photoCredit ? (
+      {data.credits.length > 0 ? (
+        <div className="border-t border-line pt-4">
+          <div className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+            Credits
+          </div>
+          <div className="mt-2 space-y-1 text-[13px] leading-[1.55] text-ink">
+            {data.credits.map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
+          </div>
+        </div>
+      ) : data.photoCredit ? (
         <div className="border-t border-line pt-4">
           <div className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
             Photography
