@@ -4,7 +4,6 @@ import { useSelection } from "@/lib/store";
 import { Canvas } from "@/components/Canvas";
 import { RightStack } from "@/components/RightStack";
 import { BioView } from "@/components/views/BioView";
-import { CVView } from "@/components/views/CVView";
 import { AboutView } from "@/components/views/AboutView";
 import { NewsView } from "@/components/views/NewsView";
 import { GrantView } from "@/components/views/GrantView";
@@ -21,7 +20,6 @@ export function ViewSwitcher() {
     );
   }
   if (view === "bio") return <BioView />;
-  if (view === "cv") return <CVView />;
   if (view === "about") return <AboutView />;
   if (view === "news") return <NewsView />;
   if (view === "grant") return <GrantView />;

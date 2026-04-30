@@ -23,7 +23,7 @@ import { asset } from "@/lib/paths";
  * with no compositor tricks. Tap a tile to open it fullscreen, tap to
  * dismiss. Bio / CV / About sections live in a tab strip.
  */
-type Tab = "works" | "about" | "bio" | "cv";
+type Tab = "works" | "about" | "bio";
 
 export function MobileFallback() {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function MobileFallback() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={asset("/logo.svg")} alt={ARTIST_NAME} className="h-5 w-auto" draggable={false} />
         <nav className="flex gap-3 text-[11px] italic font-bold uppercase tracking-[0.1em] text-mute">
-          {(["works", "bio", "cv", "about"] as Tab[]).map((t) => (
+          {(["works", "bio", "about"] as Tab[]).map((t) => (
             <button
               key={t}
               type="button"
@@ -65,10 +65,12 @@ export function MobileFallback() {
         <WorksGrid onOpen={(id) => setOpenId(id)} />
       ) : tab === "about" ? (
         <Prose paragraphs={ABOUT_PARAGRAPHS} />
-      ) : tab === "bio" ? (
-        <Prose paragraphs={BIO_PARAGRAPHS} />
       ) : (
-        <CVPanel />
+        // Bio tab stacks the bio paragraphs and the CV vertically.
+        <>
+          <Prose paragraphs={BIO_PARAGRAPHS} />
+          <CVPanel />
+        </>
       )}
 
       {open ? <FullscreenViewer work={open} onClose={() => setOpenId(null)} /> : null}
