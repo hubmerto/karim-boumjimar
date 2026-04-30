@@ -14,7 +14,7 @@ export function TextView({
 }) {
   return (
     <main className="fixed inset-0 top-12 right-0 z-0 overflow-y-auto bg-canvas md:left-[200px]">
-      <div className="mx-auto max-w-[680px] px-6 py-12 md:px-12 md:py-16">
+      <div className="max-w-[680px] px-6 py-12 md:px-10 md:py-14">
         <h1 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute mb-4">
           {title}
         </h1>
