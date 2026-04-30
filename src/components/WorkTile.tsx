@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import type { Work } from "@/types/work";
 import { workBounds } from "@/lib/canvas-math";
 import { useDispersion } from "@/lib/dispersion";
@@ -42,18 +42,34 @@ function WorkTileImpl({ work }: Props) {
   const dy = Math.round(
     introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
   );
-  // tile-fade-in: drifty entrance with widely varied delay (0-5s) and
+  // Per-tile timing: drifty entrance with widely varied delay (0-5s) and
   // duration (1-2s) so the tiles appear in different random spots and
   // at different speeds, with the last one settling around 7s after
-  // the splash clears. Only applied once the splash has cleared,
-  // otherwise the animation runs invisibly behind it.
+  // the splash clears.
+  const { fadeDelay, fadeDuration } = useMemo(() => {
+    const { r1, r2 } = tileSeed(work.id);
+    return {
+      fadeDelay: Math.round(r1 * 5000),
+      fadeDuration: Math.round(1000 + r2 * 1000),
+    };
+  }, [work.id]);
+
   const innerAnimation = useMemo(() => {
     if (!splashGone) return undefined;
-    const { r1, r2 } = tileSeed(work.id);
-    const fadeDelay = Math.round(r1 * 5000);
-    const fadeDuration = Math.round(1000 + r2 * 1000);
     return `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`;
-  }, [splashGone, work.id]);
+  }, [splashGone, fadeDelay, fadeDuration]);
+
+  // Mount the <img> at the same moment the tile starts to fade in. With
+  // 123 tiles, mounting them all at once when the splash clears spikes
+  // memory and crashes iOS Safari. Staggering by the same per-tile delay
+  // means the browser fetches + decodes images at a trickle (~25/sec),
+  // never holding too much decoded data at once.
+  const [imgMounted, setImgMounted] = useState(false);
+  useEffect(() => {
+    if (!splashGone) return;
+    const t = setTimeout(() => setImgMounted(true), fadeDelay);
+    return () => clearTimeout(t);
+  }, [splashGone, fadeDelay]);
 
   return (
     <button
@@ -99,7 +115,7 @@ function WorkTileImpl({ work }: Props) {
           animation: innerAnimation,
         }}
       >
-        {splashGone ? (
+        {imgMounted ? (
           // Plain <img> - next/image fights with arbitrary 2D transforms on the parent.
           // eslint-disable-next-line @next/next/no-img-element
           <img
