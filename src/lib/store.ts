@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type View = "exhibitions" | "news" | "bio" | "about" | "grant";
+export type View = "exhibitions" | "news" | "bio" | "cv" | "about" | "grant";
 
 type CanvasState = {
   view: View;

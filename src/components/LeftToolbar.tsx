@@ -8,6 +8,7 @@ const ITEMS: { key: View; label: string }[] = [
   { key: "exhibitions", label: "Exhibitions" },
   { key: "news", label: "News" },
   { key: "bio", label: "Bio" },
+  { key: "cv", label: "CV" },
   { key: "about", label: "About" },
   { key: "grant", label: "Grant" },
 ];
