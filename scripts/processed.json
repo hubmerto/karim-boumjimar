@@ -1,289 +1,740 @@
 [
   {
     "id": "beauty-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 94838,
-    "outputBytes": 76246
+    "slug": "beauty",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "beauty-02",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 132454,
-    "outputBytes": 112516
+    "slug": "beauty",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "beauty-03",
-    "width": 1500,
-    "height": 2250,
-    "inputBytes": 253660,
-    "outputBytes": 220938
-  },
-  {
-    "id": "beauty-04",
-    "width": 1500,
-    "height": 2250,
-    "inputBytes": 174168,
-    "outputBytes": 147908
-  },
-  {
-    "id": "beauty-05",
-    "width": 1500,
-    "height": 2250,
-    "inputBytes": 269140,
-    "outputBytes": 243212
+    "slug": "beauty",
+    "width": 800,
+    "height": 462
   },
   {
     "id": "birdsofparadise-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 170626,
-    "outputBytes": 125884
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "birdsofparadise-02",
-    "width": 1500,
-    "height": 1001,
-    "inputBytes": 74032,
-    "outputBytes": 42172
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 534
   },
   {
     "id": "birdsofparadise-03",
-    "width": 1500,
-    "height": 1001,
-    "inputBytes": 116394,
-    "outputBytes": 78056
+    "slug": "birdsofparadise",
+    "width": 571,
+    "height": 800
   },
   {
-    "id": "deepcuts-01",
-    "width": 1500,
-    "height": 1160,
-    "inputBytes": 151516,
-    "outputBytes": 124058
+    "id": "birdsofparadise-04",
+    "slug": "birdsofparadise",
+    "width": 571,
+    "height": 800
   },
   {
-    "id": "deepcuts-02",
-    "width": 1500,
-    "height": 2000,
-    "inputBytes": 335642,
-    "outputBytes": 279236
+    "id": "birdsofparadise-05",
+    "slug": "birdsofparadise",
+    "width": 571,
+    "height": 800
   },
   {
-    "id": "deepcuts-03",
-    "width": 1500,
-    "height": 2017,
-    "inputBytes": 230406,
-    "outputBytes": 180282
+    "id": "birdsofparadise-06",
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 533
   },
   {
-    "id": "drawing-01",
-    "width": 1500,
-    "height": 1124,
-    "inputBytes": 180270,
-    "outputBytes": 146950
+    "id": "birdsofparadise-07",
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 534
   },
   {
-    "id": "drawing-02",
-    "width": 1500,
-    "height": 2001,
-    "inputBytes": 67158,
-    "outputBytes": 45742
+    "id": "birdsofparadise-08",
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 534
   },
   {
-    "id": "drawing-03",
-    "width": 1500,
-    "height": 1001,
-    "inputBytes": 310626,
-    "outputBytes": 274328
+    "id": "birdsofparadise-09",
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 534
   },
   {
-    "id": "drawing-04",
-    "width": 1500,
-    "height": 1001,
-    "inputBytes": 282250,
-    "outputBytes": 246588
-  },
-  {
-    "id": "fearandfauna-01",
-    "width": 1500,
-    "height": 994,
-    "inputBytes": 263332,
-    "outputBytes": 238416
-  },
-  {
-    "id": "fearandfauna-02",
-    "width": 1500,
-    "height": 2250,
-    "inputBytes": 403668,
-    "outputBytes": 357902
-  },
-  {
-    "id": "glory-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 268326,
-    "outputBytes": 223690
-  },
-  {
-    "id": "glory-02",
-    "width": 1080,
-    "height": 1620,
-    "inputBytes": 132622,
-    "outputBytes": 107886
-  },
-  {
-    "id": "kultuur-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 102678,
-    "outputBytes": 89390
-  },
-  {
-    "id": "kultuur-02",
-    "width": 1500,
-    "height": 2100,
-    "inputBytes": 258632,
-    "outputBytes": 234658
-  },
-  {
-    "id": "liljevalchs-01",
-    "width": 1500,
-    "height": 1125,
-    "inputBytes": 160352,
-    "outputBytes": 96874
-  },
-  {
-    "id": "liljevalchs-02",
-    "width": 1500,
-    "height": 1125,
-    "inputBytes": 125190,
-    "outputBytes": 80172
+    "id": "birdsofparadise-10",
+    "slug": "birdsofparadise",
+    "width": 800,
+    "height": 534
   },
   {
     "id": "moestings-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 240694,
-    "outputBytes": 183280
+    "slug": "moestings",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "moestings-02",
-    "width": 1500,
-    "height": 2249,
-    "inputBytes": 295666,
-    "outputBytes": 244136
+    "slug": "moestings",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "moestings-03",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 213812,
-    "outputBytes": 163644
+    "slug": "moestings",
+    "width": 800,
+    "height": 534
   },
   {
     "id": "moestings-04",
-    "width": 1500,
-    "height": 2100,
-    "inputBytes": 145024,
-    "outputBytes": 95202
+    "slug": "moestings",
+    "width": 800,
+    "height": 533
   },
   {
-    "id": "mouths-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 97782,
-    "outputBytes": 68584
+    "id": "moestings-05",
+    "slug": "moestings",
+    "width": 800,
+    "height": 534
   },
   {
-    "id": "mouths-02",
-    "width": 1500,
-    "height": 2248,
-    "inputBytes": 91714,
-    "outputBytes": 66810
+    "id": "moestings-06",
+    "slug": "moestings",
+    "width": 572,
+    "height": 800
   },
   {
-    "id": "mouths-03",
-    "width": 1500,
-    "height": 2250,
-    "inputBytes": 158046,
-    "outputBytes": 120210
+    "id": "moestings-07",
+    "slug": "moestings",
+    "width": 800,
+    "height": 534
   },
   {
-    "id": "overgaden-01",
-    "width": 1500,
-    "height": 1145,
-    "inputBytes": 172158,
-    "outputBytes": 151300
+    "id": "moestings-08",
+    "slug": "moestings",
+    "width": 800,
+    "height": 533
   },
   {
-    "id": "overgaden-02",
-    "width": 1500,
-    "height": 1178,
-    "inputBytes": 174420,
-    "outputBytes": 152498
+    "id": "moestings-09",
+    "slug": "moestings",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "moestings-10",
+    "slug": "moestings",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "moestings-11",
+    "slug": "moestings",
+    "width": 572,
+    "height": 800
+  },
+  {
+    "id": "moestings-12",
+    "slug": "moestings",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "moestings-13",
+    "slug": "moestings",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "moestings-14",
+    "slug": "moestings",
+    "width": 534,
+    "height": 800
+  },
+  {
+    "id": "moestings-15",
+    "slug": "moestings",
+    "width": 572,
+    "height": 800
+  },
+  {
+    "id": "moestings-16",
+    "slug": "moestings",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "moestings-17",
+    "slug": "moestings",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "moestings-18",
+    "slug": "moestings",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "moestings-19",
+    "slug": "moestings",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "moestings-20",
+    "slug": "moestings",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "liljevalchs-01",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "liljevalchs-02",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "liljevalchs-03",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "liljevalchs-04",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "liljevalchs-05",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "liljevalchs-06",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "liljevalchs-07",
+    "slug": "liljevalchs",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "deepcuts-01",
+    "slug": "deepcuts",
+    "width": 800,
+    "height": 619
+  },
+  {
+    "id": "deepcuts-02",
+    "slug": "deepcuts",
+    "width": 600,
+    "height": 800
+  },
+  {
+    "id": "deepcuts-03",
+    "slug": "deepcuts",
+    "width": 595,
+    "height": 800
+  },
+  {
+    "id": "drawing-01",
+    "slug": "drawing",
+    "width": 600,
+    "height": 800
+  },
+  {
+    "id": "drawing-02",
+    "slug": "drawing",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "drawing-03",
+    "slug": "drawing",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "drawing-04",
+    "slug": "drawing",
+    "width": 800,
+    "height": 600
+  },
+  {
+    "id": "drawing-05",
+    "slug": "drawing",
+    "width": 609,
+    "height": 800
+  },
+  {
+    "id": "drawing-06",
+    "slug": "drawing",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "drawing-07",
+    "slug": "drawing",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "drawing-08",
+    "slug": "drawing",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "drawing-09",
+    "slug": "drawing",
+    "width": 800,
+    "height": 529
+  },
+  {
+    "id": "drawing-10",
+    "slug": "drawing",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "drawing-11",
+    "slug": "drawing",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "kultuur-01",
+    "slug": "kultuur",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "kultuur-02",
+    "slug": "kultuur",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "kultuur-03",
+    "slug": "kultuur",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "kultuur-04",
+    "slug": "kultuur",
+    "width": 572,
+    "height": 800
+  },
+  {
+    "id": "kultuur-05",
+    "slug": "kultuur",
+    "width": 572,
+    "height": 800
+  },
+  {
+    "id": "kultuur-06",
+    "slug": "kultuur",
+    "width": 572,
+    "height": 800
+  },
+  {
+    "id": "kultuur-07",
+    "slug": "kultuur",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "kultuur-08",
+    "slug": "kultuur",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "kultuur-09",
+    "slug": "kultuur",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "kultuur-10",
+    "slug": "kultuur",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "kultuur-11",
+    "slug": "kultuur",
+    "width": 571,
+    "height": 800
+  },
+  {
+    "id": "kultuur-12",
+    "slug": "kultuur",
+    "width": 800,
+    "height": 534
   },
   {
     "id": "pandemonium-01",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 209206,
-    "outputBytes": 184450
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "pandemonium-02",
-    "width": 1500,
-    "height": 1016,
-    "inputBytes": 240540,
-    "outputBytes": 213870
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 542
   },
   {
     "id": "pandemonium-03",
-    "width": 1500,
-    "height": 971,
-    "inputBytes": 199846,
-    "outputBytes": 176818
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 518
   },
   {
     "id": "pandemonium-04",
-    "width": 1500,
-    "height": 2244,
-    "inputBytes": 889450,
-    "outputBytes": 797292
+    "slug": "pandemonium",
+    "width": 535,
+    "height": 800
   },
   {
     "id": "pandemonium-05",
-    "width": 1134,
-    "height": 1507,
-    "inputBytes": 135032,
-    "outputBytes": 122324
+    "slug": "pandemonium",
+    "width": 602,
+    "height": 800
+  },
+  {
+    "id": "pandemonium-06",
+    "slug": "pandemonium",
+    "width": 640,
+    "height": 800
+  },
+  {
+    "id": "pandemonium-07",
+    "slug": "pandemonium",
+    "width": 568,
+    "height": 800
+  },
+  {
+    "id": "pandemonium-08",
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 492
+  },
+  {
+    "id": "pandemonium-09",
+    "slug": "pandemonium",
+    "width": 560,
+    "height": 800
+  },
+  {
+    "id": "pandemonium-10",
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 514
+  },
+  {
+    "id": "pandemonium-11",
+    "slug": "pandemonium",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "pandemonium-12",
+    "slug": "pandemonium",
+    "width": 606,
+    "height": 800
+  },
+  {
+    "id": "pandemonium-13",
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 540
+  },
+  {
+    "id": "pandemonium-14",
+    "slug": "pandemonium",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "symbiosis-01",
-    "width": 1500,
-    "height": 2038,
-    "inputBytes": 237066,
-    "outputBytes": 186314
+    "slug": "symbiosis",
+    "width": 589,
+    "height": 800
   },
   {
     "id": "symbiosis-02",
-    "width": 1500,
-    "height": 1875,
-    "inputBytes": 416686,
-    "outputBytes": 338256
+    "slug": "symbiosis",
+    "width": 640,
+    "height": 800
   },
   {
     "id": "symbiosis-03",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 144440,
-    "outputBytes": 107262
+    "slug": "symbiosis",
+    "width": 800,
+    "height": 533
   },
   {
     "id": "symbiosis-04",
-    "width": 1500,
-    "height": 1000,
-    "inputBytes": 147888,
-    "outputBytes": 111216
+    "slug": "symbiosis",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "symbiosis-05",
+    "slug": "symbiosis",
+    "width": 639,
+    "height": 800
+  },
+  {
+    "id": "symbiosis-06",
+    "slug": "symbiosis",
+    "width": 640,
+    "height": 800
+  },
+  {
+    "id": "glory-01",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "glory-02",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "glory-03",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "glory-04",
+    "slug": "glory",
+    "width": 474,
+    "height": 800
+  },
+  {
+    "id": "glory-05",
+    "slug": "glory",
+    "width": 536,
+    "height": 800
+  },
+  {
+    "id": "glory-06",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "glory-07",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "glory-08",
+    "slug": "glory",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "glory-09",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "glory-10",
+    "slug": "glory",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "fearandfauna-01",
+    "slug": "fearandfauna",
+    "width": 800,
+    "height": 530
+  },
+  {
+    "id": "fearandfauna-02",
+    "slug": "fearandfauna",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "fearandfauna-03",
+    "slug": "fearandfauna",
+    "width": 800,
+    "height": 534
+  },
+  {
+    "id": "fearandfauna-04",
+    "slug": "fearandfauna",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "fearandfauna-05",
+    "slug": "fearandfauna",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "fearandfauna-06",
+    "slug": "fearandfauna",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "rites-01",
+    "slug": "rites",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "rites-02",
+    "slug": "rites",
+    "width": 800,
+    "height": 561
+  },
+  {
+    "id": "rites-03",
+    "slug": "rites",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "rites-04",
+    "slug": "rites",
+    "width": 533,
+    "height": 800
+  },
+  {
+    "id": "rites-05",
+    "slug": "rites",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "rites-06",
+    "slug": "rites",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "rites-07",
+    "slug": "rites",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "rites-08",
+    "slug": "rites",
+    "width": 800,
+    "height": 533
+  },
+  {
+    "id": "rites-09",
+    "slug": "rites",
+    "width": 531,
+    "height": 800
+  },
+  {
+    "id": "rites-10",
+    "slug": "rites",
+    "width": 531,
+    "height": 800
+  },
+  {
+    "id": "rites-11",
+    "slug": "rites",
+    "width": 530,
+    "height": 800
+  },
+  {
+    "id": "rites-12",
+    "slug": "rites",
+    "width": 800,
+    "height": 530
+  },
+  {
+    "id": "rites-13",
+    "slug": "rites",
+    "width": 530,
+    "height": 800
+  },
+  {
+    "id": "queer-01",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
+  },
+  {
+    "id": "queer-02",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
+  },
+  {
+    "id": "queer-03",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
+  },
+  {
+    "id": "queer-04",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
+  },
+  {
+    "id": "queer-05",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
+  },
+  {
+    "id": "queer-06",
+    "slug": "queer",
+    "width": 532,
+    "height": 800
+  },
+  {
+    "id": "queer-07",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
+  },
+  {
+    "id": "queer-08",
+    "slug": "queer",
+    "width": 800,
+    "height": 532
   }
 ]
