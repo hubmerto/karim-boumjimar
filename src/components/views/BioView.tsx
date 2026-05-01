@@ -103,7 +103,8 @@ function BioSide() {
             {RECOGNITION.map((r, i) => (
               <li key={i}>
                 {r.text}
-                <span className="text-mute"> - {r.year}</span>
+                <span className="text-mute"> - </span>
+                <time className="text-mute">{r.year}</time>
               </li>
             ))}
           </ul>

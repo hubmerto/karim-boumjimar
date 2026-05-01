@@ -10,9 +10,9 @@ export function NewsView() {
         {NEWS.map((entry, i) => {
           const Inner = (
             <>
-              <div className="italic text-[12px] uppercase tracking-[0.06em] text-mute">
+              <time className="block italic text-[12px] uppercase tracking-[0.06em] text-mute">
                 {entry.date}
-              </div>
+              </time>
               <div className="text-[14px] leading-[1.55] text-ink">
                 {entry.text}
                 {entry.url ? (

@@ -233,7 +233,7 @@ export function ExpandedGroup() {
           className="pointer-events-none absolute left-4 top-4 z-10 italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute"
           style={chromeStyle}
         >
-          {heading.title} · {heading.year}
+          {heading.title} · <time>{heading.year}</time>
         </div>
       ) : null}
       <button

@@ -175,7 +175,7 @@ export function Index({
                     <span className="text-mute"> · {e.venue}</span>
                   ) : null}
                 </span>
-                <span className="italic text-[12px] text-mute">{e.year}</span>
+                <time className="italic text-[12px] text-mute">{e.year}</time>
               </button>
             </li>
           ))}

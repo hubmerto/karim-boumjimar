@@ -237,7 +237,7 @@ function SheetIndex({ onPick }: { onPick: () => void }) {
               {e.title}
               {e.venue ? <span className="text-mute"> · {e.venue}</span> : null}
             </span>
-            <span className="italic text-[12px] text-mute">{e.year}</span>
+            <time className="italic text-[12px] text-mute">{e.year}</time>
           </button>
         </li>
       ))}

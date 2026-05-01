@@ -98,7 +98,11 @@ export function SelectedView({ work }: { work: Work }) {
               {row.label}
             </dt>
             <dd className="text-[13px] leading-[1.55] text-ink break-words">
-              {row.value}
+              {row.label === "YEAR" || row.label === "DATE" ? (
+                <time>{row.value}</time>
+              ) : (
+                row.value
+              )}
             </dd>
           </div>
         ))}

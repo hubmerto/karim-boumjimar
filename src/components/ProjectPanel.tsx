@@ -64,7 +64,7 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
       <div className="space-y-1">
         <h2 className="text-base font-medium text-ink">{data.title}</h2>
         <div className="text-[12px] text-mute">
-          {data.year}
+          <time>{data.year}</time>
           {data.venue ? ` · ${data.venue}` : ""}
           {data.city ? `, ${data.city}` : ""}
         </div>

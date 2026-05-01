@@ -104,7 +104,7 @@ function WorksGrid({ onOpen }: { onOpen: (id: string) => void }) {
               />
               <div className="mt-2 flex items-baseline justify-between px-1 text-[11px]">
                 <span className="text-ink">{w.title}</span>
-                <span className="italic text-mute">{w.year}</span>
+                <time className="italic text-mute">{w.year}</time>
               </div>
             </button>
           </li>
@@ -208,7 +208,7 @@ function FullscreenViewer({
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <div className="text-[12px]">
           <div className="text-ink">{work.title}</div>
-          <div className="italic text-mute">{work.year}</div>
+          <time className="italic text-mute">{work.year}</time>
         </div>
         <button
           type="button"
