@@ -12,17 +12,22 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * The canvas now works on mobile (the iOS body-style fix did it), so
- * the canvas is the default everywhere. ?simple=1 forces the
- * vertical-scroll fallback as an escape hatch if the canvas regresses.
+ * Mobile defaults to the simple vertical-scroll fallback because the
+ * canvas keeps crashing iOS Safari on the user's device despite many
+ * memory-cut iterations. Desktop still gets the canvas. ?canvas=1
+ * forces the canvas on mobile for testing; ?simple=1 forces the
+ * fallback on desktop.
  */
 type Mode = "loading" | "simple" | "canvas";
 
 function detectMode(): Mode {
   if (typeof window === "undefined") return "loading";
-  const force = new URLSearchParams(window.location.search).get("simple");
-  if (force === "1") return "simple";
-  return "canvas";
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("simple") === "1") return "simple";
+  if (params.get("canvas") === "1") return "canvas";
+  return window.matchMedia("(max-width: 767px)").matches
+    ? "simple"
+    : "canvas";
 }
 
 export default function Home() {
