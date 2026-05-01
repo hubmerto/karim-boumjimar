@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ARTIST_NAME, CONTACT } from "@/data/bio";
+import { CONTACT } from "@/data/bio";
 import { useSelection, type View } from "@/lib/store";
 
 const ITEMS: { key: View; label: string }[] = [
@@ -77,20 +77,27 @@ export function LeftToolbar() {
             })}
           </ul>
         </div>
-        <div className="space-y-2 px-6 py-5 text-[11px] text-mute">
-          <div>{ARTIST_NAME}</div>
-          <a href={`mailto:${CONTACT.email}`} className="block hover:text-ink">
-            {CONTACT.email}
-          </a>
-          <a
-            href={CONTACT.instagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block hover:text-ink"
-          >
-            {CONTACT.instagram}
-          </a>
-          <div className="flex gap-3 pt-2">
+        <div className="border-t border-line px-6 pt-5 pb-6">
+          <div className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+            Contact
+          </div>
+          <div className="mt-3 space-y-1.5 text-[12px] leading-snug">
+            <a
+              href={`mailto:${CONTACT.email}`}
+              className="block text-ink hover:text-mute"
+            >
+              {CONTACT.email}
+            </a>
+            <a
+              href={CONTACT.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-ink hover:text-mute"
+            >
+              {CONTACT.instagram}
+            </a>
+          </div>
+          <div className="mt-5 flex gap-4 text-[10px] italic uppercase tracking-[0.1em] text-mute">
             <Link href="/imprint" className="hover:text-ink">
               Imprint
             </Link>
