@@ -16,9 +16,7 @@ export function NewsView() {
               <div className="text-[14px] leading-[1.55] text-ink">
                 {entry.text}
                 {entry.url ? (
-                  <span className="ml-1 italic text-[12px] text-mute">
-                    →
-                  </span>
+                  <span className="ml-1 italic text-[12px] text-mute">→</span>
                 ) : null}
               </div>
             </>

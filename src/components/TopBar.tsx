@@ -35,7 +35,10 @@ export function TopBar() {
       >
         {mobileMenuOpen ? "Close" : "Menu"}
       </button>
-      <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <MobileMenu
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
     </header>
   );
 }

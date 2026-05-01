@@ -31,7 +31,7 @@ export function LegalPage({
         </Link>
       </header>
       <article className="mx-auto max-w-[640px] px-4 pt-24 pb-24 text-[14px] leading-relaxed text-ink">
-        <h1 className="mb-10 italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+        <h1 className="mb-10 italic text-[10px] uppercase tracking-[0.1em] text-mute">
           {title}
         </h1>
         <div className="space-y-6">{children}</div>
@@ -49,7 +49,7 @@ export function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h2 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
         {heading}
       </h2>
       <div className="space-y-3">{children}</div>

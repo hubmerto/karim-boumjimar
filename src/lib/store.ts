@@ -46,7 +46,12 @@ type CanvasState = {
 export const useSelection = create<CanvasState>((set) => ({
   view: "exhibitions",
   setView: (v) =>
-    set({ view: v, selectedId: null, selectedGroupKey: null, expandedGroupKey: null }),
+    set({
+      view: v,
+      selectedId: null,
+      selectedGroupKey: null,
+      expandedGroupKey: null,
+    }),
   selectedId: null,
   selectedGroupKey: null,
   expandedGroupKey: null,

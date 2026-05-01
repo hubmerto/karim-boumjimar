@@ -10,7 +10,7 @@ import { ProjectContent } from "@/components/ProjectPanel";
 type Snap = "peek" | "mid" | "full";
 type Mode = "default" | "index";
 
-const PEEK_PX = 56; // height visible at "peek" snap (just header)
+const PEEK_PX = 56; // height visible at"peek" snap (just header)
 const TOP_RESERVE_PX = 64; // always leave 64px for the top bar + breathing room
 
 /** Effective sheet height in CSS px given current viewport height. */
@@ -32,7 +32,7 @@ export function InspectorSheet() {
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const selected = selectedId
-    ? WORKS.find((w) => w.id === selectedId) ?? null
+    ? (WORKS.find((w) => w.id === selectedId) ?? null)
     : null;
 
   const [snap, setSnap] = useState<Snap>("peek");
@@ -114,7 +114,9 @@ export function InspectorSheet() {
   }, [snap, vh, dragDelta]);
 
   const isDragging = isDraggingRef.current;
-  const transition = isDragging ? "none" : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)";
+  const transition = isDragging
+    ? "none"
+    : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)";
 
   // Only meaningful on the exhibitions canvas; other views show their own full content.
   // Must come AFTER all hooks to satisfy the rules of hooks.
@@ -159,7 +161,11 @@ export function InspectorSheet() {
               }}
               className="text-[13px] text-ink"
             >
-              {mode === "index" ? "← back" : selected ? selected.title : ARTIST_NAME}
+              {mode === "index"
+                ? "← back"
+                : selected
+                  ? selected.title
+                  : ARTIST_NAME}
             </button>
             <button
               type="button"
@@ -172,7 +178,7 @@ export function InspectorSheet() {
                   setSnap("full");
                 }
               }}
-              className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute hover:text-ink"
+              className="italic text-[10px] uppercase tracking-[0.1em] text-mute hover:text-ink"
             >
               {mode === "index" ? "Close" : "Index"}
             </button>
@@ -211,12 +217,19 @@ function SheetIndex({ onPick }: { onPick: () => void }) {
     for (const w of WORKS) {
       const key = `${w.title}|${w.year}`;
       if (!seen.has(key)) {
-        seen.set(key, { id: w.id, title: w.title, year: w.year, venue: w.venue });
+        seen.set(key, {
+          id: w.id,
+          title: w.title,
+          year: w.year,
+          venue: w.venue,
+        });
       }
     }
     return Array.from(seen.values()).sort((a, b) => {
-      const ay = typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
-      const by = typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
+      const ay =
+        typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
+      const by =
+        typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
       return by - ay;
     });
   }, []);

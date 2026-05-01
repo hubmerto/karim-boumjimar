@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   centerOn,
   clampPan,
@@ -35,7 +42,12 @@ function leftWidth() {
 
 function viewportRect() {
   if (typeof window === "undefined") {
-    return { x: LEFT_TOOLBAR_W_FULL, y: TOPBAR_H, w: 1024 - LEFT_TOOLBAR_W_FULL, h: 600 };
+    return {
+      x: LEFT_TOOLBAR_W_FULL,
+      y: TOPBAR_H,
+      w: 1024 - LEFT_TOOLBAR_W_FULL,
+      h: 600,
+    };
   }
   const isDesktop = window.matchMedia("(min-width: 768px)").matches;
   const { selectedId, selectedGroupKey, expandedGroupKey } =
@@ -189,9 +201,7 @@ export function useCanvas(
   // Compensate the tx so tile screen positions stay anchored. The toolbar is
   // hidden on mobile (md:flex), so this compensation must NOT run there or
   // the canvas content jumps 176px every time the user makes a selection.
-  const condensed = useSelection(
-    (s) => !!(s.selectedId || s.selectedGroupKey),
-  );
+  const condensed = useSelection((s) => !!(s.selectedId || s.selectedGroupKey));
   const prevCondensedRef = useRef(condensed);
   useEffect(() => {
     if (prevCondensedRef.current === condensed) return;
@@ -219,20 +229,17 @@ export function useCanvas(
   // mid-animation (eg. opening the gallery briefly during a nav-to-group
   // before settling below threshold).
   const programmaticAnimRef = useRef(false);
-  const animateTransform = useCallback(
-    (next: Transform, duration = 1800) => {
-      if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
-      programmaticAnimRef.current = true;
-      setIsAnimating(true);
-      setAnimDuration(duration);
-      setTransform(next);
-      animateTimerRef.current = setTimeout(() => {
-        setIsAnimating(false);
-        programmaticAnimRef.current = false;
-      }, duration + 80);
-    },
-    [],
-  );
+  const animateTransform = useCallback((next: Transform, duration = 1800) => {
+    if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+    programmaticAnimRef.current = true;
+    setIsAnimating(true);
+    setAnimDuration(duration);
+    setTransform(next);
+    animateTimerRef.current = setTimeout(() => {
+      setIsAnimating(false);
+      programmaticAnimRef.current = false;
+    }, duration + 80);
+  }, []);
 
   // Auto-zoom from 75% to 100% of bento fit, starting once the splash has
   // cleared and the per-tile fade-ins have all completed (~7s after).
@@ -305,7 +312,9 @@ export function useCanvas(
       // calmly; users had complained the zoom was twitchy.
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.005);
-        setTransform(clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()));
+        setTransform(
+          clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()),
+        );
         return;
       }
       // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
@@ -366,7 +375,8 @@ export function useCanvas(
       if (!isDragging || !dragOriginRef.current) return;
       const rawDx = e.clientX - dragOriginRef.current.x;
       const rawDy = e.clientY - dragOriginRef.current.y;
-      if (Math.abs(rawDx) > 3 || Math.abs(rawDy) > 3) dragMovedRef.current = true;
+      if (Math.abs(rawDx) > 3 || Math.abs(rawDy) > 3)
+        dragMovedRef.current = true;
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       // Drag pan is 1:1 with the cursor/finger so the canvas follows the
       // pointer exactly -- otherwise it feels uncalibrated, especially
@@ -554,7 +564,15 @@ export function useCanvas(
       }
       clearNav();
     }
-  }, [navTargetWorkId, navTargetGroupKey, works, zoomToWork, clearNav, animateTransform, destOffsets]);
+  }, [
+    navTargetWorkId,
+    navTargetGroupKey,
+    works,
+    zoomToWork,
+    clearNav,
+    animateTransform,
+    destOffsets,
+  ]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 

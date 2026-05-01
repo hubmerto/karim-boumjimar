@@ -18,7 +18,10 @@ export function Splash() {
   const setSplashGone = useSelection((s) => s.setSplashGone);
 
   useEffect(() => {
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(SESSION_KEY)) {
+    if (
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem(SESSION_KEY)
+    ) {
       setPhase("gone");
       setSplashGone(true);
       return;

@@ -15,7 +15,7 @@ export const MEDIUM_LABEL: Record<Medium, string> = {
 export function DefaultView() {
   return (
     <div className="space-y-6">
-      <h1 className="text-base font-medium text-ink">{ARTIST_NAME}</h1>
+      <h1 className="text-base text-ink">{ARTIST_NAME}</h1>
       <div className="space-y-3 text-[13px] leading-[1.55] text-ink">
         {BIO_LONG.map((paragraph, i) => (
           <p key={i}>{paragraph}</p>
@@ -79,7 +79,7 @@ export function SelectedView({ work }: { work: Work }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+        <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
           Work
         </span>
         <button
@@ -94,7 +94,7 @@ export function SelectedView({ work }: { work: Work }) {
       <dl className="space-y-3">
         {rows.map((row) => (
           <div key={row.label} className="grid grid-cols-[76px_1fr] gap-x-3">
-            <dt className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute leading-[1.55]">
+            <dt className="italic text-[10px] uppercase tracking-[0.1em] text-mute leading-[1.55]">
               {row.label}
             </dt>
             <dd className="text-[13px] leading-[1.55] text-ink break-words">
@@ -120,7 +120,7 @@ export function Section({
 }) {
   return (
     <section className="space-y-2 border-t border-line pt-4">
-      <h2 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h2 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
         {label}
       </h2>
       {children}

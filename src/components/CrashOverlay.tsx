@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 /**
  * Mobile-friendly diagnostic overlay. iOS Safari has no console accessible
- * to a phone user, and crash patterns like "Cannot open this page" leave
+ * to a phone user, and crash patterns like"Cannot open this page" leave
  * no trace. This component:
  *  - catches window.error and unhandledrejection
  *  - persists the last error in sessionStorage so it survives the WebKit
@@ -58,7 +58,9 @@ export function CrashOverlay() {
     function onRejection(e: PromiseRejectionEvent) {
       const reason = e.reason;
       const msg =
-        reason instanceof Error ? reason.message : String(reason ?? "unhandled rejection");
+        reason instanceof Error
+          ? reason.message
+          : String(reason ?? "unhandled rejection");
       const stack = reason instanceof Error ? reason.stack : undefined;
       persist(`Unhandled rejection: ${msg}`, stack);
     }
@@ -105,14 +107,25 @@ export function CrashOverlay() {
       <div style={{ fontWeight: 700, marginBottom: 6 }}>
         Last load crashed{age !== null ? ` (${age}s ago)` : ""}. Tap to dismiss.
       </div>
-      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{stored.message}</div>
+      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        {stored.message}
+      </div>
       {stored.stack ? (
-        <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", marginTop: 8, fontSize: 11 }}>
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            marginTop: 8,
+            fontSize: 11,
+          }}
+        >
           {stored.stack}
         </pre>
       ) : null}
       {stored.ua ? (
-        <div style={{ marginTop: 8, opacity: 0.7, fontSize: 10 }}>{stored.ua}</div>
+        <div style={{ marginTop: 8, opacity: 0.7, fontSize: 10 }}>
+          {stored.ua}
+        </div>
       ) : null}
     </div>
   );

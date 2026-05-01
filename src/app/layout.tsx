@@ -30,7 +30,7 @@ const OG_IMAGES = [
 ];
 
 // Disable the browser's own pinch-zoom: the canvas has its own pan/zoom
-// and the two compete on iOS. viewportFit: "cover" lets fixed UI extend
+// and the two compete on iOS. viewportFit:"cover" lets fixed UI extend
 // under the notch / home indicator on modern iPhones.
 export const viewport: Viewport = {
   width: "device-width",
@@ -39,7 +39,6 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
 };
-
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

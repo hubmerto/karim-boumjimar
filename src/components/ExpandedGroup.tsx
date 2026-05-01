@@ -46,31 +46,32 @@ export function ExpandedGroup() {
   // rather than getBoundingClientRect, because the latter returns
   // the in-progress CSS-transition position and the FLIP would land
   // at a mid-animation spot.
-  const captureSourceRects = useCallback((groupKey: string) => {
-    const map = new Map<string, DOMRect>();
-    const container = containerRef?.current;
-    const t = transformRef?.current;
-    if (!container || !t) {
+  const captureSourceRects = useCallback(
+    (groupKey: string) => {
+      const map = new Map<string, DOMRect>();
+      const container = containerRef?.current;
+      const t = transformRef?.current;
+      if (!container || !t) {
+        sourceRectsRef.current = map;
+        return;
+      }
+      const cr = container.getBoundingClientRect();
+      for (const w of WORKS) {
+        if (`${w.title}|${w.year}` !== groupKey) continue;
+        const tileEl = document.querySelector(`button[data-work-id="${w.id}"]`);
+        if (!tileEl) continue;
+        const wb = workBounds(w);
+        const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
+        const left = cr.left + (wb.minX + off.x) * t.scale + t.tx;
+        const top = cr.top + (wb.minY + off.y) * t.scale + t.ty;
+        const width = wb.width * t.scale;
+        const height = wb.height * t.scale;
+        map.set(w.id, new DOMRect(left, top, width, height));
+      }
       sourceRectsRef.current = map;
-      return;
-    }
-    const cr = container.getBoundingClientRect();
-    for (const w of WORKS) {
-      if (`${w.title}|${w.year}` !== groupKey) continue;
-      const tileEl = document.querySelector(
-        `button[data-work-id="${w.id}"]`,
-      );
-      if (!tileEl) continue;
-      const wb = workBounds(w);
-      const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
-      const left = cr.left + (wb.minX + off.x) * t.scale + t.tx;
-      const top = cr.top + (wb.minY + off.y) * t.scale + t.ty;
-      const width = wb.width * t.scale;
-      const height = wb.height * t.scale;
-      map.set(w.id, new DOMRect(left, top, width, height));
-    }
-    sourceRectsRef.current = map;
-  }, [baseOffsets, transformRef, containerRef]);
+    },
+    [baseOffsets, transformRef, containerRef],
+  );
 
   // Sync internal display state with the store. Open: capture canvas-tile
   // rects, mount the gallery, run FLIP-open. Close: capture rects again
@@ -230,7 +231,7 @@ export function ExpandedGroup() {
     >
       {heading ? (
         <div
-          className="pointer-events-none absolute left-4 top-4 z-10 italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute"
+          className="pointer-events-none absolute left-4 top-4 z-10 italic text-[10px] uppercase tracking-[0.1em] text-mute"
           style={chromeStyle}
         >
           {heading.title} · <time>{heading.year}</time>

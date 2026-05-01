@@ -42,12 +42,20 @@ export function MobileFallback() {
   return (
     <div
       className="fixed inset-0 overflow-y-auto bg-canvas"
-      style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+      style={{
+        WebkitOverflowScrolling: "touch",
+        overscrollBehavior: "contain",
+      }}
     >
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-canvas px-4 py-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={asset("/logo.svg")} alt={ARTIST_NAME} className="h-5 w-auto" draggable={false} />
-        <nav className="flex gap-3 text-[11px] italic font-bold uppercase tracking-[0.1em] text-mute">
+        <img
+          src={asset("/logo.svg")}
+          alt={ARTIST_NAME}
+          className="h-5 w-auto"
+          draggable={false}
+        />
+        <nav className="flex gap-3 text-[11px] italic uppercase tracking-[0.1em] text-mute">
           {(["works", "bio", "about"] as Tab[]).map((t) => (
             <button
               key={t}
@@ -73,7 +81,9 @@ export function MobileFallback() {
         </>
       )}
 
-      {open ? <FullscreenViewer work={open} onClose={() => setOpenId(null)} /> : null}
+      {open ? (
+        <FullscreenViewer work={open} onClose={() => setOpenId(null)} />
+      ) : null}
     </div>
   );
 }
@@ -129,7 +139,7 @@ function CVPanel() {
     <div className="px-5 py-6 pb-12 text-ink">
       <header className="flex items-end justify-between gap-3 border-b border-line pb-4">
         <div>
-          <div className="text-[15px] font-medium">{ARTIST_NAME}</div>
+          <div className="text-[15px]">{ARTIST_NAME}</div>
           <div className="mt-1 text-[12px] text-mute">
             b. {CV_BIO.born}, {CV_BIO.nationality}.
           </div>
@@ -137,7 +147,7 @@ function CVPanel() {
         <a
           href={asset("/cv.pdf")}
           download="Karim_Boumjimar_CV.pdf"
-          className="inline-flex items-center gap-1 border border-ink px-3 py-1.5 text-[10px] italic font-bold uppercase tracking-[0.1em] text-ink hover:bg-ink hover:text-canvas"
+          className="inline-flex items-center gap-1 border border-ink px-3 py-1.5 text-[10px] italic uppercase tracking-[0.1em] text-ink hover:bg-ink hover:text-canvas"
         >
           Download CV <span aria-hidden>↓</span>
         </a>
@@ -149,7 +159,7 @@ function CVPanel() {
       <CvSection label="Residencies" entries={CV_RESIDENCIES} />
       <CvSection label="Grants & Prizes" entries={CV_GRANTS} />
       <section className="mt-6 border-t border-line pt-4">
-        <h3 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+        <h3 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
           Public Collections
         </h3>
         <ul className="mt-2 space-y-1 text-[13px]">
@@ -166,12 +176,15 @@ function CVPanel() {
 function CvSection({ label, entries }: { label: string; entries: CvEntry[] }) {
   return (
     <section className="mt-6 border-t border-line pt-4">
-      <h3 className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h3 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
         {label}
       </h3>
       <ul className="mt-2 space-y-2 text-[13px] leading-[1.45]">
         {entries.map((e, i) => (
-          <li key={i} className="grid grid-cols-[56px_1fr] items-baseline gap-x-2">
+          <li
+            key={i}
+            className="grid grid-cols-[56px_1fr] items-baseline gap-x-2"
+          >
             <span className="text-mute tabular-nums">{e.year}</span>
             <span>
               <span>{e.title}</span>
@@ -218,7 +231,10 @@ function FullscreenViewer({
           ×
         </button>
       </div>
-      <div className="flex-1 overflow-auto p-4" style={{ WebkitOverflowScrolling: "touch" }}>
+      <div
+        className="flex-1 overflow-auto p-4"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

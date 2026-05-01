@@ -2,7 +2,8 @@
 
 export const ARTIST_NAME = "Karim Boumjimar";
 
-export const BIO_SHORT = "Karim Boumjimar (b. 1998, Málaga, Spain) is an artist whose work examines social hierarchies through the entanglement of nature, bodies, and identity. Working across drawing, ceramics, and performance, his practice explores how subjectivity is formed through ecological and cultural systems rather than outside of them.";
+export const BIO_SHORT =
+  "Karim Boumjimar (b. 1998, Málaga, Spain) is an artist whose work examines social hierarchies through the entanglement of nature, bodies, and identity. Working across drawing, ceramics, and performance, his practice explores how subjectivity is formed through ecological and cultural systems rather than outside of them.";
 
 /**
  * Artist statement, used by AboutView.
@@ -41,10 +42,16 @@ export const PUBLIC_COLLECTIONS = [
 
 /** Recognition / honours. */
 export const RECOGNITION = [
-  { year: "2026", text: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant, Danish Arts Foundation" },
+  {
+    year: "2026",
+    text: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant, Danish Arts Foundation",
+  },
   { year: "2025", text: "Ulrica Hydman Vallien Foundation Talent Scholarship" },
   { year: "2025", text: "Symbiosis received the 2025 Blix Prize" },
-  { year: "2025", text: "Named one of the Ten Artists to Watch in 2025 by Frieze" },
+  {
+    year: "2025",
+    text: "Named one of the Ten Artists to Watch in 2025 by Frieze",
+  },
 ];
 
 export const REPRESENTATION = [
@@ -75,152 +82,152 @@ export type NewsEntry = {
 /** Reverse-chronological. */
 export const NEWS: NewsEntry[] = [
   {
-    "date": "19 June 2026",
-    "text": "Génération Céramique, group exhibition, Fondation d’entreprise Bernardaud, Limoges 19 June 2026 – 30 April 2027",
-    "url": "https://www.bernardaud.com/en/us/news/exposition-generation-ceramique?srsltid=AfmBOoqFMtqIjy8nWAkm_MRicOWtx2M54_Hn-ZTf6BoXS-95x8t6LH7Z"
+    date: "19 June 2026",
+    text: "Génération Céramique, group exhibition, Fondation d’entreprise Bernardaud, Limoges 19 June 2026 – 30 April 2027",
+    url: "https://www.bernardaud.com/en/us/news/exposition-generation-ceramique?srsltid=AfmBOoqFMtqIjy8nWAkm_MRicOWtx2M54_Hn-ZTf6BoXS-95x8t6LH7Z",
   },
   {
-    "date": "9 June 2026",
-    "text": "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant, Danish Arts Foundation"
+    date: "9 June 2026",
+    text: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant, Danish Arts Foundation",
   },
   {
-    "date": "10 April 2026",
-    "text": "Rites of Affection, solo exhibition, Malva Museum, Lahti 10 April 2026 – 13 September 2026 Film premiere: Traces of Spring",
-    "url": "https://malvamuseo.fi/en/exhibitions/karim-boumjimar-rites-of-affection/"
+    date: "10 April 2026",
+    text: "Rites of Affection, solo exhibition, Malva Museum, Lahti 10 April 2026 – 13 September 2026 Film premiere: Traces of Spring",
+    url: "https://malvamuseo.fi/en/exhibitions/karim-boumjimar-rites-of-affection/",
   },
   {
-    "date": "28 March 2026",
-    "text": "Bodies Under Construction, solo exhibition, Møstings, Frederiksberg Museums 28 March 2026 – 7 June 2026",
-    "url": "https://www.contemporaryartlibrary.org/project/karim-boumjimar-at-mostings-frederiksberg-69603?from=%2Fartist%2Fkarim-boumjimar-34542"
+    date: "28 March 2026",
+    text: "Bodies Under Construction, solo exhibition, Møstings, Frederiksberg Museums 28 March 2026 – 7 June 2026",
+    url: "https://www.contemporaryartlibrary.org/project/karim-boumjimar-at-mostings-frederiksberg-69603?from=%2Fartist%2Fkarim-boumjimar-34542",
   },
   {
-    "date": "8 March 2026",
-    "text": "I Can Buy Myself Flowers, group exhibition, Kunsthal N 8 March 2026 – 2 August 2026",
-    "url": "https://kunsthaln.dk/en/udstilling/i-can-buy-myself-flowers/"
+    date: "8 March 2026",
+    text: "I Can Buy Myself Flowers, group exhibition, Kunsthal N 8 March 2026 – 2 August 2026",
+    url: "https://kunsthaln.dk/en/udstilling/i-can-buy-myself-flowers/",
   },
   {
-    "date": "5 March 2026",
-    "text": "Beauty is the Best Defense, group exhibition, Jessica Silverman Gallery, San Francisco 5 March 2026 – 11 April 2026",
-    "url": "https://jessicasilvermangallery.com/online-shows/beauty-is-the-best-defense-ovr/"
+    date: "5 March 2026",
+    text: "Beauty is the Best Defense, group exhibition, Jessica Silverman Gallery, San Francisco 5 March 2026 – 11 April 2026",
+    url: "https://jessicasilvermangallery.com/online-shows/beauty-is-the-best-defense-ovr/",
   },
   {
-    "date": "5 February 2026",
-    "text": "Featured in Politiken",
-    "url": "https://politiken.dk/ibyen/art10617381/%C2%BBDer-er-ikke-s%C3%A5-meget-jeg-f%C3%B8ler-jeg-g%C3%A5r-glip-af.-Jo-m%C3%A5ske-lige-et-par-n%C3%A6tter-mere-p%C3%A5-Berghain%C2%AB"
+    date: "5 February 2026",
+    text: "Featured in Politiken",
+    url: "https://politiken.dk/ibyen/art10617381/%C2%BBDer-er-ikke-s%C3%A5-meget-jeg-f%C3%B8ler-jeg-g%C3%A5r-glip-af.-Jo-m%C3%A5ske-lige-et-par-n%C3%A6tter-mere-p%C3%A5-Berghain%C2%AB",
   },
   {
-    "date": "24 January 2026",
-    "text": "Body Politics, group exhibition, Kuntsi Museum of Modern Art 24 January 2026 – 4 April 2026",
-    "url": "https://vaasa.fi/koe-ja-nae/kulttuuria-vaasassa-ja-seudulla/vaasan-museot/nayttelyt-ja-tapahtumat/miettinen-collection-body-politics/"
+    date: "24 January 2026",
+    text: "Body Politics, group exhibition, Kuntsi Museum of Modern Art 24 January 2026 – 4 April 2026",
+    url: "https://vaasa.fi/koe-ja-nae/kulttuuria-vaasassa-ja-seudulla/vaasan-museot/nayttelyt-ja-tapahtumat/miettinen-collection-body-politics/",
   },
   {
-    "date": "23 January 2026",
-    "text": "Birds of Paradise, solo exhibition, Viborg Kunsthal 23 January 2026 – 10 May 2026",
-    "url": "https://artviewer.org/karim-boumjimar-at-viborg-kunsthal/"
+    date: "23 January 2026",
+    text: "Birds of Paradise, solo exhibition, Viborg Kunsthal 23 January 2026 – 10 May 2026",
+    url: "https://artviewer.org/karim-boumjimar-at-viborg-kunsthal/",
   },
   {
-    "date": "18 December 2025",
-    "text": "Featured in Cultbytes",
-    "url": "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/"
+    date: "18 December 2025",
+    text: "Featured in Cultbytes",
+    url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
   },
   {
-    "date": "10 December 2025",
-    "text": "Featured in Dagens Industri Weekend",
-    "url": "https://www.di.se/nyheter/mestadels-formogna-som-koper-mina-verk/"
+    date: "10 December 2025",
+    text: "Featured in Dagens Industri Weekend",
+    url: "https://www.di.se/nyheter/mestadels-formogna-som-koper-mina-verk/",
   },
   {
-    "date": "21 November 2025",
-    "text": "Ulrica Hydman Vallien Foundation Talent Scholarship",
-    "url": "https://www.ulricahydmanvalliensstiftelse.se/the-scholarships/"
+    date: "21 November 2025",
+    text: "Ulrica Hydman Vallien Foundation Talent Scholarship",
+    url: "https://www.ulricahydmanvalliensstiftelse.se/the-scholarships/",
   },
   {
-    "date": "21 November 2025",
-    "text": "Stockholm Cosmologies, group exhibition, Liljevalchs Konsthall, Stockholm 21 November 2025 – 11 January 2026",
-    "url": "https://liljevalchs.se/en/kalender/stockholm-cosmologies/"
+    date: "21 November 2025",
+    text: "Stockholm Cosmologies, group exhibition, Liljevalchs Konsthall, Stockholm 21 November 2025 – 11 January 2026",
+    url: "https://liljevalchs.se/en/kalender/stockholm-cosmologies/",
   },
   {
-    "date": "14 November 2025",
-    "text": "Deep Cuts, solo exhibition, CFHILL, Stockholm 14 November 2025 – 30 December 2025",
-    "url": "https://www.contemporaryartlibrary.org/project/karim-boumjimar-61510"
+    date: "14 November 2025",
+    text: "Deep Cuts, solo exhibition, CFHILL, Stockholm 14 November 2025 – 30 December 2025",
+    url: "https://www.contemporaryartlibrary.org/project/karim-boumjimar-61510",
   },
   {
-    "date": "1 November 2025",
-    "text": "I Will Look Into the Earth, group exhibition, Helsinki Kunsthalle 1 November 2025 – 11 January 2026",
-    "url": "https://taidehalli.fi/en/events/i-will-look-into-the-earth/"
+    date: "1 November 2025",
+    text: "I Will Look Into the Earth, group exhibition, Helsinki Kunsthalle 1 November 2025 – 11 January 2026",
+    url: "https://taidehalli.fi/en/events/i-will-look-into-the-earth/",
   },
   {
-    "date": "18 October 2025",
-    "text": "This Is Just the Beginning, group exhibition, Miettinen Collection, Berlin 18 October 2025 – 31 December 2025",
-    "url": "https://miettinen-collection.de/2025/10/26/this-is-just-the-beginning/"
+    date: "18 October 2025",
+    text: "This Is Just the Beginning, group exhibition, Miettinen Collection, Berlin 18 October 2025 – 31 December 2025",
+    url: "https://miettinen-collection.de/2025/10/26/this-is-just-the-beginning/",
   },
   {
-    "date": "9 October 2025",
-    "text": "Mouths, Vessels, Portals, solo exhibition, Alice Folker Gallery, Copenhagen 9 October 2025 – 28 November 2025",
-    "url": "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/installation_shots/"
+    date: "9 October 2025",
+    text: "Mouths, Vessels, Portals, solo exhibition, Alice Folker Gallery, Copenhagen 9 October 2025 – 28 November 2025",
+    url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/installation_shots/",
   },
   {
-    "date": "29 August 2025",
-    "text": "Pandemonium Paradiso, solo exhibition, Overgaden – Institute of Contemporary Art, Copenhagen 29 August 2025 – 26 October 2025",
-    "url": "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/"
+    date: "29 August 2025",
+    text: "Pandemonium Paradiso, solo exhibition, Overgaden – Institute of Contemporary Art, Copenhagen 29 August 2025 – 26 October 2025",
+    url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
   },
   {
-    "date": "27 June 2025",
-    "text": "Featured in ELLE Danmark",
-    "url": "https://elle.dk/agenda/karriere/billedkunstner-karim-boumjimar-at-springe-ud-som-kunstner-var-i-virkeligheden-svaerere-end-at-springe-ud-som-queer/"
+    date: "27 June 2025",
+    text: "Featured in ELLE Danmark",
+    url: "https://elle.dk/agenda/karriere/billedkunstner-karim-boumjimar-at-springe-ud-som-kunstner-var-i-virkeligheden-svaerere-end-at-springe-ud-som-queer/",
   },
   {
-    "date": "20 June 2025",
-    "text": "When Form Becomes Attitude, group exhibition, Robert Grunenberg, Berlin 20 June 2025 – 9 August 2025",
-    "url": "https://robertgrunenberg.com/exhibition/when-form-becomes-attitude/"
+    date: "20 June 2025",
+    text: "When Form Becomes Attitude, group exhibition, Robert Grunenberg, Berlin 20 June 2025 – 9 August 2025",
+    url: "https://robertgrunenberg.com/exhibition/when-form-becomes-attitude/",
   },
   {
-    "date": "17 May 2025",
-    "text": "Drawings from the Hotel, solo exhibition, Pori Art Museum 17 May 2025 – 6 July 2025",
-    "url": "https://www.poriartmuseum.fi/en/events/karim-boumjimar-drawings-from-the-hotel-2/"
+    date: "17 May 2025",
+    text: "Drawings from the Hotel, solo exhibition, Pori Art Museum 17 May 2025 – 6 July 2025",
+    url: "https://www.poriartmuseum.fi/en/events/karim-boumjimar-drawings-from-the-hotel-2/",
   },
   {
-    "date": "11 April 2025",
-    "text": "Symbiosis (ceramic installation), Kunsthal Charlottenborg — awarded the 2025 Blix Prize"
+    date: "11 April 2025",
+    text: "Symbiosis (ceramic installation), Kunsthal Charlottenborg — awarded the 2025 Blix Prize",
   },
   {
-    "date": "4 April 2025",
-    "text": "MiArt, Milan — participation 4 April 2025 – 6 April 2025"
+    date: "4 April 2025",
+    text: "MiArt, Milan — participation 4 April 2025 – 6 April 2025",
   },
   {
-    "date": "6 February 2025",
-    "text": "Charlottenborg Spring Exhibition, group exhibition, Kunsthal Charlottenborg 6 February 2025 – 9 March 2025",
-    "url": "https://artmap.com/kunsthalcharlottenborg/exhibition/charlottenborg-spring-exhibition-2025"
+    date: "6 February 2025",
+    text: "Charlottenborg Spring Exhibition, group exhibition, Kunsthal Charlottenborg 6 February 2025 – 9 March 2025",
+    url: "https://artmap.com/kunsthalcharlottenborg/exhibition/charlottenborg-spring-exhibition-2025",
   },
   {
-    "date": "17 January 2025",
-    "text": "Kultuur, duo exhibition, TINA Gallery, London 17 January 2025 – 1 March 2025",
-    "url": "https://saliva.live/exhibitions/66c4dd65"
+    date: "17 January 2025",
+    text: "Kultuur, duo exhibition, TINA Gallery, London 17 January 2025 – 1 March 2025",
+    url: "https://saliva.live/exhibitions/66c4dd65",
   },
   {
-    "date": "7 January 2025",
-    "text": "Named one of Frieze “Ten Artists to Watch in 2025”",
-    "url": "https://www.frieze.com/article/ten-artists-watch-2025"
+    date: "7 January 2025",
+    text: "Named one of Frieze “Ten Artists to Watch in 2025”",
+    url: "https://www.frieze.com/article/ten-artists-watch-2025",
   },
   {
-    "date": "11 November 2024",
-    "text": "Featured in Politiken",
-    "url": "https://politiken.dk/kultur/design/art10131168/%C2%BBHun-stod-og-peb-s%C3%A5-jeg-hev-hende-op-i-sengen.-Det-skulle-jeg-nok-ikke-have-gjort%C2%AB"
+    date: "11 November 2024",
+    text: "Featured in Politiken",
+    url: "https://politiken.dk/kultur/design/art10131168/%C2%BBHun-stod-og-peb-s%C3%A5-jeg-hev-hende-op-i-sengen.-Det-skulle-jeg-nok-ikke-have-gjort%C2%AB",
   },
   {
-    "date": "28 October 2023",
-    "text": "Queer Ecologies: Naturally Subversive Aberrations, group exhibition, Centre d’Art la Panera, Lleida 28 October 2023 – 28 January 2024",
-    "url": "https://www.lapanera.cat/en/programming/expositions/ecologies-queer-aberracions-naturalment-subversives"
+    date: "28 October 2023",
+    text: "Queer Ecologies: Naturally Subversive Aberrations, group exhibition, Centre d’Art la Panera, Lleida 28 October 2023 – 28 January 2024",
+    url: "https://www.lapanera.cat/en/programming/expositions/ecologies-queer-aberracions-naturalment-subversives",
   },
   {
-    "date": "4 May 2023",
-    "text": "Fear and Fauna, nomadic group exhibition, ARIEL – Feminism in the Aesthetic 4 May 2023 – 18 June 2023",
-    "url": "https://arielfeminisms.dk/#upcoming-fear-and-fauna"
+    date: "4 May 2023",
+    text: "Fear and Fauna, nomadic group exhibition, ARIEL – Feminism in the Aesthetic 4 May 2023 – 18 June 2023",
+    url: "https://arielfeminisms.dk/#upcoming-fear-and-fauna",
   },
   {
-    "date": "21 August 2021",
-    "text": "Psychopathia Sexualis, group exhibition, Overgaden – Institute of Contemporary Art, Copenhagen 13 August 2021 – 10 October 2021",
-    "url": "https://overgaden.org/en/exhibitions/psychopathia-sexualis"
-  }
+    date: "21 August 2021",
+    text: "Psychopathia Sexualis, group exhibition, Overgaden – Institute of Contemporary Art, Copenhagen 13 August 2021 – 10 October 2021",
+    url: "https://overgaden.org/en/exhibitions/psychopathia-sexualis",
+  },
 ];
 
 export type ExhibitionEntry = {
@@ -236,17 +243,18 @@ export const EXHIBITIONS: ExhibitionEntry[] = [];
 
 export const GRANT_INFO = {
   title: "Working-Class Creative Grant",
-  intro: "A one-off 500 Euro grant awarded throughout the year to a different working-class creative anywhere in the world, funded through art sales.",
+  intro:
+    "A one-off 500 Euro grant awarded throughout the year to a different working-class creative anywhere in the world, funded through art sales.",
   body: [
-  "The grant targets individuals who receive little or no institutional support and who would benefit from practical financial assistance. Recipients can use funds flexibly - for materials, equipment, research, travel, studio costs, or living expenses.",
-  "There are no strings attached and no expectation of exchange. Applications remain in consideration indefinitely with rolling reviews throughout the year and no fixed deadline.",
-  "Previous recipients (2025-2026) include artists and organizations working in visual arts, photography, and community services across international locations.",
-],
+    "The grant targets individuals who receive little or no institutional support and who would benefit from practical financial assistance. Recipients can use funds flexibly - for materials, equipment, research, travel, studio costs, or living expenses.",
+    "There are no strings attached and no expectation of exchange. Applications remain in consideration indefinitely with rolling reviews throughout the year and no fixed deadline.",
+    "Previous recipients (2025-2026) include artists and organizations working in visual arts, photography, and community services across international locations.",
+  ],
   applyEmail: "karim@karimboumjimar.com",
   applySubject: "Grant: Your Name",
   applyChecklist: [
-  "Brief personal introduction",
-  "Work sample or description of interests / situation",
-  "Contact information",
-],
+    "Brief personal introduction",
+    "Work sample or description of interests / situation",
+    "Contact information",
+  ],
 };

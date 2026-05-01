@@ -15,9 +15,7 @@ const ITEMS: { key: View; label: string }[] = [
 export function LeftToolbar() {
   const view = useSelection((s) => s.view);
   const setView = useSelection((s) => s.setView);
-  const condensed = useSelection(
-    (s) => !!(s.selectedId || s.selectedGroupKey),
-  );
+  const condensed = useSelection((s) => !!(s.selectedId || s.selectedGroupKey));
   const deselect = useSelection((s) => s.deselect);
   const indexOpen = useSelection((s) => s.indexOpen);
   const setIndexOpen = useSelection((s) => s.setIndexOpen);

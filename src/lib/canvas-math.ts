@@ -20,8 +20,7 @@ export function workBounds(work: Work): {
   height: number;
 } {
   const img = work.images[0];
-  const aspect =
-    img && img.width && img.height ? img.height / img.width : 1;
+  const aspect = img && img.width && img.height ? img.height / img.width : 1;
   const height = work.width * aspect;
   const minX = work.position.x - work.width / 2;
   const minY = work.position.y - height / 2;
@@ -149,7 +148,8 @@ export function clampTransform(
   const bboxW = Math.max(1, bbox.maxX - bbox.minX);
   const bboxH = Math.max(1, bbox.maxY - bbox.minY);
 
-  const fitScale = Math.min(viewport.w / bboxW, viewport.h / bboxH) * fitPadding;
+  const fitScale =
+    Math.min(viewport.w / bboxW, viewport.h / bboxH) * fitPadding;
   const minScale = Math.max(SCALE_MIN, fitScale);
   const scale = Math.min(SCALE_MAX, Math.max(minScale, t.scale));
 

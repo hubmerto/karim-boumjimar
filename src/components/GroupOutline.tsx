@@ -6,7 +6,7 @@ import { useSelection } from "@/lib/store";
 
 type Props = {
   groupKey: string;
-  /** Tile IDs that belong to this group - used to detect "a tile from this group is selected". */
+  /** Tile IDs that belong to this group - used to detect"a tile from this group is selected". */
   workIds: string[];
   minX: number;
   minY: number;
@@ -90,7 +90,7 @@ function GroupOutlineImpl({
         }}
       >
         <span
-          className={`italic font-bold text-[10px] uppercase tracking-[0.1em] ${
+          className={`italic text-[10px] uppercase tracking-[0.1em] ${
             isActive ? "text-ink" : "text-mute"
           }`}
         >

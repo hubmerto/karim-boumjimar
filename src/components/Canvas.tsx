@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
-import { groupTilesByTitle, workBounds, type Transform } from "@/lib/canvas-math";
+import {
+  groupTilesByTitle,
+  workBounds,
+  type Transform,
+} from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
 import { WorkTile } from "@/components/WorkTile";
@@ -18,8 +22,10 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // gallery view fetches the full project on tap). Change these together
 // if the per-cluster cap or the number of projects changes, otherwise
 // the bento leaves tiles at position (0, 0).
-export const BENTO_COL_COUNTS_DESKTOP = [3, 4, 5, 6, 7, 8, 10, 12, 13, 12, 10, 8, 7, 6, 5, 4, 3];
-export const BENTO_COL_COUNTS_MOBILE  = [3, 5, 7, 9, 7, 5, 3];
+export const BENTO_COL_COUNTS_DESKTOP = [
+  3, 4, 5, 6, 7, 8, 10, 12, 13, 12, 10, 8, 7, 6, 5, 4, 3,
+];
+export const BENTO_COL_COUNTS_MOBILE = [3, 5, 7, 9, 7, 5, 3];
 
 // On mobile, render at most this many tiles per project on the canvas.
 // The gallery view tap-target still fetches the full project, so users
@@ -33,7 +39,6 @@ export const BENTO_ROW_GAP = 130;
 export const BENTO_JITTER_X = 25;
 export const BENTO_JITTER_Y = 25;
 
-
 export function Canvas() {
   const deselect = useSelection((s) => s.deselect);
   const selectedId = useSelection((s) => s.selectedId);
@@ -41,13 +46,14 @@ export function Canvas() {
   const condensed = !!(selectedId || selectedGroupKey);
   // Inspector renders for a tile (300px); ProjectPanel for a group (360px).
   // Canvas right edge must clear whichever are visible so tiles aren't hidden.
-  const rightClass = selectedId && selectedGroupKey
-    ? "md:right-[660px]"
-    : selectedGroupKey
-      ? "md:right-[360px]"
-      : selectedId
-        ? "md:right-[300px]"
-        : "md:right-0";
+  const rightClass =
+    selectedId && selectedGroupKey
+      ? "md:right-[660px]"
+      : selectedGroupKey
+        ? "md:right-[360px]"
+        : selectedId
+          ? "md:right-[300px]"
+          : "md:right-0";
   // Pick a column-count distribution based on viewport. Default to
   // desktop on the server (and on the client first render) so SSR and
   // CSR strings match; useEffect below switches to mobile after mount.
@@ -57,7 +63,9 @@ export function Canvas() {
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
     const apply = () =>
-      setColCounts(mq.matches ? BENTO_COL_COUNTS_MOBILE : BENTO_COL_COUNTS_DESKTOP);
+      setColCounts(
+        mq.matches ? BENTO_COL_COUNTS_MOBILE : BENTO_COL_COUNTS_DESKTOP,
+      );
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
@@ -108,7 +116,8 @@ export function Canvas() {
     // group don't cluster in the bento. Same order across renders.
     const seedSort = (id: string) => {
       let h = 0;
-      for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+      for (let i = 0; i < id.length; i++)
+        h = ((h << 5) - h + id.charCodeAt(i)) | 0;
       const x = Math.sin(h * 0.0001) * 10000;
       return x - Math.floor(x);
     };
@@ -164,8 +173,10 @@ export function Canvas() {
     const map = new Map<string, { x: number; y: number }>();
     if (colCounts !== BENTO_COL_COUNTS_MOBILE) return map;
     const sortedGroups = [...groups].sort((a, b) => {
-      const ay = typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
-      const by = typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
+      const ay =
+        typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
+      const by =
+        typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
       return by - ay || a.label.localeCompare(b.label);
     });
     const maxGroupW = sortedGroups.reduce(
@@ -196,8 +207,7 @@ export function Canvas() {
     // Centre the whole stack vertically.
     const totalH = yCursor - ROW_GAP;
     const yShift = -totalH / 2;
-    for (const [id, off] of map)
-      map.set(id, { x: off.x, y: off.y + yShift });
+    for (const [id, off] of map) map.set(id, { x: off.x, y: off.y + yShift });
     return map;
   }, [groups, colCounts]);
 

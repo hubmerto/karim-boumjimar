@@ -7,7 +7,7 @@ import { SelectedView } from "@/components/InspectorContent";
 export function Inspector() {
   const selectedId = useSelection((s) => s.selectedId);
   const selected = selectedId
-    ? WORKS.find((w) => w.id === selectedId) ?? null
+    ? (WORKS.find((w) => w.id === selectedId) ?? null)
     : null;
   // Bio / contact / representation now live in the dedicated Bio view; the
   // Inspector only shows up when a specific tile is selected.

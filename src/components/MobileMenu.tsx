@@ -71,7 +71,7 @@ export function MobileMenu({
                 >
                   <span>{item.label}</span>
                   {active ? (
-                    <span className="italic font-bold text-[10px] uppercase tracking-[0.1em] text-mute">
+                    <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
                       current
                     </span>
                   ) : null}
@@ -82,10 +82,7 @@ export function MobileMenu({
         </ul>
         <div className="space-y-1 border-t border-line px-6 py-5 text-[12px] text-mute">
           <div>{ARTIST_NAME}</div>
-          <a
-            href={`mailto:${CONTACT.email}`}
-            className="block hover:text-ink"
-          >
+          <a href={`mailto:${CONTACT.email}`} className="block hover:text-ink">
             {CONTACT.email}
           </a>
           <a
