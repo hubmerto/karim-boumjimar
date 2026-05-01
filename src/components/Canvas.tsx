@@ -12,14 +12,19 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 
 // Diamond layouts. Column counts taper symmetrically from a tall middle
 // column out toward shorter edges, producing a rhombus silhouette.
-// Both arrays sum to WORKS.length (123); change them together if the
-// number of works changes, otherwise the bento will leave tiles at
-// position (0, 0).
 //
-// Desktop is a wider diamond (17 cols) so the silhouette reads horizontal
-// in landscape; mobile is taller (11 cols) so it fits a phone in portrait.
+// Desktop sums to 123 (every WORKS entry). Mobile sums to ~39 because
+// only 3 representative tiles per project are rendered on phones (the
+// gallery view fetches the full project on tap). Change these together
+// if the per-cluster cap or the number of projects changes, otherwise
+// the bento leaves tiles at position (0, 0).
 export const BENTO_COL_COUNTS_DESKTOP = [3, 4, 5, 6, 7, 8, 10, 12, 13, 12, 10, 8, 7, 6, 5, 4, 3];
-export const BENTO_COL_COUNTS_MOBILE  = [8, 10, 11, 12, 13, 15, 13, 12, 11, 10, 8];
+export const BENTO_COL_COUNTS_MOBILE  = [3, 5, 7, 9, 7, 5, 3];
+
+// On mobile, render at most this many tiles per project on the canvas.
+// The gallery view tap-target still fetches the full project, so users
+// see every image -- we just keep the canvas memory footprint sane.
+export const MOBILE_TILES_PER_PROJECT = 3;
 // Horizontal gap between columns (canvas-space).
 export const BENTO_COL_GAP = 80;
 // Vertical gap between tiles within a column.
@@ -43,8 +48,6 @@ export function Canvas() {
       : selectedId
         ? "md:right-[300px]"
         : "md:right-0";
-  const groups = useMemo(() => groupTilesByTitle(WORKS), []);
-
   // Pick a column-count distribution based on viewport. Default to
   // desktop on the server (and on the client first render) so SSR and
   // CSR strings match; useEffect below switches to mobile after mount.
@@ -60,6 +63,42 @@ export function Canvas() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
+  // On mobile, curate down to MOBILE_TILES_PER_PROJECT representative
+  // tiles per project. The full WORKS is still passed to ExpandedGroup
+  // so the gallery view shows every image of the tapped project.
+  const isMobileLayout = colCounts === BENTO_COL_COUNTS_MOBILE;
+  const displayWorks = useMemo(() => {
+    if (!isMobileLayout) return WORKS;
+    const byGroup = new Map<string, typeof WORKS>();
+    for (const w of WORKS) {
+      const key = `${w.title}|${w.year}`;
+      let arr = byGroup.get(key);
+      if (!arr) {
+        arr = [];
+        byGroup.set(key, arr);
+      }
+      arr.push(w);
+    }
+    const curated: typeof WORKS = [];
+    for (const arr of byGroup.values()) {
+      if (arr.length <= MOBILE_TILES_PER_PROJECT) {
+        curated.push(...arr);
+      } else {
+        // Pick first / middle / last for a spread sample.
+        curated.push(
+          arr[0],
+          arr[Math.floor(arr.length / 2)],
+          arr[arr.length - 1],
+        );
+      }
+    }
+    return curated;
+  }, [isMobileLayout]);
+
+  // Groups derived from the displayed set so per-cluster bbox math
+  // matches what's actually on the canvas.
+  const groups = useMemo(() => groupTilesByTitle(displayWorks), [displayWorks]);
+
   // Bento layout: every tile gets a slot in a packed grid centred on
   // (0,0). Order is reverse-chronological by group, then by tile index
   // within group, so adjacent works tend to be from the same era — but
@@ -73,7 +112,7 @@ export function Canvas() {
       const x = Math.sin(h * 0.0001) * 10000;
       return x - Math.floor(x);
     };
-    const ordered = [...WORKS].sort(
+    const ordered = [...displayWorks].sort(
       (a, b) => seedSort(a.id) - seedSort(b.id),
     );
     // Per-column masonry: tile counts come from the chosen distribution
@@ -115,7 +154,7 @@ export function Canvas() {
       cursor += count;
     });
     return map;
-  }, [colCounts]);
+  }, [colCounts, displayWorks]);
 
   // On mobile, after the spread, lay groups out in a 2-column vertical
   // stack so the canvas reads tall instead of wide. Per-tile offset =
@@ -165,15 +204,14 @@ export function Canvas() {
   // dispersion is now driven by zoom (set inside useCanvas), so it lives
   // alongside the transform from the same hook below.
 
-  // Dynamic bento bbox: derive from the actual tile offsets so the
-  // camera frames whatever layout (desktop 7-col or mobile 4-col) is
-  // currently active without overflow.
+  // Dynamic bento bbox: derive from the actual tile offsets of the
+  // displayed set so the camera frames what's actually on screen.
   const bentoBbox = useMemo(() => {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    for (const w of WORKS) {
+    for (const w of displayWorks) {
       const wb = workBounds(w);
       const off = tileOffsets.get(w.id) ?? { x: 0, y: 0 };
       minX = Math.min(minX, wb.minX + off.x);
@@ -182,17 +220,16 @@ export function Canvas() {
       maxY = Math.max(maxY, wb.maxY + off.y);
     }
     return { minX, minY, maxX, maxY };
-  }, [tileOffsets]);
+  }, [tileOffsets, displayWorks]);
 
-  // Spread bbox: where tiles end up after the user interacts. Differs
-  // from the true works bbox on mobile (groups packed into a 2-col
-  // vertical stack via baseOffsets).
+  // Spread bbox: where tiles end up post-interaction. On mobile this
+  // packs the curated subset into a 2-col group stack via baseOffsets.
   const spreadBbox = useMemo(() => {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    for (const w of WORKS) {
+    for (const w of displayWorks) {
       const wb = workBounds(w);
       const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
       minX = Math.min(minX, wb.minX + off.x);
@@ -201,7 +238,7 @@ export function Canvas() {
       maxY = Math.max(maxY, wb.maxY + off.y);
     }
     return { minX, minY, maxX, maxY };
-  }, [baseOffsets]);
+  }, [baseOffsets, displayWorks]);
 
   const {
     containerRef,
@@ -214,7 +251,7 @@ export function Canvas() {
     isAnimating,
     animDuration,
     dispersion,
-  } = useCanvas(WORKS, bentoBbox, spreadBbox, baseOffsets);
+  } = useCanvas(displayWorks, bentoBbox, spreadBbox, baseOffsets);
 
   // Mirror the live transform in a ref so the gallery FLIP can read the
   // settled values without re-rendering ExpandedGroup on every pan/zoom.
@@ -299,7 +336,7 @@ export function Canvas() {
               canvasScale={transform.scale}
             />
           ))}
-          {WORKS.map((w) => (
+          {displayWorks.map((w) => (
             <WorkTile key={w.id} work={w} />
           ))}
         </div>

@@ -35,13 +35,17 @@ export function ExpandedGroup() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  // Compute the SETTLED screen rect for each tile in a group, derived from
-  // canvas math (workBounds + baseOffset) projected through the live canvas
-  // transform. We avoid getBoundingClientRect because it returns the rect
-  // mid-transition, so the FLIP would land at an in-progress position and
-  // the tiles would visibly shift afterwards. Using the math gives us the
-  // FINAL position the tile is animating toward, so the FLIP completes on
-  // exactly the right spot.
+  // Compute the SETTLED screen rect for each tile in a group that is
+  // actually mounted on the canvas. On mobile only a curated subset is
+  // rendered, so works not in the DOM get no source rect and the FLIP
+  // useLayoutEffect skips them (they fade in at their natural gallery
+  // position instead of animating from a phantom canvas spot).
+  //
+  // For mounted tiles, the rect is derived from canvas math
+  // (workBounds + baseOffset projected through the live transform)
+  // rather than getBoundingClientRect, because the latter returns
+  // the in-progress CSS-transition position and the FLIP would land
+  // at a mid-animation spot.
   const captureSourceRects = useCallback((groupKey: string) => {
     const map = new Map<string, DOMRect>();
     const container = containerRef?.current;
@@ -53,6 +57,10 @@ export function ExpandedGroup() {
     const cr = container.getBoundingClientRect();
     for (const w of WORKS) {
       if (`${w.title}|${w.year}` !== groupKey) continue;
+      const tileEl = document.querySelector(
+        `button[data-work-id="${w.id}"]`,
+      );
+      if (!tileEl) continue;
       const wb = workBounds(w);
       const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
       const left = cr.left + (wb.minX + off.x) * t.scale + t.tx;
