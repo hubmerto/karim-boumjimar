@@ -12,13 +12,11 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Both mobile and desktop default to the spatial canvas. On mobile the
- * Canvas curates down to 3 tiles per project (full set is fetched on
- * tap via ExpandedGroup), Inspector + ProjectPanel render as a bottom
- * sheet (InspectorSheet), and the LeftToolbar collapses into MobileMenu.
- * ?simple=1 forces the simple vertical-scroll fallback as an escape
- * hatch — this previously shipped as the mobile default while iOS
- * Safari was crashing on canvas mount.
+ * Mobile defaults to the simple vertical-scroll fallback — the canvas
+ * crashes mobile browsers shortly after mount (observed on iOS Safari
+ * and Android Chrome). Desktop gets the canvas. ?canvas=1 forces the
+ * canvas on mobile for testing fixes; ?simple=1 forces the fallback
+ * on desktop.
  */
 type Mode = "loading" | "simple" | "canvas";
 
@@ -26,7 +24,10 @@ function detectMode(): Mode {
   if (typeof window === "undefined") return "loading";
   const params = new URLSearchParams(window.location.search);
   if (params.get("simple") === "1") return "simple";
-  return "canvas";
+  if (params.get("canvas") === "1") return "canvas";
+  return window.matchMedia("(max-width: 767px)").matches
+    ? "simple"
+    : "canvas";
 }
 
 export default function Home() {
@@ -36,6 +37,10 @@ export default function Home() {
 
   useEffect(() => {
     setMode(detectMode());
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setMode(detectMode());
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   // Loading shell: just the splash + crash overlay between SSR and the
