@@ -1170,16 +1170,25 @@ function TileLayer({
         intro = 1 - Math.pow(1 - t, 3);
       }
 
-      // Visibility logic:
-      //  - core tile: visible always (subject to intro stagger)
-      //  - extra tile: visible only when its project IS the
-      //    selected group view's project (and we're in spread).
+      // Visibility:
+      //  - Overview (no spread): cores visible (subject to intro
+      //    stagger), extras invisible.
+      //  - Group view (spread): ONLY the selected project's tiles
+      //    visible — cores + extras for that project. Every other
+      //    tile (core or extra, in any other project) fades out.
+      //    This makes the bento diamond cleanly disappear when a
+      //    group opens, leaving just the selected project's
+      //    cluster on a clean canvas.
       const isCore = spec.tier === "core";
-      const inSelectedGroup = isSpread && spec.projectKey === selKey;
-      const targetAlpha = isCore || inSelectedGroup ? intro : 0;
-      // Slower alpha lerp (0.06 ≈ ~700ms time constant) so extras
-      // feather in/out instead of popping when the user switches
-      // between group views.
+      const isInSelectedProject = spec.projectKey === selKey;
+      let targetAlpha: number;
+      if (!isSpread) {
+        targetAlpha = isCore ? intro : 0;
+      } else {
+        targetAlpha = isInSelectedProject ? intro : 0;
+      }
+      // Slower alpha lerp (0.06 ≈ ~700ms time constant) so the
+      // bento and the cluster crossfade smoothly.
       sprite.alpha += (targetAlpha - sprite.alpha) * 0.06;
 
       // Position: only the SELECTED project's tiles flow into
