@@ -7,6 +7,7 @@ import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
 import { LeftToolbar } from "@/components/LeftToolbar";
 import { MobileFallback } from "@/components/MobileFallback";
+import { MobileNav } from "@/components/MobileNav";
 import { Splash } from "@/components/Splash";
 import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
@@ -73,6 +74,7 @@ export default function Home() {
     return (
       <>
         <CanvasPixi />
+        <MobileNav />
         <Splash />
         <CrashOverlay />
       </>
