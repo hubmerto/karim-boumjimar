@@ -549,28 +549,31 @@ export function CanvasPixi() {
       if (r.x + r.w > maxX) maxX = r.x + r.w;
       if (r.y + r.h > maxY) maxY = r.y + r.h;
     }
-    // Padding around the group + a generous SHEET_HEAD_ROOM so
-    // the camera leaves room at the bottom for the InspectorSheet
-    // (which peeks ~56px and expands to mid ~45% of viewport).
-    // The cluster sits in the TOP portion of the viewport, not
-    // dead-centered — leaves the bottom for the info tab as the
-    // user requested.
-    const PAD = 80;
-    const SHEET_HEAD_ROOM = 380;
+    // Fit the cluster into the VISIBLE area — the band of the
+    // viewport between the TopBar (top) and the InspectorSheet's
+    // peek (bottom). Centring inside that band puts the cluster
+    // visually middle of what the user actually sees, with all
+    // tiles inside the frame.
+    const PAD = 50;
+    const TOP_RESERVE = 48; // TopBar height
+    const BOTTOM_RESERVE = 56; // InspectorSheet peek height
+    const visibleH = Math.max(1, size.h - TOP_RESERVE - BOTTOM_RESERVE);
     const bboxW = Math.max(1, maxX - minX + PAD * 2);
-    const bboxH = Math.max(1, maxY - minY + PAD * 2 + SHEET_HEAD_ROOM);
+    const bboxH = Math.max(1, maxY - minY + PAD * 2);
     const targetScale = Math.min(
-      Math.min(size.w / bboxW, size.h / bboxH) * 0.95,
+      Math.min(size.w / bboxW, visibleH / bboxH),
       3,
     );
     const cx = (minX + maxX) / 2;
-    // Shift target Y upward by half the sheet headroom so the
-    // cluster's centre lands in the upper portion of the visible
-    // area, leaving the lower portion clear for the sheet.
-    const cy = (minY + maxY) / 2 - SHEET_HEAD_ROOM / 2 / targetScale;
+    const cy = (minY + maxY) / 2;
+    // Anchor the cluster's centre in the MIDDLE of the visible
+    // band (between TopBar and sheet peek) so it lands optically
+    // centered for the user, not just geometrically centred in
+    // the raw viewport.
+    const visibleCenterY = TOP_RESERVE + visibleH / 2;
     const target: Transform = {
       tx: size.w / 2 - cx * targetScale,
-      ty: size.h / 2 - cy * targetScale,
+      ty: visibleCenterY - cy * targetScale,
       scale: targetScale,
     };
 
