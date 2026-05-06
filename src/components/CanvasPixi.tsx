@@ -246,6 +246,101 @@ export function CanvasPixi() {
     });
   }, [size, displayWorks, bentoMap, isMobile]);
 
+  // Camera zoom-to-group on first tap. Mirrors the desktop behaviour:
+  // when navTargetGroupKey is set (by selectWork via the store), fit
+  // the group's bento bbox into the viewport with a smooth cubic-out
+  // animation. Without this the group view stage on mobile felt
+  // invisible — only the InspectorSheet rose, the canvas didn't move.
+  const navTargetGroupKey = useSelection((s) => s.navTargetGroupKey);
+  const clearNav = useSelection((s) => s.clearNav);
+  const animRafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!navTargetGroupKey || !size) return;
+    // Find all sprites that belong to this group and compute the
+    // bbox in canvas-space. Falls back to no-op if no rects yet
+    // (textures still loading).
+    const memberRects: { x: number; y: number; w: number; h: number }[] = [];
+    for (const w of displayWorks) {
+      if (`${w.title}|${w.year}` !== navTargetGroupKey) continue;
+      const slot = bentoMap?.get(w.id);
+      if (slot) memberRects.push(slot);
+      else {
+        const wb = workBounds(w);
+        memberRects.push({ x: wb.minX, y: wb.minY, w: wb.width, h: wb.height });
+      }
+    }
+    if (memberRects.length === 0) {
+      clearNav();
+      return;
+    }
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const r of memberRects) {
+      if (r.x < minX) minX = r.x;
+      if (r.y < minY) minY = r.y;
+      if (r.x + r.w > maxX) maxX = r.x + r.w;
+      if (r.y + r.h > maxY) maxY = r.y + r.h;
+    }
+    // Padding around the group + headroom for the InspectorSheet
+    // peek bar at the bottom (~140px on mobile gives the sheet a
+    // landing zone without covering the group).
+    const PAD = 80;
+    const SHEET_HEAD_ROOM = 140;
+    const bboxW = Math.max(1, maxX - minX + PAD * 2);
+    const bboxH = Math.max(1, maxY - minY + PAD * 2 + SHEET_HEAD_ROOM);
+    const targetScale = Math.min(
+      Math.min(size.w / bboxW, size.h / bboxH) * 0.95,
+      3,
+    );
+    const cx = (minX + maxX) / 2;
+    // Shift the target a bit upward so the sheet's mid snap doesn't
+    // overlap the group.
+    const cy = (minY + maxY) / 2 - SHEET_HEAD_ROOM / 2 / targetScale;
+    const target: Transform = {
+      tx: size.w / 2 - cx * targetScale,
+      ty: size.h / 2 - cy * targetScale,
+      scale: targetScale,
+    };
+
+    // Cubic ease-out tween over 900ms via rAF, mutating both the
+    // PIXI container and React state at the end so the rest of the
+    // app sees the settled value.
+    const start = transformRef.current;
+    const t0 = performance.now();
+    const DURATION = 900;
+    if (animRafRef.current != null) cancelAnimationFrame(animRafRef.current);
+    function tick(now: number) {
+      const t = Math.min(1, (now - t0) / DURATION);
+      const e = 1 - Math.pow(1 - t, 3);
+      const tx = start.tx + (target.tx - start.tx) * e;
+      const ty = start.ty + (target.ty - start.ty) * e;
+      const scale = start.scale + (target.scale - start.scale) * e;
+      transformRef.current = { tx, ty, scale };
+      const c = pixiContainerRef.current;
+      if (c) {
+        c.x = tx;
+        c.y = ty;
+        c.scale.set(scale);
+      }
+      if (t < 1) {
+        animRafRef.current = requestAnimationFrame(tick);
+      } else {
+        animRafRef.current = null;
+        setTransform({ tx, ty, scale });
+        clearNav();
+      }
+    }
+    animRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animRafRef.current != null) {
+        cancelAnimationFrame(animRafRef.current);
+        animRafRef.current = null;
+      }
+    };
+  }, [navTargetGroupKey, size, displayWorks, bentoMap, clearNav]);
+
   // Progressive texture load. Only loads the displayed subset (mobile =
   // ~39 tiles, desktop = 123). The rest are loaded on-demand when the
   // gallery opens.
