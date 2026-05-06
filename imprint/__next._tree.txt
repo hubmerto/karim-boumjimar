@@ -1,0 +1,5 @@
+:HL["/karim-boumjimar/_next/static/chunks/0fic97.9y98z7.css","style"]
+:HL["/karim-boumjimar/_next/static/media/38df7484fe560b25-s.p.0_h8~hcb-m6kp.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/karim-boumjimar/_next/static/media/f5031e7b18bdfbb3-s.p.17530ebvtj~5g.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/karim-boumjimar/logo.svg","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"imprint","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"8o_WYzXh6OdPMPkL5Yv6f"}
