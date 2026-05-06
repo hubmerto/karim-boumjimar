@@ -29,7 +29,12 @@ const LINKS: ReadonlyArray<{
 export function MobileNav() {
   const view = useSelection((s) => s.view);
   const setView = useSelection((s) => s.setView);
+  const galleryOpen = useSelection((s) => s.openProjectKey != null);
   const open = view !== "exhibitions";
+  // Hide the BIO / ABOUT / NEWS tab cluster when EITHER a text view
+  // is open (the X handles closing it) OR a project gallery is open
+  // over the canvas (the gallery has its own header + close button).
+  const navHidden = open || galleryOpen;
 
   // Esc key closes the overlay (mostly for desktop ?pixi=1 testing —
   // mobile users hit the X).
@@ -52,7 +57,7 @@ export function MobileNav() {
           top: 14,
           right: 14,
           zIndex: 30,
-          display: open ? "none" : "flex",
+          display: navHidden ? "none" : "flex",
           gap: 16,
           fontSize: 10,
           fontStyle: "italic",

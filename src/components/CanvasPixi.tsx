@@ -15,6 +15,7 @@ import { descriptionFor, type Description } from "@/data/descriptions";
 import { WORKS } from "@/data/works";
 import { workBounds } from "@/lib/canvas-math";
 import { asset } from "@/lib/paths";
+import { useSelection } from "@/lib/store";
 
 extend({ Container, Sprite });
 
@@ -450,8 +451,12 @@ export function CanvasPixi() {
   }, [textures, displayWorks, bentoMap]);
 
   // Tap-to-open-gallery. Tracks distance moved since pointerdown so a
-  // pan gesture doesn't accidentally count as a tap on a tile.
-  const [openProject, setOpenProject] = useState<string | null>(null);
+  // pan gesture doesn't accidentally count as a tap on a tile. The
+  // openProjectKey lives in the store so MobileNav can hide its tab
+  // links while a gallery is up (otherwise BIO/ABOUT/NEWS would
+  // overlap the gallery's close button + image counter).
+  const openProject = useSelection((s) => s.openProjectKey);
+  const setOpenProject = useSelection((s) => s.setOpenProjectKey);
   const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const onSpriteDown = useCallback((e: { global: { x: number; y: number } }) => {
     tapTrackerRef.current = {
@@ -460,17 +465,20 @@ export function CanvasPixi() {
       t: Date.now(),
     };
   }, []);
-  const onSpriteUp = useCallback((projectKey: string, e: { global: { x: number; y: number } }) => {
-    const start = tapTrackerRef.current;
-    tapTrackerRef.current = null;
-    if (!start) return;
-    const dist = Math.hypot(e.global.x - start.x, e.global.y - start.y);
-    const dt = Date.now() - start.t;
-    // Treat anything that moved more than 8px or took more than 500ms
-    // as a drag / long-press, not a tap.
-    if (dist > 8 || dt > 500) return;
-    setOpenProject(projectKey);
-  }, []);
+  const onSpriteUp = useCallback(
+    (projectKey: string, e: { global: { x: number; y: number } }) => {
+      const start = tapTrackerRef.current;
+      tapTrackerRef.current = null;
+      if (!start) return;
+      const dist = Math.hypot(e.global.x - start.x, e.global.y - start.y);
+      const dt = Date.now() - start.t;
+      // Treat anything that moved more than 8px or took more than 500ms
+      // as a drag / long-press, not a tap.
+      if (dist > 8 || dt > 500) return;
+      setOpenProject(projectKey);
+    },
+    [setOpenProject],
+  );
 
   const wrapperStyle: CSSProperties = {
     position: "fixed",
