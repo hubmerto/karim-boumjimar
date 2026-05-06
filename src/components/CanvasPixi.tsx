@@ -494,14 +494,21 @@ export function CanvasPixi() {
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
   }, [textures, displayWorks, bentoMap]);
 
-  // Tap-to-expand-group. Tracks distance moved since pointerdown so a
-  // pan gesture doesn't accidentally count as a tap on a tile. On a
-  // confirmed tap we route into the existing store flow (selectWork
-  // + expandGroup) so the desktop's ExpandedGroup horizontal strip
-  // and InspectorSheet take over — no custom mobile gallery.
+  // Tap-to-select. Two-stage interaction matches desktop's WorkTile:
+  //  - First tap: selectWork — camera zooms to the group, the
+  //    InspectorSheet bottom panel appears with project info bars
+  //    (the "group view" stage).
+  //  - Tap any tile in the same selected group: expandGroup —
+  //    ExpandedGroup horizontal strip carousel opens (the "gallery"
+  //    stage).
+  // Tracks distance moved since pointerdown so a pan gesture doesn't
+  // accidentally count as a tap on a tile.
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const expandedGroupKeyRef = useRef(expandedGroupKey);
   expandedGroupKeyRef.current = expandedGroupKey;
+  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
+  const selectedGroupKeyRef = useRef(selectedGroupKey);
+  selectedGroupKeyRef.current = selectedGroupKey;
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(null);
@@ -526,12 +533,13 @@ export function CanvasPixi() {
       // Treat anything that moved more than 8px or took more than 500ms
       // as a drag / long-press, not a tap.
       if (dist > 8 || dt > 500) return;
-      // Single-tap on mobile: select the work AND expand the group in
-      // one shot. (Desktop uses two taps because the first hovers/
-      // zooms the camera, the second opens the strip — phones can't
-      // hover, so we collapse those into one.)
-      selectWork(workId, projectKey);
-      expandGroup(projectKey);
+      // Same group already selected -> second tap opens the gallery.
+      // Different group (or nothing) selected -> first tap selects.
+      if (selectedGroupKeyRef.current === projectKey) {
+        expandGroup(projectKey);
+      } else {
+        selectWork(workId, projectKey);
+      }
     },
     [selectWork, expandGroup],
   );
