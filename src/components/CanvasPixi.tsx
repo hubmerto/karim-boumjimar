@@ -971,6 +971,16 @@ export function CanvasPixi() {
       // Treat anything that moved more than 8px or took more than 500ms
       // as a drag / long-press, not a tap.
       if (dist > 8 || dt > 500) return;
+      // Belt-and-braces: when a group is already in view, only
+      // accept taps from that group's tiles. The TileLayer's
+      // eventMode logic should already block hit-tests on faded-
+      // out sprites, but this guards any race during the crossfade.
+      if (
+        selectedGroupKeyRef.current &&
+        selectedGroupKeyRef.current !== projectKey
+      ) {
+        return;
+      }
       // Same group already selected -> second tap opens the gallery.
       // Different group (or nothing) selected -> first tap selects.
       if (selectedGroupKeyRef.current === projectKey) {
@@ -1246,6 +1256,11 @@ function TileLayer({
       // Slower alpha lerp (0.06 ≈ ~700ms time constant) so the
       // bento and the cluster crossfade smoothly.
       sprite.alpha += (targetAlpha - sprite.alpha) * 0.06;
+      // Tiles fading out (or already invisible) shouldn't catch
+      // taps — otherwise the user could accidentally select a
+      // different group while in group view, since alpha 0 sprites
+      // are still hit-tested by default.
+      sprite.eventMode = sprite.alpha > 0.5 ? "static" : "none";
 
       // Position: only the SELECTED project's tiles flow into
       // their cluster slot when group view opens. Other projects'
