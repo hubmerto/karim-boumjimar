@@ -28,6 +28,10 @@ type Phase = "opening" | "open" | "closing";
 export function ExpandedGroup() {
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const collapseGroup = useSelection((s) => s.collapseGroup);
+  // selectedId is the tile the user actually tapped to open the
+  // gallery — used below to scroll the carousel to that image
+  // instead of starting at index 0.
+  const selectedId = useSelection((s) => s.selectedId);
   const { baseOffsets, transformRef, containerRef } = useDispersion();
   const [displayKey, setDisplayKey] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("opening");
@@ -154,6 +158,18 @@ export function ExpandedGroup() {
     const t = setTimeout(() => setPhase("open"), TRANSITION_MS + 40);
     return () => clearTimeout(t);
   }, [phase, displayKey]);
+
+  // Scroll the carousel so the tile the user actually tapped lands
+  // first. Without this the strip always opened at index 0
+  // regardless of which photo launched it.
+  useLayoutEffect(() => {
+    if (!displayKey || !selectedId) return;
+    const target = itemRefs.current.get(selectedId);
+    const scroller = scrollRef.current;
+    if (!target || !scroller) return;
+    const targetLeft = target.offsetLeft - scroller.offsetLeft;
+    scroller.scrollLeft = targetLeft;
+  }, [displayKey, selectedId]);
 
   // FLIP close: animate each item back to its canvas-tile rect, then unmount.
   useLayoutEffect(() => {

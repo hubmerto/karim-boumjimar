@@ -984,6 +984,10 @@ export function CanvasPixi() {
       // Same group already selected -> second tap opens the gallery.
       // Different group (or nothing) selected -> first tap selects.
       if (selectedGroupKeyRef.current === projectKey) {
+        // Re-select on the second tap too so selectedId reflects
+        // the tile that LAUNCHED the gallery — ExpandedGroup uses
+        // it to open the carousel scrolled to that image.
+        selectWork(workId, projectKey);
         // Capture screen rects of every sprite in this group so the
         // gallery (ExpandedGroup) can FLIP-animate from those exact
         // bento positions into the carousel — visual continuity from
