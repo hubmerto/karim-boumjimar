@@ -505,7 +505,7 @@ export function useCanvas(
       const off = destOffsets?.get(work.id) ?? { x: 0, y: 0 };
       animateTransform(
         centerOn(v, work.position.x + off.x, work.position.y + off.y, scale),
-        2800,
+        4500,
       );
     },
     [animateTransform, destOffsets],
@@ -569,7 +569,7 @@ export function useCanvas(
         requestAnimationFrame(() => {
           animateTransform(
             fitBboxTransform(groupBbox, viewportRect(), 0.92),
-            2800,
+            4500,
           );
         });
       }

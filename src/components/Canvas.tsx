@@ -327,7 +327,7 @@ export function Canvas() {
             // Slow + soft easing for nav animations. Duration varies:
             // 5000ms for the auto-zoom 200→100%, 1100ms otherwise.
             transition: isAnimating
-              ? `transform ${animDuration}ms cubic-bezier(0.16, 1, 0.3, 1)`
+              ? `transform ${animDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`
               : "none",
             willChange: "transform",
           }}

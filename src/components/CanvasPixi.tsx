@@ -105,12 +105,14 @@ function diamondColCounts(n: number): number[] {
 }
 
 /** Lay tiles out in a tall diamond bento. Returns a Map of work.id ->
- * (canvas-space x, y) for the centre of each tile. Independent from
- * each tile's natural workBounds position. */
+ * (canvas-space x, y, w, h) for each tile. Independent from each
+ * tile's natural workBounds position. This is the OVERVIEW layout —
+ * tiles appear scattered, not by project. */
 function bentoLayout(works: typeof WORKS) {
   const counts = diamondColCounts(works.length);
   const cols = counts.length;
-  // Deterministic shuffle so works from the same group don't cluster.
+  // Deterministic shuffle so works from the same group don't cluster
+  // in the bento.
   const seedSort = (id: string) => {
     let h = 0;
     for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
@@ -151,6 +153,96 @@ function bentoLayout(works: typeof WORKS) {
   return map;
 }
 
+/** Lay tiles out clustered by their project group, mirroring the
+ * desktop's mobile baseOffsets layout. Each project's works keep
+ * their relative canvas positions (so tiles in the same group cluster
+ * together visually) and the groups themselves are arranged in a
+ * 2-column vertical stack ordered by year (newest first).
+ *
+ * Used as the SPREAD target — tiles animate from bento (overview) to
+ * this cluster layout when a group is selected, the same way desktop
+ * tiles disperse from bento to canvas positions. */
+function clusterLayout(works: typeof WORKS) {
+  const groupsMap = new Map<string, typeof WORKS>();
+  for (const w of works) {
+    const key = `${w.title}|${w.year}`;
+    let arr = groupsMap.get(key);
+    if (!arr) {
+      arr = [];
+      groupsMap.set(key, arr);
+    }
+    arr.push(w);
+  }
+  const groupList = Array.from(groupsMap.entries()).map(([key, ws]) => {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const w of ws) {
+      const wb = workBounds(w);
+      if (wb.minX < minX) minX = wb.minX;
+      if (wb.minY < minY) minY = wb.minY;
+      if (wb.maxX > maxX) maxX = wb.maxX;
+      if (wb.maxY > maxY) maxY = wb.maxY;
+    }
+    return { key, works: ws, minX, minY, maxX, maxY, year: ws[0].year };
+  });
+  // Newest first.
+  groupList.sort((a, b) => {
+    const ay =
+      typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
+    const by =
+      typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
+    return by - ay;
+  });
+
+  const maxGroupW = groupList.reduce(
+    (m, g) => Math.max(m, g.maxX - g.minX),
+    0,
+  );
+  const COLS = 2;
+  const COL_GAP = 200;
+  const ROW_GAP = 300;
+  const colWidth = maxGroupW + COL_GAP;
+  let yCursor = 0;
+  let rowH = 0;
+  const map = new Map<
+    string,
+    { x: number; y: number; w: number; h: number }
+  >();
+  groupList.forEach((g, i) => {
+    const col = i % COLS;
+    const slotCx = (col - (COLS - 1) / 2) * colWidth;
+    const gH = g.maxY - g.minY;
+    const slotCy = yCursor + gH / 2;
+    const origCx = (g.minX + g.maxX) / 2;
+    const origCy = (g.minY + g.maxY) / 2;
+    const offX = slotCx - origCx;
+    const offY = slotCy - origCy;
+    for (const w of g.works) {
+      const wb = workBounds(w);
+      map.set(w.id, {
+        x: wb.minX + offX,
+        y: wb.minY + offY,
+        w: wb.width,
+        h: wb.height,
+      });
+    }
+    rowH = Math.max(rowH, gH);
+    if (col === COLS - 1 || i === groupList.length - 1) {
+      yCursor += rowH + ROW_GAP;
+      rowH = 0;
+    }
+  });
+  // Centre the whole stack vertically.
+  const totalH = yCursor - ROW_GAP;
+  const yShift = -totalH / 2;
+  for (const [id, slot] of map) {
+    map.set(id, { x: slot.x, y: slot.y + yShift, w: slot.w, h: slot.h });
+  }
+  return map;
+}
+
 export function CanvasPixi() {
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [textures, setTextures] = useState<Map<string, Texture>>(new Map());
@@ -187,6 +279,13 @@ export function CanvasPixi() {
   // come later.
   const bentoMap = useMemo(
     () => (isMobile ? bentoLayout(displayWorks) : null),
+    [isMobile, displayWorks],
+  );
+  // Cluster layout — the SPREAD target for the group view stage.
+  // Tiles animate from bento (overview) to cluster (group view) when
+  // a group is selected, mirroring desktop's dispersion.
+  const clusterMap = useMemo(
+    () => (isMobile ? clusterLayout(displayWorks) : null),
     [isMobile, displayWorks],
   );
 
@@ -296,10 +395,14 @@ export function CanvasPixi() {
     // Find all sprites that belong to this group and compute the
     // bbox in canvas-space. Falls back to no-op if no rects yet
     // (textures still loading).
+    // Use CLUSTER positions for the bbox — the sprites animate
+    // from bento -> cluster when the group view opens, so the
+    // camera should target where the tiles WILL BE, not where they
+    // currently sit on the bento.
     const memberRects: { x: number; y: number; w: number; h: number }[] = [];
     for (const w of displayWorks) {
       if (`${w.title}|${w.year}` !== navTargetGroupKey) continue;
-      const slot = bentoMap?.get(w.id);
+      const slot = clusterMap?.get(w.id) ?? bentoMap?.get(w.id);
       if (slot) memberRects.push(slot);
       else {
         const wb = workBounds(w);
@@ -376,7 +479,7 @@ export function CanvasPixi() {
         animRafRef.current = null;
       }
     };
-  }, [navTargetGroupKey, size, displayWorks, bentoMap, clearNav]);
+  }, [navTargetGroupKey, size, displayWorks, bentoMap, clusterMap, clearNav]);
 
   // Progressive texture load. Only loads the displayed subset (mobile =
   // ~39 tiles, desktop = 123). The rest are loaded on-demand when the
@@ -621,16 +724,38 @@ export function CanvasPixi() {
       .map((w) => {
         const tex = textures.get(w.id);
         if (!tex) return null;
-        const slot = bentoMap?.get(w.id);
         const projectKey = `${w.title}|${w.year}`;
-        if (slot) {
-          return { id: w.id, workId: w.id, projectKey, tex, x: slot.x, y: slot.y, w: slot.w, h: slot.h };
-        }
+        const bento = bentoMap?.get(w.id);
+        const cluster = clusterMap?.get(w.id);
         const wb = workBounds(w);
-        return { id: w.id, workId: w.id, projectKey, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
+        // Default both to workBounds when no map is provided (desktop
+        // fallback / pre-layout). On mobile both maps are populated.
+        const bentoX = bento?.x ?? wb.minX;
+        const bentoY = bento?.y ?? wb.minY;
+        const clusterX = cluster?.x ?? wb.minX;
+        const clusterY = cluster?.y ?? wb.minY;
+        const w_ = bento?.w ?? wb.width;
+        const h_ = bento?.h ?? wb.height;
+        return {
+          id: w.id,
+          workId: w.id,
+          projectKey,
+          tex,
+          // Initial render position — current sprite x/y is set
+          // imperatively in the ref callback; these are just the
+          // bento defaults the layer uses on first mount.
+          x: bentoX,
+          y: bentoY,
+          w: w_,
+          h: h_,
+          bentoX,
+          bentoY,
+          clusterX,
+          clusterY,
+        };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
-  }, [textures, displayWorks, bentoMap]);
+  }, [textures, displayWorks, bentoMap, clusterMap]);
 
   // Tap-to-select. Two-stage interaction matches desktop's WorkTile:
   //  - First tap: selectWork — camera zooms to the group, the
@@ -730,6 +855,7 @@ export function CanvasPixi() {
               sprites={sprites}
               onSpriteDown={onSpriteDown}
               onSpriteUp={onSpriteUp}
+              spread={selectedGroupKey != null}
             />
           </pixiContainer>
         </Application>
@@ -775,6 +901,13 @@ type SpriteSpec = {
   y: number;
   w: number;
   h: number;
+  // Bento (overview) and cluster (group view) target positions.
+  // TileLayer's useTick lerps each sprite's x/y toward whichever
+  // is current based on the spread flag.
+  bentoX: number;
+  bentoY: number;
+  clusterX: number;
+  clusterY: number;
 };
 
 /** Per-tile fade-in timing. Designed so EVERY tile finishes by the
@@ -801,6 +934,7 @@ function TileLayer({
   sprites,
   onSpriteDown,
   onSpriteUp,
+  spread,
 }: {
   sprites: SpriteSpec[];
   onSpriteDown: (e: { global: { x: number; y: number } }) => void;
@@ -809,40 +943,47 @@ function TileLayer({
     workId: string,
     e: { global: { x: number; y: number } },
   ) => void;
+  /** True when the user is in group view — sprites should animate
+   * to their cluster positions. False = overview (bento). */
+  spread: boolean;
 }) {
   // Map of sprite id -> live PIXI Sprite. Populated by ref callbacks
-  // when each <pixiSprite> mounts; consumed by useTick to update alpha.
+  // when each <pixiSprite> mounts; consumed by useTick to update
+  // alpha + position.
   const spriteRefs = useRef<Map<string, PixiSpriteType>>(new Map());
   // When THIS particular sprite was first allowed to start its fade.
   // Stamped lazily inside the ticker the first frame splashGone is
   // true, NOT at mount time — sprites mount silently behind the
   // splash and only begin their fade-in once the logo is gone.
   const mountedAtRef = useRef<Map<string, number>>(new Map());
-  // True once every visible sprite has reached alpha = 1; we stop the
-  // ticker work after that to stay quiet on the GPU.
-  const allDoneRef = useRef(false);
-  // Mirror splashGone in a ref so the always-on tick callback reads
-  // the live value without needing a closure rebind.
+  // Per-sprite spec lookup so the ticker can reach bento/cluster
+  // positions without iterating the sprites array each frame.
+  const specByIdRef = useRef<Map<string, SpriteSpec>>(new Map());
+  for (const s of sprites) specByIdRef.current.set(s.id, s);
+  // Mirror splashGone + spread in refs so the always-on tick reads
+  // the live values without re-binding the callback.
   const splashGoneState = useSelection((s) => s.splashGone);
   const splashGoneRef = useRef(splashGoneState);
   splashGoneRef.current = splashGoneState;
+  const spreadRef = useRef(spread);
+  spreadRef.current = spread;
 
   useTick(() => {
-    if (allDoneRef.current) return;
     const splashGone = splashGoneRef.current;
     if (!splashGone) {
       // Hold sprites at alpha 0 while the logo is up. Don't stamp
       // mountedAt yet so the fade-in starts the first frame splash
-      // clears, not at sprite-mount time (which can be 1-2s earlier).
+      // clears, not at sprite-mount time.
       for (const [, sprite] of spriteRefs.current) {
         if (sprite) sprite.alpha = 0;
       }
       return;
     }
     const now = performance.now();
-    let allDone = true;
+    const isSpread = spreadRef.current;
     for (const [id, sprite] of spriteRefs.current) {
       if (!sprite) continue;
+      // Alpha (fade-in stagger).
       let mountedAt = mountedAtRef.current.get(id);
       if (mountedAt == null) {
         mountedAt = now;
@@ -858,9 +999,20 @@ function TileLayer({
         alpha = 1 - Math.pow(1 - t, 3);
       }
       sprite.alpha = alpha;
-      if (alpha < 1) allDone = false;
+
+      // Position (bento <-> cluster lerp). 0.08 lerp factor at 60fps
+      // gives a ~500ms-feeling settle. Sprites in the SELECTED group
+      // and sprites in OTHER groups all move to their cluster
+      // positions; this matches desktop's dispersion which shifts
+      // every tile, not just the selected group's.
+      const spec = specByIdRef.current.get(id);
+      if (spec) {
+        const targetX = isSpread ? spec.clusterX : spec.bentoX;
+        const targetY = isSpread ? spec.clusterY : spec.bentoY;
+        sprite.x += (targetX - sprite.x) * 0.08;
+        sprite.y += (targetY - sprite.y) * 0.08;
+      }
     }
-    if (allDone && spriteRefs.current.size > 0) allDoneRef.current = true;
   });
 
   return (
@@ -871,12 +1023,15 @@ function TileLayer({
           ref={(node: PixiSpriteType | null) => {
             if (node) {
               spriteRefs.current.set(s.id, node);
-              // FIRST mount: start invisible. Don't stamp mountedAt
-              // here — the ticker stamps it the first frame splash
-              // is gone, so the fade-in starts in sync with the
-              // camera intro animation.
+              // FIRST mount: start invisible at the bento position.
+              // Don't stamp mountedAt — the ticker stamps it the
+              // first frame splash is gone, so the fade-in starts
+              // in sync with the camera intro animation. We also
+              // initialise x/y here (vs JSX prop) so the ticker's
+              // per-frame mutations aren't smashed by re-renders.
               node.alpha = 0;
-              allDoneRef.current = false;
+              node.x = s.bentoX;
+              node.y = s.bentoY;
             } else {
               spriteRefs.current.delete(s.id);
               // Keep mountedAt — if React re-fires the ref callback
@@ -885,8 +1040,6 @@ function TileLayer({
             }
           }}
           texture={s.tex}
-          x={s.x}
-          y={s.y}
           width={s.w}
           height={s.h}
           eventMode="static"
