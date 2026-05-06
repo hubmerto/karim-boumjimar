@@ -73,6 +73,26 @@ a {
   text-decoration: none;
 }
 
+/* Image protection. Pairs with the JS-side ContentGuard which
+   blocks the contextmenu on these elements. Together they remove
+   the obvious one-click "save image" paths:
+   - user-select: none stops double-click word selection on the
+     image itself + drag-to-text-cursor selection
+   - -webkit-user-drag: none + the draggable={false} JSX prop block
+     drag-to-desktop / drag-to-tab
+   - -webkit-touch-callout: none disables iOS long-press save menu
+   Text content (bio, about, legal) stays selectable so users can
+   copy emails / links / addresses. */
+img,
+picture,
+canvas {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-selection);
   outline-offset: 2px;
