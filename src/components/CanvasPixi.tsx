@@ -266,17 +266,22 @@ export function CanvasPixi() {
     cy: number;
   } | null>(null);
 
+  // Mirror live transform in a ref so applyTransform always reads the
+  // current value, never a stale closure copy. Critical for incremental
+  // pan: each touchmove delta needs to apply to the LATEST transform,
+  // not the one that existed when the listener was attached.
+  const transformRef = useRef(transform);
+  transformRef.current = transform;
+
   // Coalesce transform updates to one per animation frame. Pinch and
   // touchmove can fire 60+ times per second; without this each event
-  // triggers a React render of the whole sprite tree, which on iOS
-  // Chrome was exceeding React's update budget mid-gesture.
+  // triggers a React render of the whole sprite tree.
   const pendingTransformRef = useRef<Transform | null>(null);
   const rafRef = useRef<number | null>(null);
   const applyTransform = useCallback(
     (updater: (prev: Transform) => Transform) => {
-      pendingTransformRef.current = updater(
-        pendingTransformRef.current ?? transform,
-      );
+      const current = pendingTransformRef.current ?? transformRef.current;
+      pendingTransformRef.current = updater(current);
       if (rafRef.current !== null) return;
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null;
@@ -285,7 +290,7 @@ export function CanvasPixi() {
         if (next) setTransform(next);
       });
     },
-    [transform],
+    [],
   );
   useEffect(
     () => () => {
@@ -307,7 +312,7 @@ export function CanvasPixi() {
         const dy = t1.clientY - t2.clientY;
         pinchRef.current = {
           distance: Math.hypot(dx, dy),
-          scale: transform.scale,
+          scale: transformRef.current.scale,
           cx: (t1.clientX + t2.clientX) / 2,
           cy: (t1.clientY + t2.clientY) / 2,
         };
@@ -420,7 +425,11 @@ export function CanvasPixi() {
       el.removeEventListener("pointermove", onPointerMove);
       el.removeEventListener("pointerup", onPointerUp);
     };
-  }, [transform.scale]);
+    // Deliberately empty deps: applyTransform is stable (reads from refs)
+    // and we want one set of listeners attached for the component's life,
+    // not re-attached on every gesture frame.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sprites = useMemo(() => {
     return displayWorks
