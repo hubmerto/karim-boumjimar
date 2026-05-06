@@ -298,9 +298,11 @@ export function CanvasPixi() {
         const t1 = e.touches[0];
         const t2 = e.touches[1];
         const d = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        // Cap scale at 3x so a runaway pinch can't ask the GPU to draw
+        // sprites at 5000+px and exhaust texture fillrate / memory.
         const newScale = Math.max(
-          0.01,
-          Math.min(10, pinchRef.current.scale * (d / pinchRef.current.distance)),
+          0.02,
+          Math.min(3, pinchRef.current.scale * (d / pinchRef.current.distance)),
         );
         // Anchor the zoom around the pinch centre so the canvas point
         // under the user's fingers stays put.
@@ -334,7 +336,7 @@ export function CanvasPixi() {
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.005);
         setTransform((t) => {
-          const newScale = Math.max(0.01, Math.min(10, t.scale * factor));
+          const newScale = Math.max(0.02, Math.min(3, t.scale * factor));
           const eff = newScale / t.scale;
           return {
             scale: newScale,
@@ -416,7 +418,7 @@ export function CanvasPixi() {
           height={size.h}
           background="#ffffff"
           antialias
-          resolution={typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1}
+          resolution={typeof window !== "undefined" ? Math.min(1.5, window.devicePixelRatio || 1) : 1}
           autoDensity
         >
           <pixiContainer x={transform.tx} y={transform.ty} scale={transform.scale}>
