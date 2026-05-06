@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CanvasPixi } from "@/components/CanvasPixi";
 import { CrashOverlay } from "@/components/CrashOverlay";
 import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
@@ -12,22 +13,26 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Mobile defaults to the simple vertical-scroll fallback — the canvas
- * crashes mobile browsers shortly after mount (observed on iOS Safari
- * and Android Chrome). Desktop gets the canvas. ?canvas=1 forces the
- * canvas on mobile for testing fixes; ?simple=1 forces the fallback
- * on desktop.
+ * Three modes:
+ *  - "pixi": WebGL canvas (mobile default; the DOM canvas crashed
+ *    iOS Safari, the Pixi version doesn't).
+ *  - "canvas": DOM canvas + full desktop chrome (TopBar, LeftToolbar
+ *    etc.). Desktop default.
+ *  - "simple": vertical-scroll fallback (kept around as an escape
+ *    hatch via ?simple=1 — mostly for accessibility / WebGL-disabled
+ *    browsers).
+ *
+ * Query params override the auto-detect: ?pixi=1, ?canvas=1, ?simple=1.
  */
-type Mode = "loading" | "simple" | "canvas";
+type Mode = "loading" | "simple" | "canvas" | "pixi";
 
 function detectMode(): Mode {
   if (typeof window === "undefined") return "loading";
   const params = new URLSearchParams(window.location.search);
   if (params.get("simple") === "1") return "simple";
   if (params.get("canvas") === "1") return "canvas";
-  return window.matchMedia("(max-width: 767px)").matches
-    ? "simple"
-    : "canvas";
+  if (params.get("pixi") === "1") return "pixi";
+  return window.matchMedia("(max-width: 767px)").matches ? "pixi" : "canvas";
 }
 
 export default function Home() {
@@ -44,7 +49,7 @@ export default function Home() {
   }, []);
 
   // Loading shell: just the splash + crash overlay between SSR and the
-  // first useEffect tick (which decides simple vs canvas).
+  // first useEffect tick (which decides which mode to render).
   if (mode === "loading") {
     return (
       <>
@@ -58,6 +63,16 @@ export default function Home() {
     return (
       <>
         <MobileFallback />
+        <Splash />
+        <CrashOverlay />
+      </>
+    );
+  }
+
+  if (mode === "pixi") {
+    return (
+      <>
+        <CanvasPixi />
         <Splash />
         <CrashOverlay />
       </>
