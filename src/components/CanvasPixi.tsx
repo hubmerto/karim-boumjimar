@@ -153,18 +153,17 @@ function bentoLayout(works: typeof WORKS) {
   return map;
 }
 
-/** Place extras (non-curated works) in a small grid just below
- * their group's cores in the bento. When the user selects a group,
- * the cores DON'T move — they stay in the diamond — and the
- * extras for that group fade in at these positions, giving the
- * "missing pictures appear next to the group" effect the user
- * asked for. Other groups' extras stay invisible.
+/** For each project, lay out its FULL photo set (cores + extras)
+ * in a tight 4-column grid centred at the project's cores'
+ * centroid in the bento. When the user enters group view, every
+ * tile in the project (including the cores) flows into this grid
+ * — looks like one coherent cluster of the project rather than
+ * "scattered cores plus a separate grid of extras".
  *
- * Position relative to cores' bento bbox:
- *   - Centered horizontally at the cores' centroid
- *   - Stacked in a 4-column grid below the cores' bbox
+ * The grid is anchored where the cores already sit so the camera
+ * doesn't need to fly across the canvas, just zoom in.
  */
-function extrasNearCoresLayout(
+function projectClusterLayout(
   works: typeof WORKS,
   coreIds: Set<string>,
   bento: Map<string, { x: number; y: number; w: number; h: number }>,
@@ -186,43 +185,52 @@ function extrasNearCoresLayout(
   }
 
   for (const [, groupWorks] of byGroup) {
-    const coreSlots: { x: number; y: number; w: number; h: number }[] = [];
+    // Anchor: centroid of the project's cores in bento. Falls back
+    // to 0,0 if no cores have a bento entry.
+    let cx = 0;
+    let cy = 0;
+    let coreCount = 0;
+    let cellW = 0;
+    let cellH = 0;
     for (const w of groupWorks) {
       if (!coreIds.has(w.id)) continue;
       const slot = bento.get(w.id);
-      if (slot) coreSlots.push(slot);
+      if (!slot) continue;
+      cx += slot.x + slot.w / 2;
+      cy += slot.y + slot.h / 2;
+      if (slot.w > cellW) cellW = slot.w;
+      if (slot.h > cellH) cellH = slot.h;
+      coreCount += 1;
     }
-    if (coreSlots.length === 0) continue;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    let cellW = 0;
-    let cellH = 0;
-    for (const s of coreSlots) {
-      if (s.x < minX) minX = s.x;
-      if (s.y < minY) minY = s.y;
-      if (s.x + s.w > maxX) maxX = s.x + s.w;
-      if (s.y + s.h > maxY) maxY = s.y + s.h;
-      if (s.w > cellW) cellW = s.w;
-      if (s.h > cellH) cellH = s.h;
+    if (coreCount > 0) {
+      cx /= coreCount;
+      cy /= coreCount;
     }
-    const cx = (minX + maxX) / 2;
+    if (cellW === 0) cellW = 200;
+    if (cellH === 0) cellH = 200;
 
-    const extras = groupWorks.filter((w) => !coreIds.has(w.id));
-    if (extras.length === 0) continue;
-
+    // Lay every tile in the project (cores + extras) in a 4-col
+    // grid centred at (cx, cy). Order: cores first, then extras.
+    const ordered = [
+      ...groupWorks.filter((w) => coreIds.has(w.id)),
+      ...groupWorks.filter((w) => !coreIds.has(w.id)),
+    ];
     const COLS = 4;
     const GAP = 24;
     const stride = cellW + GAP;
-    const yStart = maxY + GAP * 2;
-    extras.forEach((w, i) => {
+    const rowH = cellH + GAP;
+    const totalRows = Math.ceil(ordered.length / COLS);
+    // Centre the whole grid vertically too, so the project sits
+    // at its centroid rather than dangling below it.
+    const gridH = totalRows * cellH + (totalRows - 1) * GAP;
+    const yStart = cy - gridH / 2 + cellH / 2;
+
+    ordered.forEach((w, i) => {
       const wb = workBounds(w);
       const col = i % COLS;
       const row = Math.floor(i / COLS);
       const xCenter = cx + (col - (COLS - 1) / 2) * stride;
-      const yCenter = yStart + row * (cellH + GAP) + cellH / 2;
+      const yCenter = yStart + row * rowH;
       result.set(w.id, {
         x: xCenter - wb.width / 2,
         y: yCenter - wb.height / 2,
@@ -370,12 +378,14 @@ export function CanvasPixi() {
     if (!isMobile) return null;
     return bentoLayout(WORKS.filter((w) => coreIds.has(w.id)));
   }, [isMobile, coreIds]);
-  // Extras grid: each extra is positioned in a 4-col grid right
-  // below its group's cores. Cores DON'T move when a group is
-  // selected — only the extras for that group fade in here.
-  const extrasMap = useMemo(() => {
+  // Project cluster layout: every project's full photo set in a
+  // tight 4-col grid, anchored at the project's cores' centroid in
+  // bento. When a group is selected, both cores and extras flow
+  // into this grid — visually one coherent cluster of the project,
+  // not "scattered cores plus a separate grid of extras".
+  const clusterMap = useMemo(() => {
     if (!isMobile || !bentoMap) return null;
-    return extrasNearCoresLayout(WORKS, coreIds, bentoMap);
+    return projectClusterLayout(WORKS, coreIds, bentoMap);
   }, [isMobile, bentoMap, coreIds]);
 
   // Compute viewport size on mount and on resize. Avoids SSR issues by
@@ -499,15 +509,14 @@ export function CanvasPixi() {
     // Find all sprites that belong to this group and compute the
     // bbox in canvas-space. Falls back to no-op if no rects yet
     // (textures still loading).
-    // Camera fits the group's cores (bento positions, fixed) +
-    // their extras (extras-grid positions, also fixed). Cores are
-    // already where they sit in overview, but the camera zooms in
-    // so they fill the frame; extras fade in below them within the
-    // same frame.
+    // Camera fits the project's CLUSTER bbox — every tile in the
+    // project (cores flying in + extras fading in) lives at its
+    // clusterMap slot in group view, so that bbox is exactly what
+    // we want to frame.
     const memberRects: { x: number; y: number; w: number; h: number }[] = [];
     for (const w of displayWorks) {
       if (`${w.title}|${w.year}` !== navTargetGroupKey) continue;
-      const slot = bentoMap?.get(w.id) ?? extrasMap?.get(w.id);
+      const slot = clusterMap?.get(w.id);
       if (slot) memberRects.push(slot);
       else {
         const wb = workBounds(w);
@@ -586,7 +595,7 @@ export function CanvasPixi() {
         animRafRef.current = null;
       }
     };
-  }, [navTargetGroupKey, size, displayWorks, bentoMap, extrasMap, clearNav]);
+  }, [navTargetGroupKey, size, displayWorks, clusterMap, clearNav]);
 
   // Progressive texture load. Loads ALL works' thumbs (so the
   // group view can show the full project assembled in place), but
@@ -836,40 +845,36 @@ export function CanvasPixi() {
         const projectKey = `${w.title}|${w.year}`;
         const wb = workBounds(w);
         const isCore = coreIds.has(w.id);
-        // Cores anchor at their bento slot. Extras anchor at the
-        // extras-grid slot (just below their group's cores). Both
-        // are STATIC — neither moves between overview and group
-        // view. The "group view" stage is signalled by:
-        //   - camera zooming to fit the group's cores + extras
-        //   - extras' alpha lerping 0 -> 1 (visible only when their
-        //     project matches the selected group)
-        const slot = isCore ? bentoMap?.get(w.id) : extrasMap?.get(w.id);
-        const x = slot?.x ?? wb.minX;
-        const y = slot?.y ?? wb.minY;
-        const w_ = slot?.w ?? wb.width;
-        const h_ = slot?.h ?? wb.height;
+        const cluster = clusterMap?.get(w.id);
+        const clusterX = cluster?.x ?? wb.minX;
+        const clusterY = cluster?.y ?? wb.minY;
+        // Cores have a bento slot AND a cluster slot — they fly
+        // from bento -> cluster on group view, back on close.
+        // Extras only have a cluster slot — they don't move, just
+        // fade in/out in place.
+        const bentoSlot = isCore ? bentoMap?.get(w.id) : null;
+        const bentoX = bentoSlot?.x ?? clusterX;
+        const bentoY = bentoSlot?.y ?? clusterY;
+        const w_ = cluster?.w ?? bentoSlot?.w ?? wb.width;
+        const h_ = cluster?.h ?? bentoSlot?.h ?? wb.height;
         return {
           id: w.id,
           workId: w.id,
           projectKey,
           tex,
           tier: (isCore ? "core" : "extra") as "core" | "extra",
-          x,
-          y,
+          x: bentoX,
+          y: bentoY,
           w: w_,
           h: h_,
-          // Position is static — bento and cluster targets are the
-          // same. The TileLayer's spread tween is a no-op for the
-          // position channel; only the alpha channel changes between
-          // overview and group view.
-          bentoX: x,
-          bentoY: y,
-          clusterX: x,
-          clusterY: y,
+          bentoX,
+          bentoY,
+          clusterX,
+          clusterY,
         };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
-  }, [textures, displayWorks, bentoMap, extrasMap, coreIds]);
+  }, [textures, displayWorks, bentoMap, clusterMap, coreIds]);
 
   // Tap-to-select. Two-stage interaction matches desktop's WorkTile:
   //  - First tap: selectWork — camera zooms to the group, the
@@ -1110,7 +1115,12 @@ function TileLayer({
       snap.set(id, { x: sprite.x, y: sprite.y });
     }
     spreadFromRef.current = snap;
-  }, [spread]);
+    // selectedGroupKey is in the dep list too: when the user
+    // switches between groups, snapshot the new "from" so the
+    // previous group's cores tween back to bento while the new
+    // group's cores tween out to their cluster — same animation
+    // beat as a fresh group-view open.
+  }, [spread, selectedGroupKey]);
   // Mirror splashGone + spread + selectedGroupKey in refs so the
   // always-on tick reads the live values without re-binding the
   // callback.
@@ -1172,13 +1182,16 @@ function TileLayer({
       // between group views.
       sprite.alpha += (targetAlpha - sprite.alpha) * 0.06;
 
-      // Position: time-based tween from the snapshotted "from"
-      // position to the current target (bento or cluster). Cubic
-      // in-out easing so tiles drift in (slow start) and settle
-      // (slow end) — synced to the 1800ms camera zoom.
+      // Position: only the SELECTED project's tiles flow into
+      // their cluster slot when group view opens. Other projects'
+      // tiles stay at their bento positions (off-camera once the
+      // camera zooms in). Time-based cubic-in-out tween from the
+      // snapshotted "from" position to the current target, synced
+      // with the 1800ms camera zoom.
       const tweenStart = spreadTweenStartRef.current;
-      const targetX = isSpread ? spec.clusterX : spec.bentoX;
-      const targetY = isSpread ? spec.clusterY : spec.bentoY;
+      const moveToCluster = isSpread && spec.projectKey === selKey;
+      const targetX = moveToCluster ? spec.clusterX : spec.bentoX;
+      const targetY = moveToCluster ? spec.clusterY : spec.bentoY;
       if (tweenStart != null) {
         const t = Math.min(1, (now - tweenStart) / SPREAD_TWEEN_MS);
         const e =
@@ -1189,7 +1202,6 @@ function TileLayer({
         sprite.x = fromX + (targetX - fromX) * e;
         sprite.y = fromY + (targetY - fromY) * e;
       } else {
-        // No tween yet (initial mount) — snap to target.
         sprite.x = targetX;
         sprite.y = targetY;
       }
