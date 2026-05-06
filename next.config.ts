@@ -1,19 +1,29 @@
 import type { NextConfig } from "next";
 
-// Static export for GitHub Pages. The basePath is set by the deploy workflow
-// (NEXT_PUBLIC_BASE_PATH=/karim-boumjimar) so locally `pnpm dev` and
-// `pnpm build` still serve from the root.
+// Two deploy targets:
+//  1. Vercel — runtime server, image optimization on, no basePath, no
+//     trailing slash. The default when no env vars are set.
+//  2. GitHub Pages — static export with `STATIC_EXPORT=1` and
+//     `NEXT_PUBLIC_BASE_PATH=/karim-boumjimar` set in the deploy
+//     workflow. Trailing slashes + unoptimized images.
+const isStaticExport = process.env.STATIC_EXPORT === "1";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // Only emit a static export when explicitly building for GH Pages.
+  // On Vercel we want the runtime so <Image> can optimize on the fly.
+  ...(isStaticExport ? { output: "export" as const } : {}),
   basePath,
   // GitHub Pages serves directories with trailing slashes, and serves
   // index.html on directory hits — this matches that convention.
-  trailingSlash: true,
+  // Vercel doesn't need it, and turning it on there would cause
+  // unnecessary 308 redirects.
+  trailingSlash: isStaticExport,
   images: {
-    // Static export can't use Next's image optimization runtime.
-    unoptimized: true,
+    // Static export can't use Next's image optimization runtime, so we
+    // ship raw resized files. On Vercel we let the platform transcode
+    // to WebP/AVIF and resize on demand.
+    unoptimized: isStaticExport,
   },
   // Allow LAN-IP access during dev so the site can be tested from another
   // device on the same network (phone, tablet, second machine).
