@@ -10,6 +10,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { descriptionFor, type Description } from "@/data/descriptions";
 import { WORKS } from "@/data/works";
 import { workBounds } from "@/lib/canvas-math";
 import { asset } from "@/lib/paths";
@@ -641,7 +642,12 @@ function TileLayer({
 /** DOM overlay that shows all images for the tapped project. Plain
  * <img> tags (5-20 per gallery) are well within iOS Safari's budget;
  * the only thing the canvas approach can't handle is the dense overview
- * with 100+ images all at once. */
+ * with 100+ images all at once.
+ *
+ * Layout: horizontal full-bleed image carousel that snaps one image at
+ * a time. A pull-up bottom sheet sits on top with the project's long-
+ * form description and credits — collapsed it just shows the title
+ * peek; tapped it expands to ~70% of the viewport. */
 function PixiGallery({
   projectKey,
   onClose,
@@ -654,6 +660,14 @@ function PixiGallery({
     () => WORKS.filter((w) => `${w.title}|${w.year}` === projectKey),
     [projectKey],
   );
+  const desc = useMemo(
+    () => descriptionFor(title, Number(year)),
+    [title, year],
+  );
+
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Lock body scroll while the gallery is open.
   useEffect(() => {
@@ -673,6 +687,15 @@ function PixiGallery({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Track which image the carousel is currently scrolled to so the
+  // header can show "3 / 12".
+  function onScroll() {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    if (idx !== currentIdx) setCurrentIdx(idx);
+  }
+
   return (
     <div
       role="dialog"
@@ -684,23 +707,42 @@ function PixiGallery({
         zIndex: 50,
         display: "flex",
         flexDirection: "column",
-        WebkitOverflowScrolling: "touch",
+        overflow: "hidden",
       }}
     >
+      {/* Floating header — sits above the carousel so images can run
+          full-bleed underneath it. */}
       <header
         style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
-          padding: "12px 16px",
-          borderBottom: "1px solid #eee",
+          gap: 12,
+          padding: "16px 16px 32px",
           fontSize: 12,
-          flexShrink: 0,
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0.92), rgba(255,255,255,0))",
+          pointerEvents: "none",
         }}
       >
-        <div>
+        <div style={{ pointerEvents: "auto" }}>
           <div style={{ color: "#111" }}>{title}</div>
           <div style={{ fontStyle: "italic", color: "#999" }}>{year}</div>
+        </div>
+        <div
+          style={{
+            color: "#999",
+            fontSize: 11,
+            paddingTop: 2,
+            pointerEvents: "auto",
+          }}
+        >
+          {currentIdx + 1} / {works.length}
         </div>
         <button
           type="button"
@@ -710,50 +752,229 @@ function PixiGallery({
             background: "transparent",
             border: 0,
             color: "#999",
-            fontSize: 18,
+            fontSize: 22,
+            lineHeight: 1,
             cursor: "pointer",
-            padding: "4px 8px",
+            padding: "0 4px",
+            pointerEvents: "auto",
           }}
         >
           ×
         </button>
       </header>
+
+      {/* Horizontal carousel — each figure is a viewport-wide page. */}
       <div
+        ref={scrollerRef}
+        onScroll={onScroll}
         style={{
           flex: 1,
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-          padding: 12,
           display: "flex",
-          flexDirection: "column",
-          gap: 16,
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {works.map((w) => {
           const img = w.images[0];
           if (!img) return null;
           return (
-            <figure key={w.id} style={{ margin: 0 }}>
+            <figure
+              key={w.id}
+              style={{
+                margin: 0,
+                width: "100vw",
+                height: "100%",
+                flexShrink: 0,
+                scrollSnapAlign: "start",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "72px 16px 96px",
+                boxSizing: "border-box",
+              }}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={asset(img.src)}
                 alt={img.alt}
-                width={img.width}
-                height={img.height}
                 loading="lazy"
                 decoding="async"
                 draggable={false}
                 style={{
-                  display: "block",
-                  width: "100%",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  width: "auto",
                   height: "auto",
-                  background: "#f5f5f5",
+                  objectFit: "contain",
+                  display: "block",
                 }}
               />
             </figure>
           );
         })}
       </div>
+
+      {/* Pull-up bottom sheet with the long-form description + credits. */}
+      <GalleryBottomSheet
+        open={sheetOpen}
+        onToggle={() => setSheetOpen((o) => !o)}
+        desc={desc}
+      />
+    </div>
+  );
+}
+
+const SHEET_PEEK_HEIGHT = 56;
+const SHEET_OPEN_VH = 70;
+
+/** Pull-up bottom sheet. Tap the handle to toggle between the peek
+ * state (just a title bar) and expanded (~70vh, scrollable body). */
+function GalleryBottomSheet({
+  open,
+  onToggle,
+  desc,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  desc: Description | undefined;
+}) {
+  const hasContent = !!desc && (desc.body.length > 0 || desc.credits.length > 0);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 20,
+        height: `${SHEET_OPEN_VH}vh`,
+        transform: open
+          ? "translateY(0)"
+          : `translateY(calc(100% - ${SHEET_PEEK_HEIGHT}px))`,
+        transition: "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)",
+        background: "#fff",
+        borderTop: "1px solid #eee",
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        boxShadow: "0 -8px 24px rgba(0,0,0,0.06)",
+        display: "flex",
+        flexDirection: "column",
+        willChange: "transform",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-label={open ? "Hide details" : "Show details"}
+        style={{
+          appearance: "none",
+          background: "transparent",
+          border: 0,
+          padding: 0,
+          textAlign: "left",
+          cursor: "pointer",
+          color: "inherit",
+          font: "inherit",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            paddingTop: 8,
+          }}
+        >
+          <span
+            style={{
+              display: "block",
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              background: "#ddd",
+            }}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 16px 12px",
+            fontSize: 12,
+            color: "#111",
+          }}
+        >
+          <span>About this exhibition</span>
+          <span
+            style={{
+              fontSize: 14,
+              color: "#999",
+              transform: open ? "rotate(180deg)" : "rotate(0)",
+              transition: "transform 200ms",
+              display: "inline-block",
+            }}
+          >
+            ↑
+          </span>
+        </div>
+      </button>
+
+      {hasContent ? (
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+            padding: "0 20px 32px",
+            fontSize: 13,
+            lineHeight: 1.65,
+            color: "#111",
+          }}
+        >
+          {desc!.body
+            .split("\n\n")
+            .filter((p) => p.trim().length > 0)
+            .map((para, i) => (
+              <p key={i} style={{ margin: i === 0 ? "8px 0 0" : "1em 0 0" }}>
+                {para}
+              </p>
+            ))}
+          {desc!.credits.length > 0 ? (
+            <div
+              style={{
+                marginTop: 28,
+                paddingTop: 16,
+                borderTop: "1px solid #eee",
+                fontSize: 11,
+                fontStyle: "italic",
+                color: "#999",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {desc!.credits.map((c, i) => (
+                <p key={i} style={{ margin: i === 0 ? 0 : "0.5em 0 0" }}>
+                  {c}
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div
+          style={{
+            padding: "8px 20px 20px",
+            fontSize: 12,
+            color: "#999",
+            fontStyle: "italic",
+          }}
+        >
+          No description available.
+        </div>
+      )}
     </div>
   );
 }
