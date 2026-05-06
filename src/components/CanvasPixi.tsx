@@ -221,11 +221,10 @@ function projectClusterLayout(
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    // Adaptive column count so the grid roughly matches the
-    // viewport's aspect ratio. Mobile is portrait (~0.5 wide:tall),
-    // so we want fewer cols + more rows. sqrt(N * 0.4) lands
-    // ~2 cols for 10 tiles, ~3 for 20.
-    const COLS = Math.max(2, Math.min(4, Math.round(Math.sqrt(ordered.length * 0.4))));
+    // Adaptive column count, floor 3 / cap 4 — small projects (3-12
+    // tiles) get 3 cols, larger ones (>12) get 4. sqrt(N * 0.7)
+    // crosses from 3 to 4 around 14 tiles.
+    const COLS = Math.max(3, Math.min(4, Math.round(Math.sqrt(ordered.length * 0.7))));
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
