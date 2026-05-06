@@ -38,6 +38,7 @@ jobs:
 
       - name: Build (static export)
         env:
+          STATIC_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: /karim-boumjimar
         run: pnpm build
 
