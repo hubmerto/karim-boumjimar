@@ -300,10 +300,18 @@ export function ExpandedGroup() {
               <img
                 src={asset(img.src)}
                 alt={img.alt}
+                width={img.width}
+                height={img.height}
                 draggable={false}
                 // h-[88%] (not max-h) so all items render at the same height
-                // regardless of native dimensions. Source images are 800px max
-                // for memory; minor upscaling on landscape is acceptable.
+                // regardless of native dimensions. The width/height attrs
+                // are critical for the FLIP-open animation: without them
+                // the <img> has w=0 until it's downloaded, the parent div
+                // measures 0 width via getBoundingClientRect, and the FLIP
+                // useLayoutEffect skips that tile (the dst.width === 0
+                // guard). Result: gallery jumps in instead of FLIP-ing the
+                // first time the user visits, then works on subsequent
+                // opens because the image is now in cache.
                 className="block h-[88%] w-auto select-none"
               />
             </div>
