@@ -18,8 +18,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-01.webp",
         alt: "Beauty is the Best Defense, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -41,8 +41,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-02.webp",
         alt: "Beauty is the Best Defense, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -64,8 +64,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/beauty-03.webp",
         alt: "Beauty is the Best Defense, installation view",
-        width: 800,
-        height: 462,
+        width: 1600,
+        height: 924,
       },
     ],
     position: {
@@ -86,8 +86,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-01.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 533,
+        width: 1500,
+        height: 1000,
       },
     ],
     position: {
@@ -108,8 +108,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-02.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -130,8 +130,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-03.webp",
         alt: "Birds of Paradise, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -152,8 +152,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-04.webp",
         alt: "Birds of Paradise, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -174,8 +174,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-05.webp",
         alt: "Birds of Paradise, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -196,8 +196,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-06.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -218,8 +218,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-07.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -240,8 +240,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-08.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -262,8 +262,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-09.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -284,8 +284,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/birdsofparadise-10.webp",
         alt: "Birds of Paradise, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -307,8 +307,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-01.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -330,8 +330,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-02.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -353,8 +353,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-03.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -376,8 +376,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-04.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -399,8 +399,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-05.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -422,8 +422,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-06.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 572,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -445,8 +445,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-07.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -468,8 +468,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-08.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -491,8 +491,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-09.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -514,8 +514,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-10.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -537,8 +537,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-11.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 572,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -560,8 +560,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-12.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -583,8 +583,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-13.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -606,8 +606,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-14.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 534,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -629,8 +629,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-15.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 572,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -652,8 +652,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-16.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -675,8 +675,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-17.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -698,8 +698,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-18.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -721,8 +721,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-19.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -744,8 +744,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/moestings-20.webp",
         alt: "Bodies Under Construction, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -766,8 +766,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-01.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1500,
+        height: 1125,
       },
     ],
     position: {
@@ -788,8 +788,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-02.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1500,
+        height: 1125,
       },
     ],
     position: {
@@ -810,8 +810,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-03.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1200,
       },
     ],
     position: {
@@ -832,8 +832,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-04.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1200,
       },
     ],
     position: {
@@ -854,8 +854,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-05.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1200,
       },
     ],
     position: {
@@ -876,8 +876,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-06.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1200,
       },
     ],
     position: {
@@ -898,8 +898,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/liljevalchs-07.webp",
         alt: "Stockholm Cosmologies, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1200,
       },
     ],
     position: {
@@ -920,8 +920,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/deepcuts-01.webp",
         alt: "Deep Cuts, installation view",
-        width: 800,
-        height: 619,
+        width: 1500,
+        height: 1160,
       },
     ],
     position: {
@@ -942,8 +942,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/deepcuts-02.webp",
         alt: "Deep Cuts, installation view",
-        width: 600,
-        height: 800,
+        width: 1200,
+        height: 1600,
       },
     ],
     position: {
@@ -964,8 +964,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/deepcuts-03.webp",
         alt: "Deep Cuts, installation view",
-        width: 595,
-        height: 800,
+        width: 1190,
+        height: 1600,
       },
     ],
     position: {
@@ -983,8 +983,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-01.webp",
         alt: "Drawings, installation view",
-        width: 600,
-        height: 800,
+        width: 1199,
+        height: 1600,
       },
     ],
     position: {
@@ -1002,8 +1002,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-02.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1199,
       },
     ],
     position: {
@@ -1021,8 +1021,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-03.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1199,
       },
     ],
     position: {
@@ -1040,8 +1040,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-04.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1199,
       },
     ],
     position: {
@@ -1059,8 +1059,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-05.webp",
         alt: "Drawings, installation view",
-        width: 609,
-        height: 800,
+        width: 1218,
+        height: 1600,
       },
     ],
     position: {
@@ -1078,8 +1078,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-06.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -1097,8 +1097,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-07.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -1116,8 +1116,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-08.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -1135,8 +1135,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-09.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 529,
+        width: 1600,
+        height: 1058,
       },
     ],
     position: {
@@ -1154,8 +1154,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-10.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -1173,8 +1173,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/drawing-11.webp",
         alt: "Drawings, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1068,
       },
     ],
     position: {
@@ -1195,8 +1195,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-01.webp",
         alt: "Kultuur, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -1217,8 +1217,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-02.webp",
         alt: "Kultuur, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1239,8 +1239,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-03.webp",
         alt: "Kultuur, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -1261,8 +1261,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-04.webp",
         alt: "Kultuur, installation view",
-        width: 572,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1283,8 +1283,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-05.webp",
         alt: "Kultuur, installation view",
-        width: 572,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1305,8 +1305,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-06.webp",
         alt: "Kultuur, installation view",
-        width: 572,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1327,8 +1327,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-07.webp",
         alt: "Kultuur, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -1349,8 +1349,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-08.webp",
         alt: "Kultuur, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -1371,8 +1371,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-09.webp",
         alt: "Kultuur, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1393,8 +1393,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-10.webp",
         alt: "Kultuur, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1415,8 +1415,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-11.webp",
         alt: "Kultuur, installation view",
-        width: 571,
-        height: 800,
+        width: 1143,
+        height: 1600,
       },
     ],
     position: {
@@ -1437,8 +1437,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/kultuur-12.webp",
         alt: "Kultuur, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -1460,8 +1460,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-01.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 533,
+        width: 1500,
+        height: 1000,
       },
     ],
     position: {
@@ -1483,8 +1483,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-02.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 542,
+        width: 1500,
+        height: 1016,
       },
     ],
     position: {
@@ -1506,8 +1506,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-03.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 518,
+        width: 1500,
+        height: 971,
       },
     ],
     position: {
@@ -1529,8 +1529,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-04.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 535,
-        height: 800,
+        width: 1070,
+        height: 1600,
       },
     ],
     position: {
@@ -1552,8 +1552,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-05.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 602,
-        height: 800,
+        width: 1134,
+        height: 1507,
       },
     ],
     position: {
@@ -1575,8 +1575,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-06.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 640,
-        height: 800,
+        width: 1280,
+        height: 1600,
       },
     ],
     position: {
@@ -1598,8 +1598,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-07.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 568,
-        height: 800,
+        width: 1137,
+        height: 1600,
       },
     ],
     position: {
@@ -1621,8 +1621,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-08.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 492,
+        width: 1600,
+        height: 985,
       },
     ],
     position: {
@@ -1644,8 +1644,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-09.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 560,
-        height: 800,
+        width: 1121,
+        height: 1600,
       },
     ],
     position: {
@@ -1667,8 +1667,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-10.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 514,
+        width: 1600,
+        height: 1028,
       },
     ],
     position: {
@@ -1690,8 +1690,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-11.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -1713,8 +1713,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-12.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 606,
-        height: 800,
+        width: 1212,
+        height: 1600,
       },
     ],
     position: {
@@ -1736,8 +1736,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-13.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 540,
+        width: 1600,
+        height: 1080,
       },
     ],
     position: {
@@ -1759,8 +1759,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/pandemonium-14.webp",
         alt: "Pandemonium Paradiso, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -1782,8 +1782,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-01.webp",
         alt: "Symbiosis (MFA), installation view",
-        width: 589,
-        height: 800,
+        width: 1178,
+        height: 1600,
       },
     ],
     position: {
@@ -1805,8 +1805,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-02.webp",
         alt: "Symbiosis (MFA), installation view",
-        width: 640,
-        height: 800,
+        width: 1280,
+        height: 1600,
       },
     ],
     position: {
@@ -1828,8 +1828,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-03.webp",
         alt: "Symbiosis (MFA), installation view",
-        width: 800,
-        height: 533,
+        width: 1500,
+        height: 1000,
       },
     ],
     position: {
@@ -1851,8 +1851,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-04.webp",
         alt: "Symbiosis (MFA), installation view",
-        width: 800,
-        height: 533,
+        width: 1500,
+        height: 1000,
       },
     ],
     position: {
@@ -1874,8 +1874,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-05.webp",
         alt: "Symbiosis (MFA), installation view",
-        width: 639,
-        height: 800,
+        width: 1280,
+        height: 1600,
       },
     ],
     position: {
@@ -1897,8 +1897,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/symbiosis-06.webp",
         alt: "Symbiosis (MFA), installation view",
-        width: 640,
-        height: 800,
+        width: 1280,
+        height: 1600,
       },
     ],
     position: {
@@ -1919,8 +1919,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-01.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -1941,8 +1941,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-02.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -1963,8 +1963,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-03.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -1985,8 +1985,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-04.webp",
         alt: "Glory on Earth, installation view",
-        width: 474,
-        height: 800,
+        width: 846,
+        height: 1429,
       },
     ],
     position: {
@@ -2007,8 +2007,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-05.webp",
         alt: "Glory on Earth, installation view",
-        width: 536,
-        height: 800,
+        width: 1071,
+        height: 1600,
       },
     ],
     position: {
@@ -2029,8 +2029,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-06.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2051,8 +2051,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-07.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2073,8 +2073,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-08.webp",
         alt: "Glory on Earth, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2095,8 +2095,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-09.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2117,8 +2117,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/glory-10.webp",
         alt: "Glory on Earth, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2140,8 +2140,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-01.webp",
         alt: "Spring Has Arrived, installation view",
-        width: 800,
-        height: 530,
+        width: 1500,
+        height: 994,
       },
     ],
     position: {
@@ -2163,8 +2163,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-02.webp",
         alt: "Spring Has Arrived, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2186,8 +2186,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-03.webp",
         alt: "Spring Has Arrived, installation view",
-        width: 800,
-        height: 534,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2209,8 +2209,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-04.webp",
         alt: "Spring Has Arrived, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2232,8 +2232,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-05.webp",
         alt: "Spring Has Arrived, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2255,8 +2255,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/fearandfauna-06.webp",
         alt: "Spring Has Arrived, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2278,8 +2278,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-01.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2301,8 +2301,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-02.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 561,
+        width: 1600,
+        height: 1121,
       },
     ],
     position: {
@@ -2324,8 +2324,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-03.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2347,8 +2347,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-04.webp",
         alt: "Rites of Affection, installation view",
-        width: 533,
-        height: 800,
+        width: 1067,
+        height: 1600,
       },
     ],
     position: {
@@ -2370,8 +2370,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-05.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1066,
       },
     ],
     position: {
@@ -2393,8 +2393,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-06.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2416,8 +2416,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-07.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2439,8 +2439,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-08.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 533,
+        width: 1600,
+        height: 1067,
       },
     ],
     position: {
@@ -2462,8 +2462,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-09.webp",
         alt: "Rites of Affection, installation view",
-        width: 531,
-        height: 800,
+        width: 1061,
+        height: 1600,
       },
     ],
     position: {
@@ -2485,8 +2485,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-10.webp",
         alt: "Rites of Affection, installation view",
-        width: 531,
-        height: 800,
+        width: 1061,
+        height: 1600,
       },
     ],
     position: {
@@ -2508,8 +2508,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-11.webp",
         alt: "Rites of Affection, installation view",
-        width: 530,
-        height: 800,
+        width: 1061,
+        height: 1600,
       },
     ],
     position: {
@@ -2531,8 +2531,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-12.webp",
         alt: "Rites of Affection, installation view",
-        width: 800,
-        height: 530,
+        width: 1600,
+        height: 1061,
       },
     ],
     position: {
@@ -2554,8 +2554,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/rites-13.webp",
         alt: "Rites of Affection, installation view",
-        width: 530,
-        height: 800,
+        width: 1061,
+        height: 1600,
       },
     ],
     position: {
@@ -2576,8 +2576,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-01.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
@@ -2598,8 +2598,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-02.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
@@ -2620,8 +2620,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-03.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
@@ -2642,8 +2642,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-04.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
@@ -2664,8 +2664,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-05.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
@@ -2686,8 +2686,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-06.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 532,
-        height: 800,
+        width: 1065,
+        height: 1600,
       },
     ],
     position: {
@@ -2708,8 +2708,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-07.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
@@ -2730,8 +2730,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/queer-08.webp",
         alt: "Queer ecologies. Naturally subversive aberrations, installation view",
-        width: 800,
-        height: 532,
+        width: 1600,
+        height: 1065,
       },
     ],
     position: {
