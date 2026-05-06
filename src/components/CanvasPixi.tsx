@@ -613,13 +613,21 @@ function TileLayer({
           ref={(node: PixiSpriteType | null) => {
             if (node) {
               spriteRefs.current.set(s.id, node);
+              // FIRST mount only: stamp the start time and start from
+              // alpha=0. We do NOT pass `alpha={0}` as a JSX prop,
+              // because @pixi/react reapplies props on every parent
+              // re-render and would smash the ticker's mutation back
+              // to 0 every time the user zoomed/panned.
               if (!mountedAtRef.current.has(s.id)) {
+                node.alpha = 0;
                 mountedAtRef.current.set(s.id, performance.now());
                 allDoneRef.current = false;
               }
             } else {
               spriteRefs.current.delete(s.id);
-              mountedAtRef.current.delete(s.id);
+              // Keep mountedAt — if React re-fires the ref callback
+              // (e.g. callback identity changed between renders) the
+              // sprite shouldn't restart its fade.
             }
           }}
           texture={s.tex}
@@ -627,7 +635,6 @@ function TileLayer({
           y={s.y}
           width={s.w}
           height={s.h}
-          alpha={0}
           eventMode="static"
           cursor="pointer"
           onPointerDown={onSpriteDown}
