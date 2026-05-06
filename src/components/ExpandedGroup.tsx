@@ -11,6 +11,7 @@ import {
 import { WORKS } from "@/data/works";
 import { workBounds } from "@/lib/canvas-math";
 import { useDispersion } from "@/lib/dispersion";
+import { clearFlipRects, getFlipRect } from "@/lib/flipRects";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 
@@ -49,6 +50,29 @@ export function ExpandedGroup() {
   const captureSourceRects = useCallback(
     (groupKey: string) => {
       const map = new Map<string, DOMRect>();
+      // Try the Pixi handoff first — CanvasPixi populates this with
+      // sprite screen rects right before calling expandGroup, so the
+      // mobile FLIP source matches exactly where the user saw each
+      // tile on the bento. After consuming, clear so a stale
+      // snapshot can't leak into a different group's open.
+      let usedFlipHandoff = false;
+      for (const w of WORKS) {
+        if (`${w.title}|${w.year}` !== groupKey) continue;
+        const r = getFlipRect(w.id);
+        if (r) {
+          map.set(w.id, r);
+          usedFlipHandoff = true;
+        }
+      }
+      if (usedFlipHandoff) {
+        clearFlipRects();
+        sourceRectsRef.current = map;
+        return;
+      }
+
+      // Desktop path: derive source rects from the DOM canvas's
+      // workBounds + dispersion offsets, projected through the live
+      // transform.
       const container = containerRef?.current;
       const t = transformRef?.current;
       if (!container || !t) {

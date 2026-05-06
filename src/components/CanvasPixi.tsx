@@ -19,6 +19,7 @@ import {
 } from "react";
 import { WORKS } from "@/data/works";
 import { workBounds } from "@/lib/canvas-math";
+import { setFlipRects } from "@/lib/flipRects";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 import { thumbSrc } from "@/lib/thumbs";
@@ -637,12 +638,32 @@ export function CanvasPixi() {
       // Same group already selected -> second tap opens the gallery.
       // Different group (or nothing) selected -> first tap selects.
       if (selectedGroupKeyRef.current === projectKey) {
+        // Capture screen rects of every sprite in this group so the
+        // gallery (ExpandedGroup) can FLIP-animate from those exact
+        // bento positions into the carousel — visual continuity from
+        // the canvas to the strip. Sprites not in the curated mobile
+        // bento have no rect, so their gallery images simply fade in.
+        const wrapper = containerRef.current;
+        const tNow = transformRef.current;
+        if (wrapper && tNow) {
+          const cr = wrapper.getBoundingClientRect();
+          const map = new Map<string, DOMRect>();
+          for (const s of sprites) {
+            if (s.projectKey !== projectKey) continue;
+            const left = cr.left + s.x * tNow.scale + tNow.tx;
+            const top = cr.top + s.y * tNow.scale + tNow.ty;
+            const width = s.w * tNow.scale;
+            const height = s.h * tNow.scale;
+            map.set(s.workId, new DOMRect(left, top, width, height));
+          }
+          setFlipRects(map);
+        }
         expandGroup(projectKey);
       } else {
         selectWork(workId, projectKey);
       }
     },
-    [selectWork, expandGroup],
+    [selectWork, expandGroup, sprites],
   );
 
   const wrapperStyle: CSSProperties = {
@@ -673,6 +694,7 @@ export function CanvasPixi() {
               sprites={sprites}
               onSpriteDown={onSpriteDown}
               onSpriteUp={onSpriteUp}
+              selectedGroupKey={selectedGroupKey}
             />
           </pixiContainer>
         </Application>
@@ -742,6 +764,7 @@ function TileLayer({
   sprites,
   onSpriteDown,
   onSpriteUp,
+  selectedGroupKey,
 }: {
   sprites: SpriteSpec[];
   onSpriteDown: (e: { global: { x: number; y: number } }) => void;
@@ -750,40 +773,53 @@ function TileLayer({
     workId: string,
     e: { global: { x: number; y: number } },
   ) => void;
+  selectedGroupKey: string | null;
 }) {
   // Map of sprite id -> live PIXI Sprite. Populated by ref callbacks
   // when each <pixiSprite> mounts; consumed by useTick to update alpha.
   const spriteRefs = useRef<Map<string, PixiSpriteType>>(new Map());
   // When THIS particular sprite first became visible to the renderer.
   const mountedAtRef = useRef<Map<string, number>>(new Map());
-  // True once every visible sprite has reached alpha = 1; we stop the
-  // ticker work after that to stay quiet on the GPU.
-  const allDoneRef = useRef(false);
+  // Map of sprite id -> projectKey, kept in sync with the sprites prop
+  // so the ticker can decide which sprites to dim without re-binding.
+  const projectKeyByIdRef = useRef<Map<string, string>>(new Map());
+  for (const s of sprites) projectKeyByIdRef.current.set(s.id, s.projectKey);
+  // Latest selectedGroupKey from props, mirrored to a ref so the
+  // ticker reads the live value (the tick callback closure is stable
+  // for the layer's lifetime).
+  const selectedGroupKeyRef = useRef(selectedGroupKey);
+  selectedGroupKeyRef.current = selectedGroupKey;
 
   useTick(() => {
-    if (allDoneRef.current) return;
     const now = performance.now();
-    let allDone = true;
+    const selKey = selectedGroupKeyRef.current;
     for (const [id, sprite] of spriteRefs.current) {
       if (!sprite) continue;
       const mountedAt = mountedAtRef.current.get(id);
       if (mountedAt == null) continue;
+
+      // Initial fade-in (intro) — sprite climbs from alpha 0 to 1
+      // over its randomized delay+duration window.
       const { delay, duration } = tileFadeTiming(id);
       const elapsed = now - mountedAt - delay;
-      let alpha;
-      if (elapsed <= 0) {
-        alpha = 0;
-      } else if (elapsed >= duration) {
-        alpha = 1;
-      } else {
-        // ease-out cubic-ish (matches the DOM canvas's cubic-bezier feel)
+      let intro: number;
+      if (elapsed <= 0) intro = 0;
+      else if (elapsed >= duration) intro = 1;
+      else {
         const t = elapsed / duration;
-        alpha = 1 - Math.pow(1 - t, 3);
+        intro = 1 - Math.pow(1 - t, 3);
       }
-      sprite.alpha = alpha;
-      if (alpha < 1) allDone = false;
+
+      // Group-dim factor: sprites NOT in the selected group dim down
+      // to 0.12, sprites IN the selected group (or none selected) at 1.
+      const projectKey = projectKeyByIdRef.current.get(id);
+      const inGroup = !selKey || projectKey === selKey;
+      const target = (inGroup ? 1 : 0.12) * intro;
+
+      // Smoothly lerp toward the target so dim transitions don't pop.
+      // 0.18 lerp factor ≈ 200ms time constant at 60fps.
+      sprite.alpha += (target - sprite.alpha) * 0.18;
     }
-    if (allDone && spriteRefs.current.size > 0) allDoneRef.current = true;
   });
 
   return (
@@ -802,7 +838,6 @@ function TileLayer({
               if (!mountedAtRef.current.has(s.id)) {
                 node.alpha = 0;
                 mountedAtRef.current.set(s.id, performance.now());
-                allDoneRef.current = false;
               }
             } else {
               spriteRefs.current.delete(s.id);
