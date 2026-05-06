@@ -221,16 +221,21 @@ function projectClusterLayout(
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    // Column count chosen so the natural fit-scale gives readable
-    // tile sizes on a portrait viewport. Tiles are ~3500px wide
-    // canvas-space; on a 390px-wide phone, fewer cols means a
-    // smaller cluster bbox horizontally and therefore a higher fit
-    // scale (= bigger tiles).
-    //   ≤3 photos -> 1 column (vertical list, tall single tiles)
+    // Column count: ramp up with project size so small projects
+    // get a single tall column and large projects get a denser
+    // grid.
+    //   ≤3 photos  -> 1 column (vertical list, tall single tiles)
     //   4-9 photos -> 2 columns
-    //   10+ photos -> 3 columns
+    //   10-12      -> 3 columns
+    //   13+        -> 4 columns
     const COLS =
-      ordered.length <= 3 ? 1 : ordered.length <= 9 ? 2 : 3;
+      ordered.length <= 3
+        ? 1
+        : ordered.length <= 9
+          ? 2
+          : ordered.length <= 12
+            ? 3
+            : 4;
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
