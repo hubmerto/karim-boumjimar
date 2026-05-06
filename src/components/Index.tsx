@@ -124,7 +124,7 @@ export function Index({
         className="fixed top-12 bottom-0 left-0 z-40 flex w-[420px] max-w-[90vw] flex-col border-r border-line bg-canvas"
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-4">
-          <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+          <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
             Index · {entries.length}
           </span>
           <div className="flex items-center gap-4">
@@ -142,7 +142,7 @@ export function Index({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="italic text-[14px] text-mute hover:text-ink"
+              className="italic text-caption text-mute hover:text-ink"
             >
               ×
             </button>
@@ -165,7 +165,7 @@ export function Index({
                   navigateToGroup(e.groupKey);
                   onClose();
                 }}
-                className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-[13px] ${
+                className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-ui ${
                   i === activeIdx
                     ? "bg-line text-ink"
                     : "text-ink hover:bg-line"
@@ -177,7 +177,7 @@ export function Index({
                     <span className="text-mute"> · {e.venue}</span>
                   ) : null}
                 </span>
-                <time className="italic text-[12px] text-mute">{e.year}</time>
+                <time className="italic text-xs text-mute">{e.year}</time>
               </button>
             </li>
           ))}
@@ -201,7 +201,7 @@ function SortButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`italic text-[10px] uppercase tracking-[0.1em] ${
+      className={`italic text-meta uppercase tracking-[0.1em] ${
         active ? "text-ink" : "text-mute hover:text-ink"
       }`}
     >

@@ -47,7 +47,7 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+        <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
           About
         </span>
         {showClose ? (
@@ -55,7 +55,7 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
             type="button"
             onClick={closeProject}
             aria-label="Close project description"
-            className="text-[16px] leading-none text-mute hover:text-ink"
+            className="text-base leading-none text-mute hover:text-ink"
           >
             →
           </button>
@@ -63,21 +63,21 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
       </div>
       <div className="space-y-1">
         <h2 className="text-base text-ink">{data.title}</h2>
-        <div className="text-[12px] text-mute">
+        <div className="text-xs text-mute">
           <time>{data.year}</time>
           {data.venue ? ` · ${data.venue}` : ""}
           {data.city ? `, ${data.city}` : ""}
         </div>
       </div>
-      <div className="space-y-3 whitespace-pre-line text-[13px] leading-[1.6] text-ink">
+      <div className="space-y-3 whitespace-pre-line text-ui leading-[1.6] text-pretty break-words text-ink">
         {data.body}
       </div>
       {data.credits.length > 0 ? (
         <div className="border-t border-line pt-4">
-          <div className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+          <div className="italic text-meta uppercase tracking-[0.1em] text-mute">
             Credits
           </div>
-          <div className="mt-2 space-y-1 text-[13px] leading-[1.55] text-ink">
+          <div className="mt-2 space-y-1 text-ui leading-[1.55] text-ink">
             {data.credits.map((line, i) => (
               <div key={i}>{line}</div>
             ))}
@@ -85,10 +85,10 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
         </div>
       ) : data.photoCredit ? (
         <div className="border-t border-line pt-4">
-          <div className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+          <div className="italic text-meta uppercase tracking-[0.1em] text-mute">
             Photography
           </div>
-          <div className="text-[13px] text-ink">{data.photoCredit}</div>
+          <div className="text-ui text-ink">{data.photoCredit}</div>
         </div>
       ) : null}
     </div>

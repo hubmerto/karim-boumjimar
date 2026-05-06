@@ -16,13 +16,13 @@ export function DefaultView() {
   return (
     <div className="space-y-6">
       <h1 className="text-base text-ink">{ARTIST_NAME}</h1>
-      <div className="space-y-3 text-[13px] leading-[1.55] text-ink">
+      <div className="space-y-3 text-ui leading-[1.55] text-ink">
         {BIO_LONG.map((paragraph, i) => (
           <p key={i}>{paragraph}</p>
         ))}
       </div>
       <Section label="REPRESENTATION">
-        <ul className="space-y-1 text-[13px]">
+        <ul className="space-y-1 text-ui">
           {REPRESENTATION.map((rep) => (
             <li key={rep.name}>
               <a
@@ -41,7 +41,7 @@ export function DefaultView() {
       <Section label="CONTACT">
         <a
           href={`mailto:${CONTACT.email}`}
-          className="text-[13px] text-ink hover:text-mute"
+          className="text-ui text-ink hover:text-mute"
         >
           {CONTACT.email}
         </a>
@@ -51,7 +51,7 @@ export function DefaultView() {
           href={CONTACT.instagramUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[13px] text-ink hover:text-mute"
+          className="text-ui text-ink hover:text-mute"
         >
           {CONTACT.instagram}
         </a>
@@ -79,14 +79,14 @@ export function SelectedView({ work }: { work: Work }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+        <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
           Work
         </span>
         <button
           type="button"
           onClick={closeInspector}
           aria-label="Close inspector"
-          className="text-[16px] leading-none text-mute hover:text-ink"
+          className="text-base leading-none text-mute hover:text-ink"
         >
           →
         </button>
@@ -94,10 +94,10 @@ export function SelectedView({ work }: { work: Work }) {
       <dl className="space-y-3">
         {rows.map((row) => (
           <div key={row.label} className="grid grid-cols-[76px_1fr] gap-x-3">
-            <dt className="italic text-[10px] uppercase tracking-[0.1em] text-mute leading-[1.55]">
+            <dt className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
               {row.label}
             </dt>
-            <dd className="text-[13px] leading-[1.55] text-ink break-words">
+            <dd className="text-ui leading-[1.55] text-ink break-words">
               {row.label === "YEAR" || row.label === "DATE" ? (
                 <time>{row.value}</time>
               ) : (
@@ -120,7 +120,7 @@ export function Section({
 }) {
   return (
     <section className="space-y-2 border-t border-line pt-4">
-      <h2 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h2 className="italic text-meta uppercase tracking-[0.1em] text-mute">
         {label}
       </h2>
       {children}

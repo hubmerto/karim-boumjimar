@@ -10,7 +10,7 @@ export function AboutView() {
       <h2 className="text-2xl text-ink leading-tight tracking-tight">
         Bodies, myths, environments - merging.
       </h2>
-      <div className="mt-8 space-y-5 text-[15px] leading-[1.65] text-ink">
+      <div className="mt-8 space-y-5 text-body leading-[1.65] text-pretty break-words text-ink">
         {ABOUT_PARAGRAPHS.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
@@ -19,7 +19,7 @@ export function AboutView() {
       {/* Contact + legal at the end of About. Mirrors the desktop
           LeftToolbar footer, but reachable from the body of the page
           on mobile (where there is no left rail). */}
-      <div className="mt-14 border-t border-line pt-6 text-[12px] leading-[1.6] text-mute">
+      <div className="mt-14 border-t border-line pt-6 text-xs leading-[1.6] text-mute">
         <div className="text-ink">{ARTIST_NAME}</div>
         <a
           href={`mailto:${CONTACT.email}`}

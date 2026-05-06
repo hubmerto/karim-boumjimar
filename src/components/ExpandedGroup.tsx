@@ -267,7 +267,7 @@ export function ExpandedGroup() {
     >
       {heading ? (
         <div
-          className="pointer-events-none absolute left-4 top-4 z-10 italic text-[10px] uppercase tracking-[0.1em] text-mute"
+          className="pointer-events-none absolute left-4 top-4 z-10 italic text-meta uppercase tracking-[0.1em] text-mute"
           style={chromeStyle}
         >
           {heading.title} · <time>{heading.year}</time>
@@ -283,7 +283,7 @@ export function ExpandedGroup() {
           pointerEvents: phase === "open" ? "auto" : "none",
         }}
       >
-        <span className="text-[14px]">×</span>
+        <span className="text-caption">×</span>
       </button>
       <div
         ref={scrollRef}

@@ -33,7 +33,7 @@ export function BioView() {
   return (
     <main className="fixed inset-0 top-12 right-0 z-0 overflow-y-auto bg-canvas md:left-[200px]">
       <div className="max-w-[1280px] px-6 py-10 md:px-10 md:py-14">
-        <h1 className="italic text-[10px] uppercase tracking-[0.1em] text-mute mb-6">
+        <h1 className="italic text-meta uppercase tracking-[0.1em] text-mute mb-6">
           Bio
         </h1>
 
@@ -52,7 +52,7 @@ function BioSide() {
       <h2 className="text-2xl text-ink leading-tight tracking-tight">
         {ARTIST_NAME}
       </h2>
-      <div className="mt-6 space-y-4 text-[15px] leading-[1.6] text-ink">
+      <div className="mt-6 space-y-4 text-body leading-[1.6] text-pretty break-words text-ink">
         {BIO_PARAGRAPHS.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
@@ -127,14 +127,14 @@ function CVSide() {
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <h2 className="text-base text-ink">Curriculum Vitae</h2>
-          <div className="mt-1 text-[12px] text-mute">
+          <div className="mt-1 text-xs text-mute">
             b. {CV_BIO.born}, {CV_BIO.nationality}
           </div>
         </div>
         <a
           href={asset("/cv.pdf")}
           download="Karim_Boumjimar_CV.pdf"
-          className="inline-flex items-center gap-2 border border-ink px-3 py-1.5 text-[11px] italic uppercase tracking-[0.1em] text-ink hover:bg-ink hover:text-canvas"
+          className="inline-flex items-center gap-2 border border-ink px-3 py-1.5 text-label italic uppercase tracking-[0.1em] text-ink hover:bg-ink hover:text-canvas"
         >
           Download CV <span aria-hidden>↓</span>
         </a>
@@ -160,10 +160,10 @@ function Block({
 }) {
   return (
     <div className="space-y-2 border-t border-line pt-4">
-      <h3 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h3 className="italic text-meta uppercase tracking-[0.1em] text-mute">
         {label}
       </h3>
-      <div className="text-[14px] leading-[1.55]">{children}</div>
+      <div className="text-caption leading-[1.55]">{children}</div>
     </div>
   );
 }
@@ -171,10 +171,10 @@ function Block({
 function CvBlock({ label, entries }: { label: string; entries: CvEntry[] }) {
   return (
     <div className="mt-6 border-t border-line pt-4">
-      <h3 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h3 className="italic text-meta uppercase tracking-[0.1em] text-mute">
         {label}
       </h3>
-      <ul className="mt-2 space-y-1.5 text-[13px] leading-[1.5]">
+      <ul className="mt-2 space-y-1.5 text-ui leading-[1.5]">
         {entries.map((e, i) => (
           <li
             key={i}

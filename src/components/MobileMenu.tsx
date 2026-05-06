@@ -90,10 +90,10 @@ export function MobileMenu({
               <button
                 type="button"
                 onClick={() => setMode("index")}
-                className="flex w-full items-center justify-between border-b border-line px-6 py-4 text-left text-[18px] text-ink"
+                className="flex w-full items-center justify-between border-b border-line px-6 py-4 text-left text-lede text-ink"
               >
                 <span>Index</span>
-                <span aria-hidden className="italic text-[12px] text-mute">
+                <span aria-hidden className="italic text-xs text-mute">
                   →
                 </span>
               </button>
@@ -106,11 +106,11 @@ export function MobileMenu({
                     href={item.href}
                     onClick={() => onClose()}
                     aria-current={active ? "page" : undefined}
-                    className="flex w-full items-center justify-between px-6 py-4 text-left text-[18px] text-ink"
+                    className="flex w-full items-center justify-between px-6 py-4 text-left text-lede text-ink"
                   >
                     <span>{item.label}</span>
                     {active ? (
-                      <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+                      <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
                         current
                       </span>
                     ) : null}
@@ -119,7 +119,7 @@ export function MobileMenu({
               );
             })}
           </ul>
-          <div className="space-y-1 border-t border-line px-6 py-5 text-[12px] text-mute">
+          <div className="space-y-1 border-t border-line px-6 py-5 text-xs text-mute">
             <div className="text-ink">{ARTIST_NAME}</div>
             <a
               href={`mailto:${CONTACT.email}`}
@@ -154,14 +154,14 @@ export function MobileMenu({
             <button
               type="button"
               onClick={() => setMode("sections")}
-              className="flex items-center gap-2 text-[14px] text-ink"
+              className="flex items-center gap-2 text-caption text-ink"
             >
-              <span aria-hidden className="italic text-[12px] text-mute">
+              <span aria-hidden className="italic text-xs text-mute">
                 ←
               </span>
               <span>Back</span>
             </button>
-            <span className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+            <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
               Index · {entries.length}
             </span>
           </div>
@@ -174,7 +174,7 @@ export function MobileMenu({
                     navigateToGroup(e.groupKey);
                     onClose();
                   }}
-                  className="grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-6 py-3 text-left text-[14px] text-ink"
+                  className="grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-6 py-3 text-left text-caption text-ink"
                 >
                   <span className="truncate">
                     {e.title}

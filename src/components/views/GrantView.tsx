@@ -12,19 +12,19 @@ export function GrantView() {
       <h2 className="text-2xl text-ink leading-tight tracking-tight">
         {GRANT_INFO.title}
       </h2>
-      <p className="mt-6 text-[15px] leading-[1.6] text-ink">
+      <p className="mt-6 text-body leading-[1.6] text-pretty break-words text-ink">
         {GRANT_INFO.intro}
       </p>
-      <div className="mt-6 space-y-4 text-[15px] leading-[1.6] text-ink">
+      <div className="mt-6 space-y-4 text-body leading-[1.6] text-pretty break-words text-ink">
         {GRANT_INFO.body.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
       </div>
       <section className="mt-10 space-y-3 border-t border-line pt-6">
-        <h3 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+        <h3 className="italic text-meta uppercase tracking-[0.1em] text-mute">
           How to apply
         </h3>
-        <p className="text-[14px] leading-[1.6] text-ink">
+        <p className="text-caption leading-[1.6] text-ink">
           Email{""}
           <a
             href={mailto}
@@ -36,7 +36,7 @@ export function GrantView() {
           with subject line &ldquo;{GRANT_INFO.applySubject}&rdquo;. Please
           include:
         </p>
-        <ul className="ml-5 list-disc space-y-1 text-[14px] leading-[1.6] text-ink">
+        <ul className="ml-5 list-disc space-y-1 text-caption leading-[1.6] text-ink">
           {GRANT_INFO.applyChecklist.map((item) => (
             <li key={item}>{item}</li>
           ))}

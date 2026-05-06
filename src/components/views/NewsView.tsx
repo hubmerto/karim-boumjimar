@@ -10,13 +10,13 @@ export function NewsView() {
         {NEWS.map((entry, i) => {
           const Inner = (
             <>
-              <time className="block italic text-[12px] uppercase tracking-[0.06em] text-mute">
+              <time className="block italic text-xs uppercase tracking-[0.06em] text-mute">
                 {entry.date}
               </time>
-              <div className="text-[14px] leading-[1.55] text-ink">
+              <div className="text-caption leading-[1.55] text-ink">
                 {entry.text}
                 {entry.url ? (
-                  <span className="ml-1 italic text-[12px] text-mute">→</span>
+                  <span className="ml-1 italic text-xs text-mute">→</span>
                 ) : null}
               </div>
             </>

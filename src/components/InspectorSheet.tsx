@@ -169,7 +169,7 @@ export function InspectorSheet() {
                 if (mode === "index") setMode("default");
                 else setSnap((s) => (s === "peek" ? "mid" : "peek"));
               }}
-              className="text-[13px] text-ink"
+              className="text-ui text-ink"
             >
               {mode === "index"
                 ? "← back"
@@ -188,7 +188,7 @@ export function InspectorSheet() {
                   setSnap("full");
                 }
               }}
-              className="italic text-[10px] uppercase tracking-[0.1em] text-mute hover:text-ink"
+              className="italic text-meta uppercase tracking-[0.1em] text-mute hover:text-ink"
             >
               {mode === "index" ? "Close" : "Index"}
             </button>
@@ -254,13 +254,13 @@ function SheetIndex({ onPick }: { onPick: () => void }) {
               navigateTo(e.id);
               onPick();
             }}
-            className="grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-[14px] text-ink active:bg-line"
+            className="grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-caption text-ink active:bg-line"
           >
             <span className="truncate">
               {e.title}
               {e.venue ? <span className="text-mute"> · {e.venue}</span> : null}
             </span>
-            <time className="italic text-[12px] text-mute">{e.year}</time>
+            <time className="italic text-xs text-mute">{e.year}</time>
           </button>
         </li>
       ))}

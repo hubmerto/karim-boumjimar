@@ -90,7 +90,7 @@ function GroupOutlineImpl({
         }}
       >
         <span
-          className={`italic text-[10px] uppercase tracking-[0.1em] ${
+          className={`italic text-meta uppercase tracking-[0.1em] ${
             isActive ? "text-ink" : "text-mute"
           }`}
         >

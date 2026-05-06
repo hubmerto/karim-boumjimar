@@ -30,7 +30,7 @@ export function LeftToolbar() {
           condensed ? "opacity-100" : "pointer-events-none opacity-0"
         } transition-opacity duration-200`}
       >
-        <span className="text-[14px]">›</span>
+        <span className="text-caption">›</span>
       </button>
 
       <nav
@@ -45,7 +45,7 @@ export function LeftToolbar() {
             onClick={() => setIndexOpen(!indexOpen)}
             aria-haspopup="dialog"
             aria-expanded={indexOpen}
-            className="flex w-full items-center border-b border-line px-6 py-3 text-left text-[13px] text-ink hover:text-mute"
+            className="flex w-full items-center border-b border-line px-6 py-3 text-left text-ui text-ink hover:text-mute"
           >
             <span>Index</span>
           </button>
@@ -57,7 +57,7 @@ export function LeftToolbar() {
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`flex w-full items-center gap-3 px-6 py-3 text-left text-[13px] ${
+                    className={`flex w-full items-center gap-3 px-6 py-3 text-left text-ui ${
                       active ? "text-ink" : "text-mute hover:text-ink"
                     }`}
                   >
@@ -72,7 +72,7 @@ export function LeftToolbar() {
             })}
           </ul>
         </div>
-        <div className="px-6 py-5 text-[11px] text-mute">
+        <div className="px-6 py-5 text-label text-mute">
           <div className="flex gap-3">
             <Link href="/imprint" className="hover:text-ink">
               Imprint

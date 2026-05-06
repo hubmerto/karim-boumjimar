@@ -36,8 +36,8 @@ export function LegalPage({
           BioView / AboutView / NewsView. Without it the article was
           clipped at viewport bottom and couldn't scroll. */}
       <main className="fixed inset-0 top-12 z-0 overflow-y-auto bg-canvas text-ink">
-        <article className="mx-auto max-w-[640px] px-4 pt-12 pb-24 text-[14px] leading-relaxed text-ink">
-          <h1 className="mb-10 italic text-[10px] uppercase tracking-[0.1em] text-mute">
+        <article className="mx-auto max-w-[640px] px-4 pt-12 pb-24 text-caption leading-relaxed text-pretty break-words text-ink">
+          <h1 className="mb-10 italic text-meta uppercase tracking-[0.1em] text-mute">
             {title}
           </h1>
           <div className="space-y-6">{children}</div>
@@ -56,7 +56,7 @@ export function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="italic text-[10px] uppercase tracking-[0.1em] text-mute">
+      <h2 className="italic text-meta uppercase tracking-[0.1em] text-mute">
         {heading}
       </h2>
       <div className="space-y-3">{children}</div>

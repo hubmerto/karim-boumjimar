@@ -31,7 +31,7 @@ export function TopBar() {
         aria-expanded={mobileMenuOpen}
         aria-haspopup="menu"
         onClick={() => setMobileMenuOpen((v) => !v)}
-        className="text-[13px] text-ink hover:text-mute md:hidden"
+        className="text-ui text-ink hover:text-mute md:hidden"
       >
         {mobileMenuOpen ? "Close" : "Menu"}
       </button>
