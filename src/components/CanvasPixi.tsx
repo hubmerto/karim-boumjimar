@@ -57,6 +57,90 @@ function curateForMobile() {
   return out;
 }
 
+const BENTO_COL_GAP = 80;
+const BENTO_ROW_GAP = 130;
+
+/** Build a symmetric diamond column-count array that sums to N tiles.
+ * Tall diamond (more rows than columns) for portrait phones. */
+function diamondColCounts(n: number): number[] {
+  // Pick column count proportional to sqrt(n) but biased toward fewer
+  // columns so it reads tall on a phone. ~7 cols for 39 tiles.
+  const cols = Math.max(3, Math.round(Math.sqrt(n) * 1.1));
+  const half = Math.floor(cols / 2);
+  // Triangular weights peaking in the middle.
+  const weights = Array.from({ length: cols }, (_, i) =>
+    1 + (cols % 2 === 1 ? half - Math.abs(i - half) : Math.min(i, cols - 1 - i)),
+  );
+  const sumW = weights.reduce((a, b) => a + b, 0);
+  // Initial distribution proportional to weights.
+  const counts = weights.map((w) => Math.round((w / sumW) * n));
+  // Adjust so the sum matches exactly n.
+  let diff = n - counts.reduce((a, b) => a + b, 0);
+  let i = Math.floor(cols / 2);
+  while (diff !== 0) {
+    counts[i] += diff > 0 ? 1 : -1;
+    diff += diff > 0 ? -1 : 1;
+    i = (i + 1) % cols;
+  }
+  // Each column needs at least 1 tile.
+  for (let j = 0; j < counts.length; j++) {
+    if (counts[j] < 1) {
+      counts[j] = 1;
+      // Borrow from the tallest column.
+      const peak = counts.indexOf(Math.max(...counts));
+      counts[peak] -= 1;
+    }
+  }
+  return counts;
+}
+
+/** Lay tiles out in a tall diamond bento. Returns a Map of work.id ->
+ * (canvas-space x, y) for the centre of each tile. Independent from
+ * each tile's natural workBounds position. */
+function bentoLayout(works: typeof WORKS) {
+  const counts = diamondColCounts(works.length);
+  const cols = counts.length;
+  // Deterministic shuffle so works from the same group don't cluster.
+  const seedSort = (id: string) => {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+    const x = Math.sin(h * 0.0001) * 10000;
+    return x - Math.floor(x);
+  };
+  const ordered = [...works].sort((a, b) => seedSort(a.id) - seedSort(b.id));
+  const tileBounds = ordered.map((w) => workBounds(w));
+  const maxTileW = tileBounds.reduce((m, b) => Math.max(m, b.width), 0);
+  const colSpacing = maxTileW + BENTO_COL_GAP;
+  const colCenters = Array.from(
+    { length: cols },
+    (_, i) => (i - (cols - 1) / 2) * colSpacing,
+  );
+  const map = new Map<string, { x: number; y: number; w: number; h: number }>();
+  let cursor = 0;
+  counts.forEach((count, col) => {
+    let stackH = 0;
+    for (let j = 0; j < count; j++) stackH += tileBounds[cursor + j].height;
+    stackH += (count - 1) * BENTO_ROW_GAP;
+    let y = -stackH / 2;
+    for (let j = 0; j < count; j++) {
+      const idx = cursor + j;
+      const work = ordered[idx];
+      const wb = tileBounds[idx];
+      const cx = colCenters[col];
+      const cy = y + wb.height / 2;
+      map.set(work.id, {
+        x: cx - wb.width / 2,
+        y: cy - wb.height / 2,
+        w: wb.width,
+        h: wb.height,
+      });
+      y += wb.height + BENTO_ROW_GAP;
+    }
+    cursor += count;
+  });
+  return map;
+}
+
 export function CanvasPixi() {
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [textures, setTextures] = useState<Map<string, Texture>>(new Map());
@@ -82,6 +166,14 @@ export function CanvasPixi() {
     [isMobile],
   );
 
+  // Bento layout (tall diamond) on mobile. On desktop, leave tiles at
+  // their natural canvas-space positions for now -- desktop bento can
+  // come later.
+  const bentoMap = useMemo(
+    () => (isMobile ? bentoLayout(displayWorks) : null),
+    [isMobile, displayWorks],
+  );
+
   // Compute viewport size on mount and on resize. Avoids SSR issues by
   // staying null until we know the real window size.
   useEffect(() => {
@@ -104,16 +196,25 @@ export function CanvasPixi() {
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    for (const w of displayWorks) {
-      const wb = workBounds(w);
-      if (wb.minX < minX) minX = wb.minX;
-      if (wb.minY < minY) minY = wb.minY;
-      if (wb.maxX > maxX) maxX = wb.maxX;
-      if (wb.maxY > maxY) maxY = wb.maxY;
+    if (bentoMap) {
+      for (const r of bentoMap.values()) {
+        if (r.x < minX) minX = r.x;
+        if (r.y < minY) minY = r.y;
+        if (r.x + r.w > maxX) maxX = r.x + r.w;
+        if (r.y + r.h > maxY) maxY = r.y + r.h;
+      }
+    } else {
+      for (const w of displayWorks) {
+        const wb = workBounds(w);
+        if (wb.minX < minX) minX = wb.minX;
+        if (wb.minY < minY) minY = wb.minY;
+        if (wb.maxX > maxX) maxX = wb.maxX;
+        if (wb.maxY > maxY) maxY = wb.maxY;
+      }
     }
     const bboxW = Math.max(1, maxX - minX);
     const bboxH = Math.max(1, maxY - minY);
-    const scale = Math.min(size.w / bboxW, size.h / bboxH) * 0.9;
+    const scale = Math.min(size.w / bboxW, size.h / bboxH) * 0.85;
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     setTransform({
@@ -121,7 +222,7 @@ export function CanvasPixi() {
       ty: size.h / 2 - cy * scale,
       scale,
     });
-  }, [size, displayWorks]);
+  }, [size, displayWorks, bentoMap]);
 
   // Progressive texture load. Only loads the displayed subset (mobile =
   // ~39 tiles, desktop = 123). The rest are loaded on-demand when the
@@ -290,18 +391,15 @@ export function CanvasPixi() {
       .map((w) => {
         const tex = textures.get(w.id);
         if (!tex) return null;
+        const slot = bentoMap?.get(w.id);
+        if (slot) {
+          return { id: w.id, tex, x: slot.x, y: slot.y, w: slot.w, h: slot.h };
+        }
         const wb = workBounds(w);
-        return {
-          id: w.id,
-          tex,
-          x: wb.minX,
-          y: wb.minY,
-          w: wb.width,
-          h: wb.height,
-        };
+        return { id: w.id, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
-  }, [textures, displayWorks]);
+  }, [textures, displayWorks, bentoMap]);
 
   const wrapperStyle: CSSProperties = {
     position: "fixed",
