@@ -823,88 +823,75 @@ function PixiGallery({
         </button>
       </header>
 
-      {/* Carousel container — height shrinks in group mode so the
-          info panel fits below; grows to 100% in fullscreen. */}
+      {/* Carousel takes the full viewport in BOTH modes. The info
+          panel just overlays the bottom in group mode (covering a
+          portion of the image) and slides off in fullscreen mode.
+          That way portrait photos can fill the screen vertically
+          regardless of mode — no padding-induced shrinking. */}
       <div
+        ref={scrollerRef}
+        onScroll={onScroll}
         style={{
           flex: 1,
-          minHeight: 0,
           display: "flex",
-          flexDirection: "column",
-          transition: "padding-bottom 320ms cubic-bezier(0.32, 0.72, 0, 1)",
-          paddingBottom: fullscreen ? 0 : `${PANEL_VH}vh`,
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
         }}
       >
-        <div
-          ref={scrollerRef}
-          onScroll={onScroll}
-          style={{
-            flex: 1,
-            display: "flex",
-            overflowX: "auto",
-            overflowY: "hidden",
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          {works.map((w) => {
-            const img = w.images[0];
-            if (!img) return null;
-            return (
-              <figure
-                key={w.id}
-                onPointerDown={onFigPointerDown}
-                onPointerUp={onFigPointerUp}
+        {works.map((w) => {
+          const img = w.images[0];
+          if (!img) return null;
+          return (
+            <figure
+              key={w.id}
+              onPointerDown={onFigPointerDown}
+              onPointerUp={onFigPointerUp}
+              style={{
+                margin: 0,
+                width: "100vw",
+                height: "100%",
+                flexShrink: 0,
+                scrollSnapAlign: "start",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxSizing: "border-box",
+                position: "relative",
+                cursor: "zoom-in",
+              }}
+            >
+              {/* next/image gives us per-device resizing + WebP/AVIF
+                  conversion via Vercel's optimizer. The image fills
+                  the viewport via object-fit: contain — portrait
+                  pieces will reach the top/bottom edges, landscape
+                  pieces will reach left/right and have white bars
+                  above/below. */}
+              <Image
+                src={asset(img.src)}
+                alt={img.alt}
+                width={img.width}
+                height={img.height}
+                sizes="100vw"
+                draggable={false}
                 style={{
-                  margin: 0,
-                  width: "100vw",
-                  height: "100%",
-                  flexShrink: 0,
-                  scrollSnapAlign: "start",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: fullscreen
-                    ? "60px 16px 24px"
-                    : "60px 16px 16px",
-                  boxSizing: "border-box",
-                  position: "relative",
-                  cursor: "zoom-in",
+                  maxWidth: "100vw",
+                  maxHeight: "100vh",
+                  width: "auto",
+                  height: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                  pointerEvents: "none",
                 }}
-              >
-                {/* next/image gives us per-device resizing + WebP/AVIF
-                    conversion via Vercel's optimizer. On the GH Pages
-                    build it falls back to the raw file (unoptimized
-                    flag is set in next.config.ts). */}
-                <Image
-                  src={asset(img.src)}
-                  alt={img.alt}
-                  width={img.width}
-                  height={img.height}
-                  sizes="100vw"
-                  draggable={false}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    width: "auto",
-                    height: "auto",
-                    objectFit: "contain",
-                    display: "block",
-                    pointerEvents: "none",
-                  }}
-                />
-              </figure>
-            );
-          })}
-        </div>
+              />
+            </figure>
+          );
+        })}
       </div>
 
       {/* Bottom info panel. Slides off-screen in fullscreen mode. */}
-      <GalleryInfoPanel
-        meta={meta}
-        desc={desc}
-        hidden={fullscreen}
-      />
+      <GalleryInfoPanel meta={meta} desc={desc} hidden={fullscreen} />
     </div>
   );
 }
