@@ -157,10 +157,16 @@ export function CanvasPixi() {
     ty: 0,
     scale: 0.05,
   }));
-  const [isMobile, setIsMobile] = useState(false);
+  // Lazy-init from matchMedia so the FIRST render already knows
+  // whether we're mobile. With useState(false) the initial render
+  // tried to lay out all 123 tiles in their desktop positions before
+  // the effect kicked in — that flash broke the bento on mobile.
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 767px)").matches;
+  });
 
-  // Decide curated subset (mobile) vs full set (desktop) based on
-  // viewport width. Re-runs on orientation change.
+  // Re-evaluate on resize / orientation change.
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
     const apply = () => setIsMobile(mq.matches);
