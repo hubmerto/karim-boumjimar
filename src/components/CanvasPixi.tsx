@@ -437,14 +437,38 @@ export function CanvasPixi() {
         const tex = textures.get(w.id);
         if (!tex) return null;
         const slot = bentoMap?.get(w.id);
+        const projectKey = `${w.title}|${w.year}`;
         if (slot) {
-          return { id: w.id, tex, x: slot.x, y: slot.y, w: slot.w, h: slot.h };
+          return { id: w.id, projectKey, tex, x: slot.x, y: slot.y, w: slot.w, h: slot.h };
         }
         const wb = workBounds(w);
-        return { id: w.id, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
+        return { id: w.id, projectKey, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
   }, [textures, displayWorks, bentoMap]);
+
+  // Tap-to-open-gallery. Tracks distance moved since pointerdown so a
+  // pan gesture doesn't accidentally count as a tap on a tile.
+  const [openProject, setOpenProject] = useState<string | null>(null);
+  const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const onSpriteDown = useCallback((e: { global: { x: number; y: number } }) => {
+    tapTrackerRef.current = {
+      x: e.global.x,
+      y: e.global.y,
+      t: Date.now(),
+    };
+  }, []);
+  const onSpriteUp = useCallback((projectKey: string, e: { global: { x: number; y: number } }) => {
+    const start = tapTrackerRef.current;
+    tapTrackerRef.current = null;
+    if (!start) return;
+    const dist = Math.hypot(e.global.x - start.x, e.global.y - start.y);
+    const dt = Date.now() - start.t;
+    // Treat anything that moved more than 8px or took more than 500ms
+    // as a drag / long-press, not a tap.
+    if (dist > 8 || dt > 500) return;
+    setOpenProject(projectKey);
+  }, []);
 
   const wrapperStyle: CSSProperties = {
     position: "fixed",
@@ -473,6 +497,12 @@ export function CanvasPixi() {
                 y={s.y}
                 width={s.w}
                 height={s.h}
+                eventMode="static"
+                cursor="pointer"
+                onPointerDown={onSpriteDown}
+                onPointerUp={(e: { global: { x: number; y: number } }) =>
+                  onSpriteUp(s.projectKey, e)
+                }
               />
             ))}
           </pixiContainer>
@@ -494,6 +524,132 @@ export function CanvasPixi() {
       >
         pixi · {sprites.length}/{displayWorks.length} loaded
         {isMobile ? ` · mobile (curated)` : ` · desktop (full)`}
+      </div>
+      {openProject ? (
+        <PixiGallery
+          projectKey={openProject}
+          onClose={() => setOpenProject(null)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** DOM overlay that shows all images for the tapped project. Plain
+ * <img> tags (5-20 per gallery) are well within iOS Safari's budget;
+ * the only thing the canvas approach can't handle is the dense overview
+ * with 100+ images all at once. */
+function PixiGallery({
+  projectKey,
+  onClose,
+}: {
+  projectKey: string;
+  onClose: () => void;
+}) {
+  const [title, year] = projectKey.split("|");
+  const works = useMemo(
+    () => WORKS.filter((w) => `${w.title}|${w.year}` === projectKey),
+    [projectKey],
+  );
+
+  // Lock body scroll while the gallery is open.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  // Esc closes.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-label={`${title}, ${year}`}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "#fff",
+        zIndex: 50,
+        display: "flex",
+        flexDirection: "column",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+          borderBottom: "1px solid #eee",
+          fontSize: 12,
+          flexShrink: 0,
+        }}
+      >
+        <div>
+          <div style={{ color: "#111" }}>{title}</div>
+          <div style={{ fontStyle: "italic", color: "#999" }}>{year}</div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          style={{
+            background: "transparent",
+            border: 0,
+            color: "#999",
+            fontSize: 18,
+            cursor: "pointer",
+            padding: "4px 8px",
+          }}
+        >
+          ×
+        </button>
+      </header>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          padding: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        {works.map((w) => {
+          const img = w.images[0];
+          if (!img) return null;
+          return (
+            <figure key={w.id} style={{ margin: 0 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={asset(img.src)}
+                alt={img.alt}
+                width={img.width}
+                height={img.height}
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  height: "auto",
+                  background: "#f5f5f5",
+                }}
+              />
+            </figure>
+          );
+        })}
       </div>
     </div>
   );
