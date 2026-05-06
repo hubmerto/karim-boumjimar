@@ -44,9 +44,16 @@ export const PUBLIC_COLLECTIONS = [
 export const RECOGNITION = [
   {
     year: "2026",
-    text: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant, Danish Arts Foundation",
+    text: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship",
   },
-  { year: "2025", text: "Ulrica Hydman Vallien Foundation Talent Scholarship" },
+  {
+    year: "2026",
+    text: "Danish Arts Foundation working grant",
+  },
+  {
+    year: "2025",
+    text: "Ulrica Hydman Vallien Foundation Talent Scholarship",
+  },
   { year: "2025", text: "Symbiosis received the 2025 Blix Prize" },
   {
     year: "2025",
@@ -56,14 +63,9 @@ export const RECOGNITION = [
 
 export const REPRESENTATION = [
   {
-    name: "Alice Folker Gallery",
-    city: "Copenhagen",
-    url: "https://alicefolker.dk/artists/33-karim-boumjimar/overview/",
-  },
-  {
-    name: "Helsinki Contemporary",
-    city: "Helsinki",
-    url: "https://helsinkicontemporary.com/artists/karim-boumjimar",
+    name: "Tina Gallery",
+    city: "London",
+    url: "https://tinaofficial.co.uk/",
   },
 ] as const;
 

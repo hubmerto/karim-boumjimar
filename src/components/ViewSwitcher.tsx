@@ -38,18 +38,15 @@ export function ViewSwitcher() {
       <>
         <CanvasPixi />
         {/* ExpandedGroup is rendered inside Canvas on desktop. On
-            mobile the Pixi canvas takes that slot, so we mount the
-            group overlay here instead, in a positioning shell that
-            sits below TopBar (top-12). pointer-events: none on the
-            shell so canvas pan/pinch isn't blocked when the overlay
-            is closed; ExpandedGroup re-enables them on its own root
-            via bg-canvas + z-20. */}
-        <div
-          className="pointer-events-none fixed inset-0 top-12 z-20"
-          style={{ touchAction: "auto" }}
-        >
-          <ExpandedGroup />
-        </div>
+            mobile the Pixi canvas takes that slot, so we mount it
+            here instead. Only mount the positioning shell when the
+            overlay is actually open — otherwise pointer-events on
+            the wrapper would intercept touches even with
+            pointer-events:none, and (more importantly) the canvas
+            wrapper's touch-action:none would propagate up the
+            event chain and block native horizontal scroll inside
+            the strip. */}
+        <MobileExpandedGroupShell />
       </>
     ) : (
       <>
@@ -63,4 +60,23 @@ export function ViewSwitcher() {
   if (view === "news") return <NewsView />;
   if (view === "grant") return <GrantView />;
   return null;
+}
+
+/** Mobile-only positioning shell for ExpandedGroup. Mounted only
+ * when the store says a group is expanded so it doesn't sit on
+ * top of the canvas with pointer-events traps when idle. The
+ * shell sits below the TopBar (top-12) and gives ExpandedGroup
+ * (which uses absolute inset-0) a positioning context. Explicit
+ * touchAction lets the strip's native horizontal scroll through. */
+function MobileExpandedGroupShell() {
+  const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
+  if (!expandedGroupKey) return null;
+  return (
+    <div
+      className="fixed inset-0 top-12 z-20"
+      style={{ touchAction: "pan-x" }}
+    >
+      <ExpandedGroup />
+    </div>
+  );
 }
