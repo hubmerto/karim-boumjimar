@@ -82,6 +82,11 @@ function WorkTileImpl({ work }: Props) {
       onClick={(e) => {
         e.stopPropagation();
         if (activeGroupKey === groupKey) {
+          // Second tap: re-select THIS specific tile so selectedId
+          // reflects what the user just clicked, then expand. The
+          // gallery (ExpandedGroup) reads selectedId to scroll to
+          // that image first instead of starting at index 0.
+          selectWork(work.id, groupKey);
           expandGroup(groupKey);
           return;
         }
