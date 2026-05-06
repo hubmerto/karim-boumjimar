@@ -24,11 +24,13 @@ const worksDir = resolve(root, "public/images/works");
 const UPLOADS_BASE =
   "/Users/humbertoimac/Downloads/(ﾉ◕ヮ◕)ﾉ_･ﾟ✧ WEBSITE UPLOADS (◠‿◠✿)/01_images";
 
-// Cap at 1600px on the long edge. ~5x the area of the old 800 cap,
-// crisp enough on a 5K display when zoomed in. Vercel's image
-// optimizer will resize this DOWN per request for smaller viewports.
-const MAX = 1600;
-const QUALITY = 82;
+// Cap at 2400px on the long edge. ~9x the area of the old 800 cap.
+// Crisp on a 5K display even at 2x zoom. Vercel's image optimizer
+// resizes this DOWN per request for smaller viewports / lower DPR
+// devices. Total committed size ~40-50MB for 123 files (was 20MB
+// at 1600px) — still well within sane git limits.
+const MAX = 2400;
+const QUALITY = 85;
 
 const MAPPING = [
   { upload: "01_beauty-is-the-best-defense", slug: "beauty" },
