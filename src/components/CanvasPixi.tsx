@@ -228,7 +228,14 @@ export function CanvasPixi() {
     }
     const bboxW = Math.max(1, maxX - minX);
     const bboxH = Math.max(1, maxY - minY);
-    const scale = Math.min(size.w / bboxW, size.h / bboxH) * 0.85;
+    // On mobile the bento is a tall vertical diamond — fitting the
+    // whole height makes images tiny with huge horizontal margins.
+    // Fit by width instead and let the top/bottom rows clip; the
+    // user can pan vertically to reach them. Desktop still fits
+    // both axes.
+    const scale = isMobile
+      ? (size.w / bboxW) * 0.95
+      : Math.min(size.w / bboxW, size.h / bboxH) * 0.85;
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     setTransform({
@@ -236,7 +243,7 @@ export function CanvasPixi() {
       ty: size.h / 2 - cy * scale,
       scale,
     });
-  }, [size, displayWorks, bentoMap]);
+  }, [size, displayWorks, bentoMap, isMobile]);
 
   // Progressive texture load. Only loads the displayed subset (mobile =
   // ~39 tiles, desktop = 123). The rest are loaded on-demand when the
