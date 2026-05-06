@@ -9,7 +9,6 @@ import {
   type Container as PixiContainerType,
   type Sprite as PixiSpriteType,
 } from "pixi.js";
-import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -18,7 +17,6 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { descriptionFor, type Description } from "@/data/descriptions";
 import { WORKS } from "@/data/works";
 import { workBounds } from "@/lib/canvas-math";
 import { asset } from "@/lib/paths";
@@ -283,10 +281,11 @@ export function CanvasPixi() {
   const transformRef = useRef(transform);
   transformRef.current = transform;
 
-  // Mirror gallery-open state in a ref so the touch handlers below
-  // (which are bound once via addEventListener) can early-return when
-  // a gallery is up — without it, the wrapper's preventDefault on
-  // touchmove blocks the gallery carousel's native horizontal scroll.
+  // Mirror group-expanded state in a ref so the touch handlers below
+  // (bound once via addEventListener) can early-return when the
+  // ExpandedGroup overlay is up — without it the wrapper's
+  // preventDefault on touchmove would swallow the strip's horizontal
+  // scroll.
 
   // Direct ref to the underlying PIXI Container so pinch/pan can
   // mutate its x/y/scale without going through React state. Skipping
@@ -337,7 +336,7 @@ export function CanvasPixi() {
       // When a project gallery is up, leave touches alone so the
       // gallery's horizontal-snap carousel and pull-up sheets can
       // scroll natively.
-      if (openProjectRef.current) return;
+      if (expandedGroupKeyRef.current) return;
       if (e.touches.length === 2) {
         e.preventDefault();
         const t1 = e.touches[0];
@@ -363,7 +362,7 @@ export function CanvasPixi() {
       }
     }
     function onTouchMove(e: TouchEvent) {
-      if (openProjectRef.current) return;
+      if (expandedGroupKeyRef.current) return;
       if (e.touches.length === 2 && pinchRef.current) {
         e.preventDefault();
         const t1 = e.touches[0];
@@ -474,23 +473,24 @@ export function CanvasPixi() {
         const slot = bentoMap?.get(w.id);
         const projectKey = `${w.title}|${w.year}`;
         if (slot) {
-          return { id: w.id, projectKey, tex, x: slot.x, y: slot.y, w: slot.w, h: slot.h };
+          return { id: w.id, workId: w.id, projectKey, tex, x: slot.x, y: slot.y, w: slot.w, h: slot.h };
         }
         const wb = workBounds(w);
-        return { id: w.id, projectKey, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
+        return { id: w.id, workId: w.id, projectKey, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
   }, [textures, displayWorks, bentoMap]);
 
-  // Tap-to-open-gallery. Tracks distance moved since pointerdown so a
-  // pan gesture doesn't accidentally count as a tap on a tile. The
-  // openProjectKey lives in the store so MobileNav can hide its tab
-  // links while a gallery is up (otherwise BIO/ABOUT/NEWS would
-  // overlap the gallery's close button + image counter).
-  const openProject = useSelection((s) => s.openProjectKey);
-  const setOpenProject = useSelection((s) => s.setOpenProjectKey);
-  const openProjectRef = useRef(openProject);
-  openProjectRef.current = openProject;
+  // Tap-to-expand-group. Tracks distance moved since pointerdown so a
+  // pan gesture doesn't accidentally count as a tap on a tile. On a
+  // confirmed tap we route into the existing store flow (selectWork
+  // + expandGroup) so the desktop's ExpandedGroup horizontal strip
+  // and InspectorSheet take over — no custom mobile gallery.
+  const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
+  const expandedGroupKeyRef = useRef(expandedGroupKey);
+  expandedGroupKeyRef.current = expandedGroupKey;
+  const selectWork = useSelection((s) => s.selectWork);
+  const expandGroup = useSelection((s) => s.expandGroup);
   const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const onSpriteDown = useCallback((e: { global: { x: number; y: number } }) => {
     tapTrackerRef.current = {
@@ -500,7 +500,11 @@ export function CanvasPixi() {
     };
   }, []);
   const onSpriteUp = useCallback(
-    (projectKey: string, e: { global: { x: number; y: number } }) => {
+    (
+      projectKey: string,
+      workId: string,
+      e: { global: { x: number; y: number } },
+    ) => {
       const start = tapTrackerRef.current;
       tapTrackerRef.current = null;
       if (!start) return;
@@ -509,9 +513,14 @@ export function CanvasPixi() {
       // Treat anything that moved more than 8px or took more than 500ms
       // as a drag / long-press, not a tap.
       if (dist > 8 || dt > 500) return;
-      setOpenProject(projectKey);
+      // Single-tap on mobile: select the work AND expand the group in
+      // one shot. (Desktop uses two taps because the first hovers/
+      // zooms the camera, the second opens the strip — phones can't
+      // hover, so we collapse those into one.)
+      selectWork(workId, projectKey);
+      expandGroup(projectKey);
     },
-    [setOpenProject],
+    [selectWork, expandGroup],
   );
 
   const wrapperStyle: CSSProperties = {
@@ -570,12 +579,6 @@ export function CanvasPixi() {
           {isMobile ? ` · mobile (curated)` : ` · desktop (full)`}
         </div>
       ) : null}
-      {openProject ? (
-        <PixiGallery
-          projectKey={openProject}
-          onClose={() => setOpenProject(null)}
-        />
-      ) : null}
     </div>
   );
 }
@@ -587,6 +590,7 @@ export function CanvasPixi() {
 type SpriteSpec = {
   id: string;
   projectKey: string;
+  workId: string;
   tex: Texture;
   x: number;
   y: number;
@@ -621,6 +625,7 @@ function TileLayer({
   onSpriteDown: (e: { global: { x: number; y: number } }) => void;
   onSpriteUp: (
     projectKey: string,
+    workId: string,
     e: { global: { x: number; y: number } },
   ) => void;
 }) {
@@ -693,7 +698,7 @@ function TileLayer({
           cursor="pointer"
           onPointerDown={onSpriteDown}
           onPointerUp={(e: { global: { x: number; y: number } }) =>
-            onSpriteUp(s.projectKey, e)
+            onSpriteUp(s.projectKey, s.workId, e)
           }
         />
       ))}
@@ -701,505 +706,3 @@ function TileLayer({
   );
 }
 
-/** Project gallery overlay — opens when a tile on the canvas is
- * tapped. Two modes:
- *
- *  - "group" (default): horizontal-snap image carousel takes the
- *    upper portion of the viewport, a bottom info panel takes the
- *    lower portion. The panel shows the project's venue / dates /
- *    long-form description / credits — the equivalent of the desktop
- *    ExpandedGroup overview.
- *
- *  - "fullscreen": tap an image and the bottom panel slides off,
- *    the carousel grows to fill the viewport. Tap again to toggle
- *    back to group mode.
- *
- * The horizontal carousel is the same in both modes — the difference
- * is just how much vertical space it gets and whether the info panel
- * is visible. Each figure is one viewport-width "page" with CSS
- * scroll-snap, so the user swipes horizontally between images.
- */
-type GalleryMode = "group" | "fullscreen";
-
-const PANEL_VH = 42;
-
-function PixiGallery({
-  projectKey,
-  onClose,
-}: {
-  projectKey: string;
-  onClose: () => void;
-}) {
-  const [title, year] = projectKey.split("|");
-  const works = useMemo(
-    () => WORKS.filter((w) => `${w.title}|${w.year}` === projectKey),
-    [projectKey],
-  );
-  const desc = useMemo(
-    () => descriptionFor(title, Number(year)),
-    [title, year],
-  );
-  // First work has the venue / city / date metadata (it's the same
-  // for every work in a project, so any of them would do).
-  const meta = works[0];
-
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [mode, setMode] = useState<GalleryMode>("group");
-
-  // Lock body scroll while the gallery is open.
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
-  // Esc closes.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  // Track which image the carousel is currently scrolled to so the
-  // header can show "3 / 12".
-  function onScroll() {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
-    if (idx !== currentIdx) setCurrentIdx(idx);
-  }
-
-  // Tap-on-image toggles fullscreen mode. We track pointerdown
-  // position + time so a horizontal swipe (which scrolls between
-  // images) doesn't accidentally count as a tap.
-  const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(
-    null,
-  );
-  function onFigPointerDown(e: React.PointerEvent) {
-    tapTrackerRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
-  }
-  function onFigPointerUp(e: React.PointerEvent) {
-    const start = tapTrackerRef.current;
-    tapTrackerRef.current = null;
-    if (!start) return;
-    const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
-    const dt = Date.now() - start.t;
-    if (dist > 8 || dt > 500) return;
-    setMode((m) => (m === "group" ? "fullscreen" : "group"));
-  }
-
-  const fullscreen = mode === "fullscreen";
-
-  return (
-    <div
-      role="dialog"
-      aria-label={`${title}, ${year}`}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "#fff",
-        zIndex: 50,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        // Explicit touch-action — the Pixi canvas wrapper sets
-        // touchAction: none for pinch/pan capture; the gallery needs
-        // to opt back in or its carousel + sheets won't scroll.
-        touchAction: "auto",
-      }}
-    >
-      {/* Floating header — sits above the carousel so images can run
-          full-bleed underneath it. */}
-      <header
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 12,
-          padding: "16px 16px 32px",
-          fontSize: 12,
-          background:
-            "linear-gradient(to bottom, rgba(255,255,255,0.92), rgba(255,255,255,0))",
-          pointerEvents: "none",
-        }}
-      >
-        <div style={{ pointerEvents: "auto" }}>
-          <div style={{ color: "#111" }}>{title}</div>
-          <div style={{ fontStyle: "italic", color: "#999" }}>{year}</div>
-        </div>
-        <div
-          style={{
-            color: "#999",
-            fontSize: 11,
-            paddingTop: 2,
-            pointerEvents: "auto",
-          }}
-        >
-          {currentIdx + 1} / {works.length}
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          style={{
-            background: "transparent",
-            border: 0,
-            color: "#999",
-            fontSize: 22,
-            lineHeight: 1,
-            cursor: "pointer",
-            padding: "0 4px",
-            pointerEvents: "auto",
-          }}
-        >
-          ×
-        </button>
-      </header>
-
-      {/* Carousel takes the full viewport in BOTH modes. The info
-          panel just overlays the bottom in group mode (covering a
-          portion of the image) and slides off in fullscreen mode.
-          That way portrait photos can fill the screen vertically
-          regardless of mode — no padding-induced shrinking. */}
-      <div
-        ref={scrollerRef}
-        onScroll={onScroll}
-        style={{
-          flex: 1,
-          display: "flex",
-          overflowX: "auto",
-          overflowY: "hidden",
-          scrollSnapType: "x mandatory",
-          WebkitOverflowScrolling: "touch",
-          // Allow horizontal swipe only — vertical drags fall through
-          // to the bottom sheets so they can be opened by pulling up.
-          touchAction: "pan-x",
-        }}
-      >
-        {works.map((w) => {
-          const img = w.images[0];
-          if (!img) return null;
-          return (
-            <figure
-              key={w.id}
-              onPointerDown={onFigPointerDown}
-              onPointerUp={onFigPointerUp}
-              style={{
-                margin: 0,
-                width: "100vw",
-                height: "100%",
-                flexShrink: 0,
-                scrollSnapAlign: "start",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxSizing: "border-box",
-                position: "relative",
-                cursor: "zoom-in",
-              }}
-            >
-              {/* next/image gives us per-device resizing + WebP/AVIF
-                  conversion via Vercel's optimizer. The image fills
-                  the viewport via object-fit: contain — portrait
-                  pieces will reach the top/bottom edges, landscape
-                  pieces will reach left/right and have white bars
-                  above/below. */}
-              <Image
-                src={asset(img.src)}
-                alt={img.alt}
-                width={img.width}
-                height={img.height}
-                sizes="100vw"
-                draggable={false}
-                style={{
-                  maxWidth: "100vw",
-                  maxHeight: "100vh",
-                  width: "auto",
-                  height: "auto",
-                  objectFit: "contain",
-                  display: "block",
-                  pointerEvents: "none",
-                }}
-              />
-            </figure>
-          );
-        })}
-      </div>
-
-      {/* Bottom info panel. Slides off-screen in fullscreen mode. */}
-      <GalleryInfoPanel meta={meta} desc={desc} hidden={fullscreen} />
-    </div>
-  );
-}
-
-/** Two stacked pullable sheets at the bottom of the gallery. Each
- * has a peek (just a header bar) and an expanded state (~70vh /
- * ~50vh respectively). Sheets are independent — tap either header
- * to toggle. Both slide off-screen in fullscreen mode.
- *
- * Layout:
- *   Description sheet (bottom)  — peek 56px, expanded 75vh
- *   Info sheet      (above it)  — peek 56px, expanded 50vh
- * In peek state the user sees two stacked bars; each scrolls
- * internally when expanded. */
-const SHEET_PEEK = 56;
-const DESC_OPEN_VH = 75;
-const INFO_OPEN_VH = 50;
-
-function GalleryInfoPanel({
-  meta,
-  desc,
-  hidden,
-}: {
-  meta: typeof WORKS[number] | undefined;
-  desc: Description | undefined;
-  hidden: boolean;
-}) {
-  const [descOpen, setDescOpen] = useState(false);
-  const [infoOpen, setInfoOpen] = useState(false);
-
-  // Build the info-sheet content from the work's metadata + the
-  // description's `credits` array (text by / curation by /
-  // photography by — see scripts/build-works-v2.mjs for how those
-  // get split out of the long-form body).
-  const infoLines = useMemo(() => {
-    const lines: string[] = [];
-    if (meta?.venue) {
-      lines.push(meta.city ? `${meta.venue}, ${meta.city}` : meta.venue);
-    }
-    if (meta?.date) lines.push(meta.date);
-    return lines;
-  }, [meta]);
-
-  return (
-    <>
-      {/* DESCRIPTION SHEET — sits at the very bottom. */}
-      <Sheet
-        zIndex={20}
-        bottomOffset={0}
-        peekHeight={SHEET_PEEK}
-        openHeight={`${DESC_OPEN_VH}vh`}
-        open={descOpen}
-        onToggle={() => setDescOpen((o) => !o)}
-        title="About this exhibition"
-        hidden={hidden}
-      >
-        {desc && desc.body ? (
-          desc.body
-            .split("\n\n")
-            .filter((p) => p.trim().length > 0)
-            .map((para, i) => (
-              <p key={i} style={{ margin: i === 0 ? "0" : "1em 0 0" }}>
-                {para}
-              </p>
-            ))
-        ) : (
-          <p style={{ margin: 0, fontStyle: "italic", color: "#999" }}>
-            No description yet.
-          </p>
-        )}
-      </Sheet>
-
-      {/* INFO SHEET — sits 56px above the description sheet, so when
-          both are collapsed the user sees two stacked bars. */}
-      <Sheet
-        zIndex={21}
-        bottomOffset={SHEET_PEEK}
-        peekHeight={SHEET_PEEK}
-        openHeight={`${INFO_OPEN_VH}vh`}
-        open={infoOpen}
-        onToggle={() => setInfoOpen((o) => !o)}
-        title={
-          infoLines.length > 0 ? infoLines.join(" · ") : "Exhibition details"
-        }
-        hidden={hidden}
-      >
-        {infoLines.length > 0 ? (
-          <div style={{ marginBottom: desc?.credits.length ? 24 : 0 }}>
-            {infoLines.map((line, i) => (
-              <p key={i} style={{ margin: i === 0 ? 0 : "0.4em 0 0" }}>
-                {line}
-              </p>
-            ))}
-          </div>
-        ) : null}
-        {desc && desc.credits.length > 0 ? (
-          <div
-            style={{
-              paddingTop: infoLines.length > 0 ? 16 : 0,
-              borderTop: infoLines.length > 0 ? "1px solid #eee" : "none",
-              fontStyle: "italic",
-              color: "#999",
-              whiteSpace: "pre-wrap",
-              fontSize: 12,
-            }}
-          >
-            {desc.credits.map((c, i) => (
-              <p key={i} style={{ margin: i === 0 ? 0 : "0.5em 0 0" }}>
-                {c}
-              </p>
-            ))}
-          </div>
-        ) : null}
-        {infoLines.length === 0 &&
-        (!desc || desc.credits.length === 0) ? (
-          <p style={{ margin: 0, fontStyle: "italic", color: "#999" }}>
-            No additional info.
-          </p>
-        ) : null}
-      </Sheet>
-    </>
-  );
-}
-
-/** Single bottom sheet with a tap-to-toggle header. Header is always
- * visible (peek state). When toggled open, the sheet grows upward to
- * `openHeight` and the body becomes scrollable. */
-function Sheet({
-  zIndex,
-  bottomOffset,
-  peekHeight,
-  openHeight,
-  open,
-  onToggle,
-  title,
-  hidden,
-  children,
-}: {
-  zIndex: number;
-  bottomOffset: number;
-  peekHeight: number;
-  openHeight: string;
-  open: boolean;
-  onToggle: () => void;
-  title: string;
-  hidden: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: bottomOffset,
-        zIndex,
-        height: open ? openHeight : peekHeight,
-        transform: hidden
-          ? `translateY(calc(100% + ${bottomOffset}px))`
-          : "translateY(0)",
-        transition:
-          "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), height 280ms cubic-bezier(0.32, 0.72, 0, 1)",
-        background: "#fff",
-        borderTop: "1px solid #eee",
-        borderTopLeftRadius: 14,
-        borderTopRightRadius: 14,
-        boxShadow: open ? "0 -8px 24px rgba(0,0,0,0.06)" : "none",
-        display: "flex",
-        flexDirection: "column",
-        willChange: "transform, height",
-        pointerEvents: hidden ? "none" : "auto",
-        overflow: "hidden",
-      }}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
-        style={{
-          appearance: "none",
-          background: "transparent",
-          border: 0,
-          padding: 0,
-          textAlign: "left",
-          cursor: "pointer",
-          color: "inherit",
-          font: "inherit",
-          flexShrink: 0,
-        }}
-      >
-        {/* Drag-handle pill — pure visual affordance for now (the
-            interaction is just tap, no actual drag yet). */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            paddingTop: 8,
-          }}
-        >
-          <span
-            style={{
-              display: "block",
-              width: 36,
-              height: 4,
-              borderRadius: 2,
-              background: "#ddd",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            padding: "6px 18px 12px",
-            fontSize: 12,
-            color: "#111",
-          }}
-        >
-          <span
-            style={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {title}
-          </span>
-          <span
-            aria-hidden
-            style={{
-              fontSize: 14,
-              color: "#999",
-              transform: open ? "rotate(180deg)" : "rotate(0)",
-              transition: "transform 200ms",
-              display: "inline-block",
-              flexShrink: 0,
-            }}
-          >
-            ↑
-          </span>
-        </div>
-      </button>
-
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-          overscrollBehavior: "contain",
-          padding: "0 20px 28px",
-          fontSize: 13,
-          lineHeight: 1.6,
-          color: "#111",
-          touchAction: "pan-y",
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}

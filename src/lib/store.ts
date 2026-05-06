@@ -18,11 +18,6 @@ type CanvasState = {
    * mobile menu can open it too. */
   indexOpen: boolean;
   setIndexOpen: (open: boolean) => void;
-  /** Project key (`title|year`) of the project gallery currently open
-   * over the Pixi canvas, or null. Lifted to the store so MobileNav
-   * can hide its tab links when a gallery is up. */
-  openProjectKey: string | null;
-  setOpenProjectKey: (key: string | null) => void;
   /** True once the splash logo has fully faded out (or was skipped via the
    * sessionStorage cache). Tiles wait on this to start their fade-in so the
    * animation isn't wasted behind the splash. */
@@ -64,8 +59,6 @@ export const useSelection = create<CanvasState>((set) => ({
   navTargetGroupKey: null,
   indexOpen: false,
   setIndexOpen: (open) => set({ indexOpen: open }),
-  openProjectKey: null,
-  setOpenProjectKey: (key) => set({ openProjectKey: key }),
   splashGone: false,
   setSplashGone: (v) => set({ splashGone: v }),
   select: (id) => set({ selectedId: id }),
