@@ -241,28 +241,28 @@ export function useCanvas(
     }, duration + 80);
   }, []);
 
-  // Auto-zoom from 75% to 100% of bento fit, starting once the splash has
-  // cleared and the per-tile fade-ins have all completed (~7s after).
+  // Auto-zoom from 75% to 100% of bento fit, starting THE INSTANT
+  // the splash clears and running over INTRO_REVEAL_MS (= 6000).
+  // Same duration as the per-tile fade-in window so the camera
+  // settles the same moment the last tile reaches alpha 1.
   // Skipped if the user has already interacted in that window.
+  const INTRO_REVEAL_MS = 6000;
   const splashGone = useSelection((s) => s.splashGone);
   useEffect(() => {
     if (!bentoBbox || !splashGone) return;
-    const t1 = setTimeout(() => {
-      if (userInteractedRef.current) return;
-      const v = viewportRect();
-      const fit = fitBboxTransform(bentoBbox, v).scale;
-      const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
-      const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
-      animateTransform(
-        {
-          tx: v.w / 2 - cx * fit,
-          ty: v.h / 2 - cy * fit,
-          scale: fit,
-        },
-        4000,
-      );
-    }, 7000);
-    return () => clearTimeout(t1);
+    if (userInteractedRef.current) return;
+    const v = viewportRect();
+    const fit = fitBboxTransform(bentoBbox, v).scale;
+    const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+    const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+    animateTransform(
+      {
+        tx: v.w / 2 - cx * fit,
+        ty: v.h / 2 - cy * fit,
+        scale: fit,
+      },
+      INTRO_REVEAL_MS,
+    );
   }, [bentoBbox, splashGone, animateTransform]);
 
   // Drive dispersion from the current zoom level with hysteresis. The

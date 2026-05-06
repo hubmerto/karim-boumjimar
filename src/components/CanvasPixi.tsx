@@ -208,11 +208,12 @@ export function CanvasPixi() {
   // Initial framing: animate camera from a tighter zoom out to the
   // bento fit over INTRO_REVEAL_MS — matched to the tile fade-in
   // window so the camera SETTLES the same instant the last sprite
-  // reaches alpha 1. The starting transform is the very-zoomed-out
-  // useState default; the target is the bento-fit transform.
+  // reaches alpha 1. Gated on splashGone so the camera reveal doesn't
+  // start while the logo is still up.
   const introAnimRef = useRef<number | null>(null);
+  const splashGone = useSelection((s) => s.splashGone);
   useEffect(() => {
-    if (!size || displayWorks.length === 0) return;
+    if (!size || displayWorks.length === 0 || !splashGone) return;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -280,7 +281,7 @@ export function CanvasPixi() {
         introAnimRef.current = null;
       }
     };
-  }, [size, displayWorks, bentoMap, isMobile]);
+  }, [size, displayWorks, bentoMap, isMobile, splashGone]);
 
   // Camera zoom-to-group on first tap. Mirrors the desktop behaviour:
   // when navTargetGroupKey is set (by selectWork via the store), fit
@@ -812,20 +813,41 @@ function TileLayer({
   // Map of sprite id -> live PIXI Sprite. Populated by ref callbacks
   // when each <pixiSprite> mounts; consumed by useTick to update alpha.
   const spriteRefs = useRef<Map<string, PixiSpriteType>>(new Map());
-  // When THIS particular sprite first became visible to the renderer.
+  // When THIS particular sprite was first allowed to start its fade.
+  // Stamped lazily inside the ticker the first frame splashGone is
+  // true, NOT at mount time — sprites mount silently behind the
+  // splash and only begin their fade-in once the logo is gone.
   const mountedAtRef = useRef<Map<string, number>>(new Map());
   // True once every visible sprite has reached alpha = 1; we stop the
   // ticker work after that to stay quiet on the GPU.
   const allDoneRef = useRef(false);
+  // Mirror splashGone in a ref so the always-on tick callback reads
+  // the live value without needing a closure rebind.
+  const splashGoneState = useSelection((s) => s.splashGone);
+  const splashGoneRef = useRef(splashGoneState);
+  splashGoneRef.current = splashGoneState;
 
   useTick(() => {
     if (allDoneRef.current) return;
+    const splashGone = splashGoneRef.current;
+    if (!splashGone) {
+      // Hold sprites at alpha 0 while the logo is up. Don't stamp
+      // mountedAt yet so the fade-in starts the first frame splash
+      // clears, not at sprite-mount time (which can be 1-2s earlier).
+      for (const [, sprite] of spriteRefs.current) {
+        if (sprite) sprite.alpha = 0;
+      }
+      return;
+    }
     const now = performance.now();
     let allDone = true;
     for (const [id, sprite] of spriteRefs.current) {
       if (!sprite) continue;
-      const mountedAt = mountedAtRef.current.get(id);
-      if (mountedAt == null) continue;
+      let mountedAt = mountedAtRef.current.get(id);
+      if (mountedAt == null) {
+        mountedAt = now;
+        mountedAtRef.current.set(id, mountedAt);
+      }
       const { delay, duration } = tileFadeTiming(id);
       const elapsed = now - mountedAt - delay;
       let alpha;
@@ -849,16 +871,12 @@ function TileLayer({
           ref={(node: PixiSpriteType | null) => {
             if (node) {
               spriteRefs.current.set(s.id, node);
-              // FIRST mount only: stamp the start time and start from
-              // alpha=0. We do NOT pass `alpha={0}` as a JSX prop,
-              // because @pixi/react reapplies props on every parent
-              // re-render and would smash the ticker's mutation back
-              // to 0 every time the user zoomed/panned.
-              if (!mountedAtRef.current.has(s.id)) {
-                node.alpha = 0;
-                mountedAtRef.current.set(s.id, performance.now());
-                allDoneRef.current = false;
-              }
+              // FIRST mount: start invisible. Don't stamp mountedAt
+              // here — the ticker stamps it the first frame splash
+              // is gone, so the fade-in starts in sync with the
+              // camera intro animation.
+              node.alpha = 0;
+              allDoneRef.current = false;
             } else {
               spriteRefs.current.delete(s.id);
               // Keep mountedAt — if React re-fires the ref callback

@@ -43,15 +43,16 @@ function WorkTileImpl({ work }: Props) {
   const dy = Math.round(
     introOffset.y * (1 - dispersion) + baseOffset.y * dispersion,
   );
-  // Per-tile timing: drifty entrance with widely varied delay (0-5s) and
-  // duration (1-2s) so the tiles appear in different random spots and
-  // at different speeds, with the last one settling around 7s after
-  // the splash clears.
+  // Per-tile timing: drifty entrance with varied delay (0-4500) and
+  // fixed duration (1500), worst case = 6000ms — matches the camera
+  // intro animation window so the last tile settles the same instant
+  // the camera reaches its target zoom (see INTRO_REVEAL_MS in
+  // useCanvas / CanvasPixi).
   const { fadeDelay, fadeDuration } = useMemo(() => {
-    const { r1, r2 } = tileSeed(work.id);
+    const { r1 } = tileSeed(work.id);
     return {
-      fadeDelay: Math.round(r1 * 5000),
-      fadeDuration: Math.round(1000 + r2 * 1000),
+      fadeDelay: Math.round(r1 * 4500),
+      fadeDuration: 1500,
     };
   }, [work.id]);
 
