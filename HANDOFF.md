@@ -1,7 +1,8 @@
 You're picking up an in-progress portfolio site for ceramic artist Karim Boumjimar. The previous Claude session got it to a working state. Your job is to continue from there.
 
 **Repo:** `https://github.com/hubmerto/karim-boumjimar`
-**Live site (when deployed):** `https://hubmerto.github.io/karim-boumjimar/`
+**Live site:** `https://www.karimboumjimar.com` (Vercel, primary)
+**Backup mirror:** `https://hubmerto.com/karim-boumjimar/` (GitHub Pages, do not edit through here)
 **Aesthetic reference:** `palace-enterprise.com`, `tinaofficial.co.uk`, Figma's Properties panel
 
 ## Ground rules
@@ -58,15 +59,10 @@ Single-viewport pan/zoom canvas. 41 work tiles grouped into 13 exhibition cluste
 
 ## Step 4, pending work
 
-1. **Deploy workflow.** A ready-to-use template lives at `deploy.yml.template` in the repo root. To enable auto-deploy to GitHub Pages, the `gh` token needs the `workflow` scope. The refresh command is interactive, so ask before running it: `gh auth refresh -h github.com -s workflow`. Once that's done, copy the template into place and commit:
-   ```bash
-   mkdir -p .github/workflows
-   cp deploy.yml.template .github/workflows/deploy.yml
-   ```
-   Then in repo settings, set Pages source to "GitHub Actions".
-2. **Performance pass.** `<img loading="lazy">` is in but no IntersectionObserver yet for true viewport-based loading. Could lift heavy tiles out when zoomed away from them.
-3. **Polish.** Focus rings on every focusable, more keyboard shortcuts (e.g. arrow keys to walk between tiles), cursor refinement during drag.
-4. **Lighthouse pass.** Target 95+ on Performance, Accessibility, Best Practices, SEO. Static export is configured.
+1. **Performance pass.** `<img loading="lazy">` is in but no IntersectionObserver yet for true viewport-based loading. Could lift heavy tiles out when zoomed away from them. Pixi gallery uses `<Image>` (Vercel optimizes); bento canvas tiles still use raw URLs.
+2. **Polish.** Focus rings on every focusable, more keyboard shortcuts (e.g. arrow keys to walk between tiles), cursor refinement during drag.
+3. **Lighthouse pass.** Target 95+ on Performance, Accessibility, Best Practices, SEO. Vercel is now primary.
+4. **Pixi adoption.** Mobile is on the WebGL canvas (`/pixi`). Desktop still uses the DOM canvas. Once parity is reached (group titles, FLIP into gallery, hidden DOM mirror for SEO/a11y), make Pixi the default.
 
 ## Step 5, known gotchas
 
@@ -74,8 +70,8 @@ Single-viewport pan/zoom canvas. 41 work tiles grouped into 13 exhibition cluste
 - **Cross-origin dev:** if you test from another device on the LAN, add the IP to `allowedDevOrigins` in `next.config.ts`. Currently `["192.168.178.75"]`. If your iMac IP is different, swap or add it. Without this, hydration silently fails on cross-origin loads.
 - **Hydration determinism:** SSR and client first render must produce identical HTML. The canvas's initial transform is fixed at `{ tx: 0, ty: 48, scale: 0.15 }`; fitAll is then applied via `useLayoutEffect` so users never see the un-fit state.
 - **Container-local coords:** the canvas's `tx/ty` live in the container's local coord system (not screen). The container's CSS positioning (`md:left-[200px]` etc.) already accounts for the screen offset, so `fitAllTransform` does NOT add `viewport.x` / `viewport.y` into `tx` / `ty`. Don't reintroduce that bug.
-- **Static export:** `output: "export"` is set. `next/image` is disabled (`unoptimized: true`). Tiles use plain `<img>` because next/image fights with arbitrary 2D transforms.
-- **Asset paths:** raw `<img src>` paths must go through `asset(path)` from `src/lib/paths.ts` so `NEXT_PUBLIC_BASE_PATH` (set by the deploy workflow to `/karim-boumjimar`) gets prepended correctly.
+- **Build target:** Vercel by default (runtime, image optimization on). Set `STATIC_EXPORT=1` + `NEXT_PUBLIC_BASE_PATH=/karim-boumjimar` to produce the GitHub Pages mirror (`out/` folder, no image optimizer). The GH Actions workflow does this automatically.
+- **Asset paths:** raw `<img src>` paths still go through `asset(path)` from `src/lib/paths.ts` so the GH Pages mirror stays working. On Vercel `NEXT_PUBLIC_BASE_PATH` is empty so `asset()` is a no-op.
 - **No animation library** (no framer-motion). All motion is CSS transitions on transform.
 
 When you start, please confirm by reading `src/app/page.tsx` and `src/lib/store.ts` so you understand the current state before making changes. Then tell me where you'd start.

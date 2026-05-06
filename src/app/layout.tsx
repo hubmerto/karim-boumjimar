@@ -11,8 +11,13 @@ const libre = Libre_Baskerville({
   display: "swap",
 });
 
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const SITE_URL = "https://hubmerto.com" + BASE_PATH;
+// Production lives on Vercel at karimboumjimar.com. The GitHub Pages
+// mirror at hubmerto.com/karim-boumjimar/ is kept as a static backup
+// but search engines should treat the .com as canonical, so we hard-
+// code that as the SITE_URL by default. Override with
+// NEXT_PUBLIC_SITE_URL if you ever spin up a different host.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.karimboumjimar.com";
 const TITLE = "Karim Boumjimar";
 const DESCRIPTION =
   "Examining social hierarchies through hybrid bodies, mythology, and ecology. Selected projects, writing, and exhibitions.";

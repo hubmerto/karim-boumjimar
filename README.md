@@ -3,6 +3,9 @@
 Single-viewport canvas portfolio for ceramic artist Karim Boumjimar.
 Next.js 16 (App Router) + Tailwind 4 + Zustand + Sharp.
 
+**Live:** https://www.karimboumjimar.com (Vercel)
+**Backup mirror:** https://hubmerto.com/karim-boumjimar/ (GitHub Pages, do not edit through here)
+
 ## Continuing on another machine
 
 ```bash
@@ -82,19 +85,16 @@ node scripts/to-webp.mjs       # converts to public/images/works/
 node scripts/build-works.mjs   # regenerates src/data/works.ts
 ```
 
-## Deploying to GitHub Pages
+## Deploying
 
-The deploy workflow file lives outside the repo at `/tmp/deploy-workflow.yml` until your `gh` token has the `workflow` scope. To enable auto-deploy:
+Every push to `main` triggers two deploys in parallel:
+
+- **Vercel** (primary, https://www.karimboumjimar.com) — runtime build, image optimization on. Configured in the Vercel dashboard; nothing in the repo to maintain.
+- **GitHub Pages** (mirror, https://hubmerto.com/karim-boumjimar/) — static export driven by `.github/workflows/deploy.yml`. Sets `STATIC_EXPORT=1` and `NEXT_PUBLIC_BASE_PATH=/karim-boumjimar`. Kept as a backup; the canonical URL points to the Vercel domain.
+
+Local builds default to the Vercel-style config. To produce the static mirror locally:
 
 ```bash
-gh auth refresh -h github.com -s workflow   # opens browser to authorise
-mkdir -p .github/workflows
-cp /tmp/deploy-workflow.yml .github/workflows/deploy.yml
-git add .github/workflows/deploy.yml
-git commit -m "Add Pages deploy workflow"
-git push
+STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/karim-boumjimar pnpm build
+# Output goes to ./out
 ```
-
-Then in the repo on github.com: **Settings - Pages - Source: GitHub Actions**.
-
-After that, every push to `main` builds and deploys to `https://hubmerto.github.io/karim-boumjimar/`.
