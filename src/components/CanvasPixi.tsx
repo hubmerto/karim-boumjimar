@@ -221,10 +221,10 @@ function projectClusterLayout(
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    // Adaptive column count, floor 3 / cap 4 — small projects (3-12
-    // tiles) get 3 cols, larger ones (>12) get 4. sqrt(N * 0.7)
-    // crosses from 3 to 4 around 14 tiles.
-    const COLS = Math.max(3, Math.min(4, Math.round(Math.sqrt(ordered.length * 0.7))));
+    // 3 columns regardless of project size — keeps the per-tile
+    // size consistent across groups (large projects don't end up
+    // tiny because a 4-col grid blew past the viewport width).
+    const COLS = 3;
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
@@ -475,10 +475,16 @@ export function CanvasPixi() {
     const visibleH = Math.max(1, size.h - TOP_RESERVE - BOTTOM_RESERVE);
     const bboxW = Math.max(1, maxX - minX + PAD * 2);
     const bboxH = Math.max(1, maxY - minY + PAD * 2);
-    const targetScale = Math.min(
-      Math.min(size.w / bboxW, visibleH / bboxH),
-      3,
-    );
+    const fitScale = Math.min(size.w / bboxW, visibleH / bboxH);
+    // Floor the group-view zoom at 1.4x the bento fit so the camera
+    // always lands noticeably zoomed in past the overview, even for
+    // the few projects whose cluster naturally fits at a small
+    // scale. If the cluster is taller than the visible band at this
+    // zoom the user can pan vertically to see the rest.
+    const minGroupScale = bentoFitScaleRef.current
+      ? bentoFitScaleRef.current * 1.4
+      : 0;
+    const targetScale = Math.min(Math.max(fitScale, minGroupScale), 3);
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     // Anchor the cluster's centre in the MIDDLE of the visible
