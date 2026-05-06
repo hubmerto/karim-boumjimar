@@ -3,6 +3,10 @@ import type { MetadataRoute } from "next";
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.karimboumjimar.com";
 
+// Required so Next can prerender this route handler under
+// `output: "export"` (the GitHub Pages mirror build).
+export const dynamic = "force-static";
+
 // Routes the site exposes. About / Bio / News / Grant currently live
 // inside the single SPA at `/` (the LeftToolbar swaps the view via
 // Zustand state) — they're listed here so search engines and link
