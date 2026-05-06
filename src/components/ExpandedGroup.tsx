@@ -251,10 +251,11 @@ export function ExpandedGroup() {
       </button>
       <div
         ref={scrollRef}
-        className="flex h-full w-full items-center gap-8 px-4"
+        className="flex h-full w-full items-center gap-8 px-4 pt-14"
         style={{
           overflowX: phase === "open" ? "auto" : "hidden",
           overflowY: "hidden",
+          touchAction: "pan-x",
         }}
       >
         {works.map((w) => {
