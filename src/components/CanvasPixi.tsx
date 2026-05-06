@@ -190,38 +190,47 @@ function projectClusterLayout(
     let cx = 0;
     let cy = 0;
     let coreCount = 0;
-    let cellW = 0;
-    let cellH = 0;
     for (const w of groupWorks) {
       if (!coreIds.has(w.id)) continue;
       const slot = bento.get(w.id);
       if (!slot) continue;
       cx += slot.x + slot.w / 2;
       cy += slot.y + slot.h / 2;
-      if (slot.w > cellW) cellW = slot.w;
-      if (slot.h > cellH) cellH = slot.h;
       coreCount += 1;
     }
     if (coreCount > 0) {
       cx /= coreCount;
       cy /= coreCount;
     }
-    if (cellW === 0) cellW = 200;
-    if (cellH === 0) cellH = 200;
 
-    // Lay every tile in the project (cores + extras) in a 4-col
-    // grid centred at (cx, cy). Order: cores first, then extras.
+    // Cell size: max width AND max height across EVERY tile in the
+    // project (cores + extras), not just cores. Picking max across
+    // all of them prevents wider extras from overflowing into the
+    // adjacent cell.
+    let cellW = 0;
+    let cellH = 0;
+    for (const w of groupWorks) {
+      const wb = workBounds(w);
+      if (wb.width > cellW) cellW = wb.width;
+      if (wb.height > cellH) cellH = wb.height;
+    }
+    if (cellW === 0) cellW = 1500;
+    if (cellH === 0) cellH = 1000;
+
     const ordered = [
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    const COLS = 4;
+    // Adaptive column count so the grid roughly matches the
+    // viewport's aspect ratio. Mobile is portrait (~0.5 wide:tall),
+    // so we want fewer cols + more rows. sqrt(N * 0.4) lands
+    // ~2 cols for 10 tiles, ~3 for 20.
+    const COLS = Math.max(2, Math.min(4, Math.round(Math.sqrt(ordered.length * 0.4))));
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
     const totalRows = Math.ceil(ordered.length / COLS);
-    // Centre the whole grid vertically too, so the project sits
-    // at its centroid rather than dangling below it.
+    // Centre the whole grid vertically at the cores' centroid.
     const gridH = totalRows * cellH + (totalRows - 1) * GAP;
     const yStart = cy - gridH / 2 + cellH / 2;
 
@@ -540,11 +549,14 @@ export function CanvasPixi() {
       if (r.x + r.w > maxX) maxX = r.x + r.w;
       if (r.y + r.h > maxY) maxY = r.y + r.h;
     }
-    // Padding around the group + headroom for the InspectorSheet
-    // peek bar at the bottom (~140px on mobile gives the sheet a
-    // landing zone without covering the group).
+    // Padding around the group + a generous SHEET_HEAD_ROOM so
+    // the camera leaves room at the bottom for the InspectorSheet
+    // (which peeks ~56px and expands to mid ~45% of viewport).
+    // The cluster sits in the TOP portion of the viewport, not
+    // dead-centered — leaves the bottom for the info tab as the
+    // user requested.
     const PAD = 80;
-    const SHEET_HEAD_ROOM = 140;
+    const SHEET_HEAD_ROOM = 380;
     const bboxW = Math.max(1, maxX - minX + PAD * 2);
     const bboxH = Math.max(1, maxY - minY + PAD * 2 + SHEET_HEAD_ROOM);
     const targetScale = Math.min(
@@ -552,8 +564,9 @@ export function CanvasPixi() {
       3,
     );
     const cx = (minX + maxX) / 2;
-    // Shift the target a bit upward so the sheet's mid snap doesn't
-    // overlap the group.
+    // Shift target Y upward by half the sheet headroom so the
+    // cluster's centre lands in the upper portion of the visible
+    // area, leaving the lower portion clear for the sheet.
     const cy = (minY + maxY) / 2 - SHEET_HEAD_ROOM / 2 / targetScale;
     const target: Transform = {
       tx: size.w / 2 - cx * targetScale,
