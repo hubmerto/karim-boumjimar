@@ -313,6 +313,9 @@ export function CanvasPixi() {
         };
         dragRef.current = null;
       } else if (e.touches.length === 1) {
+        // Same reason as touchmove -- preventDefault here cancels iOS's
+        // default 1-finger gesture (potential edge swipe / scroll).
+        e.preventDefault();
         dragRef.current = {
           x: e.touches[0].clientX,
           y: e.touches[0].clientY,
@@ -345,6 +348,9 @@ export function CanvasPixi() {
           };
         });
       } else if (e.touches.length === 1 && dragRef.current) {
+        // preventDefault is required so iOS Safari doesn't intercept
+        // the swipe as an edge gesture / scroll attempt.
+        e.preventDefault();
         const dx = e.touches[0].clientX - dragRef.current.x;
         const dy = e.touches[0].clientY - dragRef.current.y;
         dragRef.current = {
