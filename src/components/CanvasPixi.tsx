@@ -221,10 +221,16 @@ function projectClusterLayout(
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    // 3 columns regardless of project size — keeps the per-tile
-    // size consistent across groups (large projects don't end up
-    // tiny because a 4-col grid blew past the viewport width).
-    const COLS = 3;
+    // Column count chosen so the natural fit-scale gives readable
+    // tile sizes on a portrait viewport. Tiles are ~3500px wide
+    // canvas-space; on a 390px-wide phone, fewer cols means a
+    // smaller cluster bbox horizontally and therefore a higher fit
+    // scale (= bigger tiles).
+    //   ≤3 photos -> 1 column (vertical list, tall single tiles)
+    //   4-9 photos -> 2 columns
+    //   10+ photos -> 3 columns
+    const COLS =
+      ordered.length <= 3 ? 1 : ordered.length <= 9 ? 2 : 3;
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
@@ -475,16 +481,14 @@ export function CanvasPixi() {
     const visibleH = Math.max(1, size.h - TOP_RESERVE - BOTTOM_RESERVE);
     const bboxW = Math.max(1, maxX - minX + PAD * 2);
     const bboxH = Math.max(1, maxY - minY + PAD * 2);
-    const fitScale = Math.min(size.w / bboxW, visibleH / bboxH);
-    // Floor the group-view zoom at 1.4x the bento fit so the camera
-    // always lands noticeably zoomed in past the overview, even for
-    // the few projects whose cluster naturally fits at a small
-    // scale. If the cluster is taller than the visible band at this
-    // zoom the user can pan vertically to see the rest.
-    const minGroupScale = bentoFitScaleRef.current
-      ? bentoFitScaleRef.current * 1.4
-      : 0;
-    const targetScale = Math.min(Math.max(fitScale, minGroupScale), 3);
+    // Use the natural fit-scale — with the new adaptive column
+    // counts (1 col for 3-photo projects, 2 for medium, 3 for
+    // large) every project lands several multiples zoomed in past
+    // the bento overview, so no extra min floor is needed.
+    const targetScale = Math.min(
+      Math.min(size.w / bboxW, visibleH / bboxH),
+      3,
+    );
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     // Anchor the cluster's centre in the MIDDLE of the visible
