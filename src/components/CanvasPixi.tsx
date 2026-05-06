@@ -269,21 +269,32 @@ export function CanvasPixi() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  const displayWorks = useMemo(
-    () => (isMobile ? curateForMobile() : WORKS),
-    [isMobile],
-  );
+  // ALL works are loaded as sprites on mobile. The bento OVERVIEW
+  // shows only the curated subset (3 per project — "core" tiles);
+  // the rest ("extras") sit at their cluster positions with alpha
+  // 0 in overview and fade in when their project is the selected
+  // group. That way the group view shows the FULL project gallery
+  // assembled in place rather than just the curated 3.
+  const displayWorks = useMemo(() => (isMobile ? WORKS : WORKS), [isMobile]);
+  // The set of curated work IDs — these are the "core" tiles that
+  // appear on the bento overview. Used by texture-load priority and
+  // by the per-sprite tier flag.
+  const coreIds = useMemo(() => {
+    if (!isMobile) {
+      return new Set(WORKS.map((w) => w.id));
+    }
+    return new Set(curateForMobile().map((w) => w.id));
+  }, [isMobile]);
 
-  // Bento layout (tall diamond) on mobile. On desktop, leave tiles at
-  // their natural canvas-space positions for now -- desktop bento can
-  // come later.
-  const bentoMap = useMemo(
-    () => (isMobile ? bentoLayout(displayWorks) : null),
-    [isMobile, displayWorks],
-  );
-  // Cluster layout — the SPREAD target for the group view stage.
-  // Tiles animate from bento (overview) to cluster (group view) when
-  // a group is selected, mirroring desktop's dispersion.
+  // Bento layout: only the curated cores get bento positions.
+  // Extras have no bento entry — they sit at their cluster slot in
+  // overview (invisible because their tier is "extra").
+  const bentoMap = useMemo(() => {
+    if (!isMobile) return null;
+    return bentoLayout(WORKS.filter((w) => coreIds.has(w.id)));
+  }, [isMobile, coreIds]);
+  // Cluster layout — covers ALL works so each project's full
+  // gallery has positions to flow into when its group is selected.
   const clusterMap = useMemo(
     () => (isMobile ? clusterLayout(displayWorks) : null),
     [isMobile, displayWorks],
@@ -481,27 +492,29 @@ export function CanvasPixi() {
     };
   }, [navTargetGroupKey, size, displayWorks, bentoMap, clusterMap, clearNav]);
 
-  // Progressive texture load. Only loads the displayed subset (mobile =
-  // ~39 tiles, desktop = 123). The rest are loaded on-demand when the
-  // gallery opens.
+  // Progressive texture load. Loads ALL works' thumbs (so the
+  // group view can show the full project assembled in place), but
+  // PRIORITISES the cores so the bento overview becomes interactive
+  // first. Order: cores in the same order as displayWorks, then
+  // extras in their natural order. Each is a 600px webp ~80KB.
   useEffect(() => {
     let cancelled = false;
     const map = new Map<string, Texture>();
+    const ordered = [
+      ...displayWorks.filter((w) => coreIds.has(w.id)),
+      ...displayWorks.filter((w) => !coreIds.has(w.id)),
+    ];
     async function loadAll() {
-      for (const w of displayWorks) {
+      for (const w of ordered) {
         if (cancelled) return;
         const fullSrc = w.images[0]?.src ?? "";
-        // Load 600px thumbnails into PIXI textures — the bento tiles
-        // never render larger than ~300-400px on screen, so the full
-        // 2400px webps were ~5x heavier than needed. Full-res is used
-        // by the gallery (ExpandedGroup) which loads on demand.
         const src = asset(thumbSrc(fullSrc));
         if (!src) continue;
         try {
           const tex = await Assets.load(src);
           if (cancelled) return;
           map.set(w.id, tex);
-          if (map.size % 5 === 0 || map.size === displayWorks.length) {
+          if (map.size % 5 === 0 || map.size === ordered.length) {
             setTextures(new Map(map));
           }
         } catch (e) {
@@ -514,7 +527,7 @@ export function CanvasPixi() {
     return () => {
       cancelled = true;
     };
-  }, [displayWorks]);
+  }, [displayWorks, coreIds]);
 
   // Drag pan + pinch zoom. Lives on the wrapping div so we don't fight
   // PIXI's interaction system; it just moves the transform state and
@@ -728,22 +741,21 @@ export function CanvasPixi() {
         const bento = bentoMap?.get(w.id);
         const cluster = clusterMap?.get(w.id);
         const wb = workBounds(w);
-        // Default both to workBounds when no map is provided (desktop
-        // fallback / pre-layout). On mobile both maps are populated.
-        const bentoX = bento?.x ?? wb.minX;
-        const bentoY = bento?.y ?? wb.minY;
+        const isCore = coreIds.has(w.id);
         const clusterX = cluster?.x ?? wb.minX;
         const clusterY = cluster?.y ?? wb.minY;
-        const w_ = bento?.w ?? wb.width;
-        const h_ = bento?.h ?? wb.height;
+        // Cores have a bento position. Extras sit at their cluster
+        // slot in overview too (no movement on spread, only fade).
+        const bentoX = bento?.x ?? clusterX;
+        const bentoY = bento?.y ?? clusterY;
+        const w_ = bento?.w ?? cluster?.w ?? wb.width;
+        const h_ = bento?.h ?? cluster?.h ?? wb.height;
         return {
           id: w.id,
           workId: w.id,
           projectKey,
           tex,
-          // Initial render position — current sprite x/y is set
-          // imperatively in the ref callback; these are just the
-          // bento defaults the layer uses on first mount.
+          tier: (isCore ? "core" : "extra") as "core" | "extra",
           x: bentoX,
           y: bentoY,
           w: w_,
@@ -755,7 +767,7 @@ export function CanvasPixi() {
         };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
-  }, [textures, displayWorks, bentoMap, clusterMap]);
+  }, [textures, displayWorks, bentoMap, clusterMap, coreIds]);
 
   // Tap-to-select. Two-stage interaction matches desktop's WorkTile:
   //  - First tap: selectWork — camera zooms to the group, the
@@ -856,6 +868,7 @@ export function CanvasPixi() {
               onSpriteDown={onSpriteDown}
               onSpriteUp={onSpriteUp}
               spread={selectedGroupKey != null}
+              selectedGroupKey={selectedGroupKey}
             />
           </pixiContainer>
         </Application>
@@ -897,6 +910,10 @@ type SpriteSpec = {
   projectKey: string;
   workId: string;
   tex: Texture;
+  /** "core" tiles appear on the bento overview (curated 3 per
+   * project on mobile). "extra" tiles only appear in their group's
+   * group-view stage — invisible in overview. */
+  tier: "core" | "extra";
   x: number;
   y: number;
   w: number;
@@ -935,6 +952,7 @@ function TileLayer({
   onSpriteDown,
   onSpriteUp,
   spread,
+  selectedGroupKey,
 }: {
   sprites: SpriteSpec[];
   onSpriteDown: (e: { global: { x: number; y: number } }) => void;
@@ -946,6 +964,9 @@ function TileLayer({
   /** True when the user is in group view — sprites should animate
    * to their cluster positions. False = overview (bento). */
   spread: boolean;
+  /** Which project's group view is open. Used to decide which
+   * "extra" sprites should fade in (only those in this group). */
+  selectedGroupKey: string | null;
 }) {
   // Map of sprite id -> live PIXI Sprite. Populated by ref callbacks
   // when each <pixiSprite> mounts; consumed by useTick to update
@@ -960,13 +981,16 @@ function TileLayer({
   // positions without iterating the sprites array each frame.
   const specByIdRef = useRef<Map<string, SpriteSpec>>(new Map());
   for (const s of sprites) specByIdRef.current.set(s.id, s);
-  // Mirror splashGone + spread in refs so the always-on tick reads
-  // the live values without re-binding the callback.
+  // Mirror splashGone + spread + selectedGroupKey in refs so the
+  // always-on tick reads the live values without re-binding the
+  // callback.
   const splashGoneState = useSelection((s) => s.splashGone);
   const splashGoneRef = useRef(splashGoneState);
   splashGoneRef.current = splashGoneState;
   const spreadRef = useRef(spread);
   spreadRef.current = spread;
+  const selectedGroupKeyRef = useRef(selectedGroupKey);
+  selectedGroupKeyRef.current = selectedGroupKey;
 
   useTick(() => {
     const splashGone = splashGoneRef.current;
@@ -981,9 +1005,16 @@ function TileLayer({
     }
     const now = performance.now();
     const isSpread = spreadRef.current;
+    const selKey = selectedGroupKeyRef.current;
     for (const [id, sprite] of spriteRefs.current) {
       if (!sprite) continue;
-      // Alpha (fade-in stagger).
+      const spec = specByIdRef.current.get(id);
+      if (!spec) continue;
+
+      // Intro fade-in stagger (still only applies the FIRST time
+      // this sprite reveals — extras start invisible and only fade
+      // in when their group is selected, but they share the same
+      // ease curve).
       let mountedAt = mountedAtRef.current.get(id);
       if (mountedAt == null) {
         mountedAt = now;
@@ -991,27 +1022,32 @@ function TileLayer({
       }
       const { delay, duration } = tileFadeTiming(id);
       const elapsed = now - mountedAt - delay;
-      let alpha;
-      if (elapsed <= 0) alpha = 0;
-      else if (elapsed >= duration) alpha = 1;
+      let intro;
+      if (elapsed <= 0) intro = 0;
+      else if (elapsed >= duration) intro = 1;
       else {
         const t = elapsed / duration;
-        alpha = 1 - Math.pow(1 - t, 3);
+        intro = 1 - Math.pow(1 - t, 3);
       }
-      sprite.alpha = alpha;
+
+      // Visibility logic:
+      //  - core tile: visible always (subject to intro stagger)
+      //  - extra tile: visible only when its project IS the
+      //    selected group view's project (and we're in spread).
+      const isCore = spec.tier === "core";
+      const inSelectedGroup = isSpread && spec.projectKey === selKey;
+      const targetAlpha = isCore || inSelectedGroup ? intro : 0;
+      // Lerp alpha for smooth fade-in/out of extras between groups.
+      sprite.alpha += (targetAlpha - sprite.alpha) * 0.12;
 
       // Position (bento <-> cluster lerp). 0.08 lerp factor at 60fps
-      // gives a ~500ms-feeling settle. Sprites in the SELECTED group
-      // and sprites in OTHER groups all move to their cluster
-      // positions; this matches desktop's dispersion which shifts
-      // every tile, not just the selected group's.
-      const spec = specByIdRef.current.get(id);
-      if (spec) {
-        const targetX = isSpread ? spec.clusterX : spec.bentoX;
-        const targetY = isSpread ? spec.clusterY : spec.bentoY;
-        sprite.x += (targetX - sprite.x) * 0.08;
-        sprite.y += (targetY - sprite.y) * 0.08;
-      }
+      // gives a ~500ms-feeling settle. Cores move from bento to
+      // cluster on spread; extras don't move (their bento equals
+      // their cluster).
+      const targetX = isSpread ? spec.clusterX : spec.bentoX;
+      const targetY = isSpread ? spec.clusterY : spec.bentoY;
+      sprite.x += (targetX - sprite.x) * 0.08;
+      sprite.y += (targetY - sprite.y) * 0.08;
     }
   });
 
