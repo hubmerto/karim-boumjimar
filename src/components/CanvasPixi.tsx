@@ -2,6 +2,7 @@
 
 import { Application, extend, useTick } from "@pixi/react";
 import { Assets, Container, Sprite, Texture, type Sprite as PixiSpriteType } from "pixi.js";
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -793,14 +794,19 @@ function PixiGallery({
                 justifyContent: "center",
                 padding: "72px 16px 96px",
                 boxSizing: "border-box",
+                position: "relative",
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              {/* next/image gives us per-device resizing + WebP/AVIF
+                  conversion via Vercel's optimizer. On the GH Pages
+                  build it falls back to the raw file (unoptimized
+                  flag is set in next.config.ts). */}
+              <Image
                 src={asset(img.src)}
                 alt={img.alt}
-                loading="lazy"
-                decoding="async"
+                width={img.width}
+                height={img.height}
+                sizes="100vw"
                 draggable={false}
                 style={{
                   maxWidth: "100%",
