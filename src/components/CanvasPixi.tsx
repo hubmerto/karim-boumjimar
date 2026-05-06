@@ -1,7 +1,7 @@
 "use client";
 
-import { Application, extend } from "@pixi/react";
-import { Assets, Container, Sprite, Texture } from "pixi.js";
+import { Application, extend, useTick } from "@pixi/react";
+import { Assets, Container, Sprite, Texture, type Sprite as PixiSpriteType } from "pixi.js";
 import {
   useCallback,
   useEffect,
@@ -489,22 +489,11 @@ export function CanvasPixi() {
           autoDensity
         >
           <pixiContainer x={transform.tx} y={transform.ty} scale={transform.scale}>
-            {sprites.map((s) => (
-              <pixiSprite
-                key={s.id}
-                texture={s.tex}
-                x={s.x}
-                y={s.y}
-                width={s.w}
-                height={s.h}
-                eventMode="static"
-                cursor="pointer"
-                onPointerDown={onSpriteDown}
-                onPointerUp={(e: { global: { x: number; y: number } }) =>
-                  onSpriteUp(s.projectKey, e)
-                }
-              />
-            ))}
+            <TileLayer
+              sprites={sprites}
+              onSpriteDown={onSpriteDown}
+              onSpriteUp={onSpriteUp}
+            />
           </pixiContainer>
         </Application>
       ) : null}
@@ -532,6 +521,120 @@ export function CanvasPixi() {
         />
       ) : null}
     </div>
+  );
+}
+
+/** Renders the sprite list and animates fade-in via PIXI's ticker so
+ * each frame's alpha update bypasses React entirely. The sprites
+ * themselves are rendered with alpha=0 initially; useTick mutates each
+ * Sprite ref's alpha directly until the fade-in completes. */
+type SpriteSpec = {
+  id: string;
+  projectKey: string;
+  tex: Texture;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+function tileFadeTiming(id: string): { delay: number; duration: number } {
+  // Stable hash → two pseudo-random 0..1 floats per tile id.
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  const r1 = (() => {
+    const x = Math.sin(h) * 10000;
+    return x - Math.floor(x);
+  })();
+  const r2 = (() => {
+    const x = Math.sin(h * 1.71 + 1) * 10000;
+    return x - Math.floor(x);
+  })();
+  return {
+    delay: Math.round(r1 * 5000),
+    duration: Math.round(1000 + r2 * 1000),
+  };
+}
+
+function TileLayer({
+  sprites,
+  onSpriteDown,
+  onSpriteUp,
+}: {
+  sprites: SpriteSpec[];
+  onSpriteDown: (e: { global: { x: number; y: number } }) => void;
+  onSpriteUp: (
+    projectKey: string,
+    e: { global: { x: number; y: number } },
+  ) => void;
+}) {
+  // Map of sprite id -> live PIXI Sprite. Populated by ref callbacks
+  // when each <pixiSprite> mounts; consumed by useTick to update alpha.
+  const spriteRefs = useRef<Map<string, PixiSpriteType>>(new Map());
+  // When THIS particular sprite first became visible to the renderer.
+  const mountedAtRef = useRef<Map<string, number>>(new Map());
+  // True once every visible sprite has reached alpha = 1; we stop the
+  // ticker work after that to stay quiet on the GPU.
+  const allDoneRef = useRef(false);
+
+  useTick(() => {
+    if (allDoneRef.current) return;
+    const now = performance.now();
+    let allDone = true;
+    for (const [id, sprite] of spriteRefs.current) {
+      if (!sprite) continue;
+      const mountedAt = mountedAtRef.current.get(id);
+      if (mountedAt == null) continue;
+      const { delay, duration } = tileFadeTiming(id);
+      const elapsed = now - mountedAt - delay;
+      let alpha;
+      if (elapsed <= 0) {
+        alpha = 0;
+      } else if (elapsed >= duration) {
+        alpha = 1;
+      } else {
+        // ease-out cubic-ish (matches the DOM canvas's cubic-bezier feel)
+        const t = elapsed / duration;
+        alpha = 1 - Math.pow(1 - t, 3);
+      }
+      sprite.alpha = alpha;
+      if (alpha < 1) allDone = false;
+    }
+    if (allDone && spriteRefs.current.size > 0) allDoneRef.current = true;
+  });
+
+  return (
+    <>
+      {sprites.map((s) => (
+        <pixiSprite
+          key={s.id}
+          ref={(node: PixiSpriteType | null) => {
+            if (node) {
+              spriteRefs.current.set(s.id, node);
+              if (!mountedAtRef.current.has(s.id)) {
+                mountedAtRef.current.set(s.id, performance.now());
+                allDoneRef.current = false;
+              }
+            } else {
+              spriteRefs.current.delete(s.id);
+              mountedAtRef.current.delete(s.id);
+            }
+          }}
+          texture={s.tex}
+          x={s.x}
+          y={s.y}
+          width={s.w}
+          height={s.h}
+          alpha={0}
+          eventMode="static"
+          cursor="pointer"
+          onPointerDown={onSpriteDown}
+          onPointerUp={(e: { global: { x: number; y: number } }) =>
+            onSpriteUp(s.projectKey, e)
+          }
+        />
+      ))}
+    </>
   );
 }
 
