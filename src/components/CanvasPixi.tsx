@@ -499,23 +499,30 @@ export function CanvasPixi() {
           </pixiContainer>
         </Application>
       ) : null}
-      <div
-        style={{
-          position: "fixed",
-          top: 8,
-          left: 8,
-          padding: "4px 8px",
-          fontSize: 11,
-          fontFamily: "ui-monospace, Menlo, monospace",
-          background: "#ffd23f",
-          color: "#111",
-          borderRadius: 2,
-          zIndex: 10,
-        }}
-      >
-        pixi · {sprites.length}/{displayWorks.length} loaded
-        {isMobile ? ` · mobile (curated)` : ` · desktop (full)`}
-      </div>
+      {/* Dev-only badge with the loaded-sprite count. Hidden on
+          karimboumjimar.com / hubmerto.com — only shown in dev or on
+          a *.vercel.app preview. */}
+      {process.env.NODE_ENV !== "production" ||
+      (typeof window !== "undefined" &&
+        /vercel\.app$/.test(window.location.hostname)) ? (
+        <div
+          style={{
+            position: "fixed",
+            top: 8,
+            left: 8,
+            padding: "4px 8px",
+            fontSize: 11,
+            fontFamily: "ui-monospace, Menlo, monospace",
+            background: "#ffd23f",
+            color: "#111",
+            borderRadius: 2,
+            zIndex: 10,
+          }}
+        >
+          pixi · {sprites.length}/{displayWorks.length} loaded
+          {isMobile ? ` · mobile (curated)` : ` · desktop (full)`}
+        </div>
+      ) : null}
       {openProject ? (
         <PixiGallery
           projectKey={openProject}
