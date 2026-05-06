@@ -24,12 +24,11 @@ const worksDir = resolve(root, "public/images/works");
 const UPLOADS_BASE =
   "/Users/humbertoimac/Downloads/(ﾉ◕ヮ◕)ﾉ_･ﾟ✧ WEBSITE UPLOADS (◠‿◠✿)/01_images";
 
-// Cap at 2400px on the long edge. ~9x the area of the old 800 cap.
-// Crisp on a 5K display even at 2x zoom. Vercel's image optimizer
-// resizes this DOWN per request for smaller viewports / lower DPR
-// devices. Total committed size ~40-50MB for 123 files (was 20MB
-// at 1600px) — still well within sane git limits.
-const MAX = 2400;
+// Cap at 3500px on the long edge — visibly sharper on retina /
+// 5K displays. The gallery view uses these full-res files;
+// thumbs (600px) are still used on the bento + group view.
+// Total committed size ~80MB for 122 files.
+const MAX = 3500;
 const QUALITY = 85;
 
 const MAPPING = [
