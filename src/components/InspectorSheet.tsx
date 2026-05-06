@@ -58,14 +58,14 @@ export function InspectorSheet() {
     };
   }, []);
 
-  // Auto-expand when a work is selected so the user can see its
-  // metadata — but NOT when the gallery is open. In gallery view the
-  // sheet stays at peek (just header bar) so the carousel keeps the
-  // full canvas height; user can pull it up to read whenever.
+  // When a work is selected (entering group view), reset the
+  // sheet to peek so the info bars are CLOSED and out of the
+  // way of the cluster. The user can drag the handle up to read
+  // (mid -> full snap states still work via the drag gesture).
   useEffect(() => {
     if (selected && !expandedGroupKey) {
       setMode("default");
-      setSnap((s) => (s === "peek" ? "mid" : s));
+      setSnap("peek");
     }
   }, [selected, expandedGroupKey]);
 

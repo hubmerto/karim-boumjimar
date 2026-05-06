@@ -787,8 +787,13 @@ export function CanvasPixi() {
         const d = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
         // Cap scale at 3x so a runaway pinch can't ask the GPU to draw
         // sprites at 5000+px and exhaust texture fillrate / memory.
+        // Floor at the bento-fit scale (with a tiny 0.05x overshoot
+        // tolerance) so zooming OUT past the overview just clamps —
+        // no point letting the user shrink the bento to nothing.
+        const minScale =
+          bentoFitScaleRef.current > 0 ? bentoFitScaleRef.current * 0.95 : 0.02;
         const newScale = Math.max(
-          0.02,
+          minScale,
           Math.min(3, pinchRef.current.scale * (d / pinchRef.current.distance)),
         );
         // Anchor the zoom around the pinch centre so the canvas point
@@ -826,7 +831,11 @@ export function CanvasPixi() {
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.005);
         applyTransform((t) => {
-          const newScale = Math.max(0.02, Math.min(3, t.scale * factor));
+          const minScale =
+            bentoFitScaleRef.current > 0
+              ? bentoFitScaleRef.current * 0.95
+              : 0.02;
+          const newScale = Math.max(minScale, Math.min(3, t.scale * factor));
           const eff = newScale / t.scale;
           return {
             scale: newScale,
