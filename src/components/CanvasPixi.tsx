@@ -266,6 +266,34 @@ export function CanvasPixi() {
     cy: number;
   } | null>(null);
 
+  // Coalesce transform updates to one per animation frame. Pinch and
+  // touchmove can fire 60+ times per second; without this each event
+  // triggers a React render of the whole sprite tree, which on iOS
+  // Chrome was exceeding React's update budget mid-gesture.
+  const pendingTransformRef = useRef<Transform | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const applyTransform = useCallback(
+    (updater: (prev: Transform) => Transform) => {
+      pendingTransformRef.current = updater(
+        pendingTransformRef.current ?? transform,
+      );
+      if (rafRef.current !== null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        const next = pendingTransformRef.current;
+        pendingTransformRef.current = null;
+        if (next) setTransform(next);
+      });
+    },
+    [transform],
+  );
+  useEffect(
+    () => () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -306,7 +334,7 @@ export function CanvasPixi() {
         );
         // Anchor the zoom around the pinch centre so the canvas point
         // under the user's fingers stays put.
-        setTransform((t) => {
+        applyTransform((t) => {
           const factor = newScale / t.scale;
           const cx = pinchRef.current!.cx;
           const cy = pinchRef.current!.cy;
@@ -323,7 +351,7 @@ export function CanvasPixi() {
           x: e.touches[0].clientX,
           y: e.touches[0].clientY,
         };
-        setTransform((t) => ({ ...t, tx: t.tx + dx, ty: t.ty + dy }));
+        applyTransform((t) => ({ ...t, tx: t.tx + dx, ty: t.ty + dy }));
       }
     }
     function onTouchEnd() {
@@ -335,7 +363,7 @@ export function CanvasPixi() {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.005);
-        setTransform((t) => {
+        applyTransform((t) => {
           const newScale = Math.max(0.02, Math.min(3, t.scale * factor));
           const eff = newScale / t.scale;
           return {
@@ -345,7 +373,7 @@ export function CanvasPixi() {
           };
         });
       } else {
-        setTransform((t) => ({
+        applyTransform((t) => ({
           ...t,
           tx: t.tx - e.deltaX,
           ty: t.ty - e.deltaY,
@@ -362,7 +390,7 @@ export function CanvasPixi() {
       const dx = e.clientX - dragRef.current.x;
       const dy = e.clientY - dragRef.current.y;
       dragRef.current = { x: e.clientX, y: e.clientY };
-      setTransform((t) => ({ ...t, tx: t.tx + dx, ty: t.ty + dy }));
+      applyTransform((t) => ({ ...t, tx: t.tx + dx, ty: t.ty + dy }));
     }
     function onPointerUp() {
       dragRef.current = null;

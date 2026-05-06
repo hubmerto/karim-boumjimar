@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
   // Hide the N / build-activity indicator that pops in the corner during
   // dev (it never ships to production but distracts during local review).
   devIndicators: false,
+  // Ship source maps to production so mobile crash stacks are decodable.
+  // Adds ~2x JS file count to the deploy but no runtime cost (only fetched
+  // when DevTools is open).
+  productionBrowserSourceMaps: true,
 };
 
 export default nextConfig;
