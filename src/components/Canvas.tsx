@@ -23,7 +23,7 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // if the per-cluster cap or the number of projects changes, otherwise
 // the bento leaves tiles at position (0, 0).
 export const BENTO_COL_COUNTS_DESKTOP = [
-  3, 4, 5, 6, 7, 8, 10, 12, 13, 12, 10, 8, 7, 6, 5, 4, 3,
+  3, 4, 5, 6, 7, 8, 10, 12, 12, 12, 10, 8, 7, 6, 5, 4, 3,
 ];
 export const BENTO_COL_COUNTS_MOBILE = [3, 5, 7, 9, 7, 5, 3];
 

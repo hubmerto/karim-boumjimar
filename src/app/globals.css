@@ -24,7 +24,12 @@ body {
    user-scalable=no was crashing iOS Safari WebKit on initial paint
    (page would briefly appear and then hit "Cannot open this page").
    100dvh tracks the dynamic viewport so the address-bar reveal
-   doesn't push content around. */
+   doesn't push content around.
+   touch-action / user-select / touch-callout used to live here too
+   but that disabled pinch-zoom and text selection on text pages.
+   The canvas wrappers (Canvas.tsx, CanvasPixi.tsx) set those
+   properties on their own div, so they apply only where the canvas
+   actually lives. Text pages get native browser behavior. */
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
@@ -34,9 +39,6 @@ body {
   width: 100%;
   height: 100dvh;
   overflow: hidden;
-  touch-action: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
 }
 
 * {

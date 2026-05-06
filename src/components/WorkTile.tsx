@@ -6,6 +6,7 @@ import { workBounds } from "@/lib/canvas-math";
 import { useDispersion } from "@/lib/dispersion";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
+import { thumbSrc } from "@/lib/thumbs";
 
 type Props = { work: Work };
 
@@ -119,7 +120,10 @@ function WorkTileImpl({ work }: Props) {
           // Plain <img> - next/image fights with arbitrary 2D transforms on the parent.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={asset(img.src)}
+            // 600px thumbnail on the canvas overview (~5x lighter
+            // than the 2400px full-res). Full-size loads when the
+            // user opens the gallery (ExpandedGroup).
+            src={asset(thumbSrc(img.src))}
             alt={img.alt}
             width={img.width}
             height={img.height}

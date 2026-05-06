@@ -208,17 +208,19 @@ export const CV_RESIDENCIES: CvEntry[] = [
 export const CV_GRANTS: CvEntry[] = [
   {
     year: "2026",
-    title:
-      "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant",
-    venue: "Danish Arts Foundation",
+    title: "Carl Nielsen and Anne Marie Carl-Nielsen Talent Award",
   },
+  { year: "2026", title: "Danish Arts Foundation Working Grant" },
   {
     year: "2025",
     title: "Ulrica Hydman Vallien Foundation Talent Scholarship",
   },
-  { year: "2025", title: "Symbiosis received the 2025 Blix Prize" },
+  {
+    year: "2025",
+    title:
+      "Symbiosis sculptural work received the Blix Prize at Kunsthal Charlottenborg",
+  },
   { year: "2025", title: "Danish Arts Foundation Working Grant" },
-  { year: "2025", title: 'Frieze "Ten Artists to Watch in 2025"' },
   { year: "2022", title: "Danish Arts Foundation Working Grant" },
   { year: "2021", title: "Danish Arts Foundation Working Grant" },
 ];

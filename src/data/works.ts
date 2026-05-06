@@ -273,28 +273,6 @@ export const WORKS: Work[] = [
     width: 409,
   },
   {
-    id: "birdsofparadise-10",
-    title: "Birds of Paradise",
-    year: 2026,
-    medium: "ceramic",
-    venue: "Viborg Kunsthal",
-    city: "Viborg",
-    date: "23 Jan - 10 May 2026",
-    images: [
-      {
-        src: "/images/works/birdsofparadise-10.webp",
-        alt: "Birds of Paradise, installation view",
-        width: 2400,
-        height: 1602,
-      },
-    ],
-    position: {
-      x: -1769,
-      y: -2721,
-    },
-    width: 437,
-  },
-  {
     id: "moestings-01",
     title: "Bodies Under Construction",
     year: 2026,

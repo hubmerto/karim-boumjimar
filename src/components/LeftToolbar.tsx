@@ -4,17 +4,16 @@ import Link from "next/link";
 import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { useSelection, type View } from "@/lib/store";
 
-const ITEMS: { key: View; label: string }[] = [
-  { key: "exhibitions", label: "Exhibitions" },
-  { key: "news", label: "News" },
-  { key: "bio", label: "Bio" },
-  { key: "about", label: "About" },
-  { key: "grant", label: "Grant" },
+const ITEMS: { key: View; label: string; href: string }[] = [
+  { key: "exhibitions", label: "Exhibitions", href: "/" },
+  { key: "news", label: "News", href: "/news" },
+  { key: "bio", label: "Bio", href: "/bio" },
+  { key: "about", label: "About", href: "/about" },
+  { key: "grant", label: "Grant", href: "/grant" },
 ];
 
 export function LeftToolbar() {
   const view = useSelection((s) => s.view);
-  const setView = useSelection((s) => s.setView);
   const condensed = useSelection((s) => !!(s.selectedId || s.selectedGroupKey));
   const deselect = useSelection((s) => s.deselect);
   const indexOpen = useSelection((s) => s.indexOpen);
@@ -56,9 +55,8 @@ export function LeftToolbar() {
               const active = view === item.key;
               return (
                 <li key={item.key}>
-                  <button
-                    type="button"
-                    onClick={() => setView(item.key)}
+                  <Link
+                    href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={`flex w-full items-center gap-3 px-6 py-3 text-left text-[13px] ${
                       active ? "text-ink" : "text-mute hover:text-ink"
@@ -69,7 +67,7 @@ export function LeftToolbar() {
                       className={`h-px w-3 ${active ? "bg-ink" : "bg-transparent"}`}
                     />
                     <span>{item.label}</span>
-                  </button>
+                  </Link>
                 </li>
               );
             })}

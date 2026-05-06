@@ -6,12 +6,12 @@ import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { WORKS } from "@/data/works";
 import { useSelection, type View } from "@/lib/store";
 
-const ITEMS: { key: View; label: string }[] = [
-  { key: "exhibitions", label: "Exhibitions" },
-  { key: "news", label: "News" },
-  { key: "bio", label: "Bio" },
-  { key: "about", label: "About" },
-  { key: "grant", label: "Grant" },
+const ITEMS: { key: View; label: string; href: string }[] = [
+  { key: "exhibitions", label: "Exhibitions", href: "/" },
+  { key: "news", label: "News", href: "/news" },
+  { key: "bio", label: "Bio", href: "/bio" },
+  { key: "about", label: "About", href: "/about" },
+  { key: "grant", label: "Grant", href: "/grant" },
 ];
 
 type IndexEntry = {
@@ -53,7 +53,6 @@ export function MobileMenu({
   onClose: () => void;
 }) {
   const view = useSelection((s) => s.view);
-  const setView = useSelection((s) => s.setView);
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const [mode, setMode] = useState<Mode>("sections");
 
@@ -103,12 +102,9 @@ export function MobileMenu({
               const active = view === item.key;
               return (
                 <li key={item.key}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setView(item.key);
-                      onClose();
-                    }}
+                  <Link
+                    href={item.href}
+                    onClick={() => onClose()}
                     aria-current={active ? "page" : undefined}
                     className="flex w-full items-center justify-between px-6 py-4 text-left text-[18px] text-ink"
                   >
@@ -118,7 +114,7 @@ export function MobileMenu({
                         current
                       </span>
                     ) : null}
-                  </button>
+                  </Link>
                 </li>
               );
             })}

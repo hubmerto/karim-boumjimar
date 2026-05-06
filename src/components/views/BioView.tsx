@@ -59,9 +59,6 @@ function BioSide() {
       </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2">
-        <Block label="Collective">
-          <p>Young Boy Dancing Group, since 2016.</p>
-        </Block>
         <Block label="Contact">
           <a
             href={`mailto:${CONTACT.email}`}

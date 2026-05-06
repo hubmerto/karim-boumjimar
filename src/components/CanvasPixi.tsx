@@ -21,6 +21,7 @@ import { WORKS } from "@/data/works";
 import { workBounds } from "@/lib/canvas-math";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
+import { thumbSrc } from "@/lib/thumbs";
 
 extend({ Container, Sprite });
 
@@ -254,7 +255,12 @@ export function CanvasPixi() {
     async function loadAll() {
       for (const w of displayWorks) {
         if (cancelled) return;
-        const src = asset(w.images[0]?.src ?? "");
+        const fullSrc = w.images[0]?.src ?? "";
+        // Load 600px thumbnails into PIXI textures — the bento tiles
+        // never render larger than ~300-400px on screen, so the full
+        // 2400px webps were ~5x heavier than needed. Full-res is used
+        // by the gallery (ExpandedGroup) which loads on demand.
+        const src = asset(thumbSrc(fullSrc));
         if (!src) continue;
         try {
           const tex = await Assets.load(src);
