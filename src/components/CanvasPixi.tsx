@@ -662,15 +662,28 @@ function TileLayer({
   );
 }
 
-/** DOM overlay that shows all images for the tapped project. Plain
- * <img> tags (5-20 per gallery) are well within iOS Safari's budget;
- * the only thing the canvas approach can't handle is the dense overview
- * with 100+ images all at once.
+/** Project gallery overlay — opens when a tile on the canvas is
+ * tapped. Two modes:
  *
- * Layout: horizontal full-bleed image carousel that snaps one image at
- * a time. A pull-up bottom sheet sits on top with the project's long-
- * form description and credits — collapsed it just shows the title
- * peek; tapped it expands to ~70% of the viewport. */
+ *  - "group" (default): horizontal-snap image carousel takes the
+ *    upper portion of the viewport, a bottom info panel takes the
+ *    lower portion. The panel shows the project's venue / dates /
+ *    long-form description / credits — the equivalent of the desktop
+ *    ExpandedGroup overview.
+ *
+ *  - "fullscreen": tap an image and the bottom panel slides off,
+ *    the carousel grows to fill the viewport. Tap again to toggle
+ *    back to group mode.
+ *
+ * The horizontal carousel is the same in both modes — the difference
+ * is just how much vertical space it gets and whether the info panel
+ * is visible. Each figure is one viewport-width "page" with CSS
+ * scroll-snap, so the user swipes horizontally between images.
+ */
+type GalleryMode = "group" | "fullscreen";
+
+const PANEL_VH = 42;
+
 function PixiGallery({
   projectKey,
   onClose,
@@ -687,10 +700,13 @@ function PixiGallery({
     () => descriptionFor(title, Number(year)),
     [title, year],
   );
+  // First work has the venue / city / date metadata (it's the same
+  // for every work in a project, so any of them would do).
+  const meta = works[0];
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [mode, setMode] = useState<GalleryMode>("group");
 
   // Lock body scroll while the gallery is open.
   useEffect(() => {
@@ -718,6 +734,27 @@ function PixiGallery({
     const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
     if (idx !== currentIdx) setCurrentIdx(idx);
   }
+
+  // Tap-on-image toggles fullscreen mode. We track pointerdown
+  // position + time so a horizontal swipe (which scrolls between
+  // images) doesn't accidentally count as a tap.
+  const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(
+    null,
+  );
+  function onFigPointerDown(e: React.PointerEvent) {
+    tapTrackerRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+  }
+  function onFigPointerUp(e: React.PointerEvent) {
+    const start = tapTrackerRef.current;
+    tapTrackerRef.current = null;
+    if (!start) return;
+    const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+    const dt = Date.now() - start.t;
+    if (dist > 8 || dt > 500) return;
+    setMode((m) => (m === "group" ? "fullscreen" : "group"));
+  }
+
+  const fullscreen = mode === "fullscreen";
 
   return (
     <div
@@ -786,89 +823,104 @@ function PixiGallery({
         </button>
       </header>
 
-      {/* Horizontal carousel — each figure is a viewport-wide page. */}
+      {/* Carousel container — height shrinks in group mode so the
+          info panel fits below; grows to 100% in fullscreen. */}
       <div
-        ref={scrollerRef}
-        onScroll={onScroll}
         style={{
           flex: 1,
+          minHeight: 0,
           display: "flex",
-          overflowX: "auto",
-          overflowY: "hidden",
-          scrollSnapType: "x mandatory",
-          WebkitOverflowScrolling: "touch",
+          flexDirection: "column",
+          transition: "padding-bottom 320ms cubic-bezier(0.32, 0.72, 0, 1)",
+          paddingBottom: fullscreen ? 0 : `${PANEL_VH}vh`,
         }}
       >
-        {works.map((w) => {
-          const img = w.images[0];
-          if (!img) return null;
-          return (
-            <figure
-              key={w.id}
-              style={{
-                margin: 0,
-                width: "100vw",
-                height: "100%",
-                flexShrink: 0,
-                scrollSnapAlign: "start",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "72px 16px 96px",
-                boxSizing: "border-box",
-                position: "relative",
-              }}
-            >
-              {/* next/image gives us per-device resizing + WebP/AVIF
-                  conversion via Vercel's optimizer. On the GH Pages
-                  build it falls back to the raw file (unoptimized
-                  flag is set in next.config.ts). */}
-              <Image
-                src={asset(img.src)}
-                alt={img.alt}
-                width={img.width}
-                height={img.height}
-                sizes="100vw"
-                draggable={false}
+        <div
+          ref={scrollerRef}
+          onScroll={onScroll}
+          style={{
+            flex: 1,
+            display: "flex",
+            overflowX: "auto",
+            overflowY: "hidden",
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {works.map((w) => {
+            const img = w.images[0];
+            if (!img) return null;
+            return (
+              <figure
+                key={w.id}
+                onPointerDown={onFigPointerDown}
+                onPointerUp={onFigPointerUp}
                 style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  width: "auto",
-                  height: "auto",
-                  objectFit: "contain",
-                  display: "block",
+                  margin: 0,
+                  width: "100vw",
+                  height: "100%",
+                  flexShrink: 0,
+                  scrollSnapAlign: "start",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: fullscreen
+                    ? "60px 16px 24px"
+                    : "60px 16px 16px",
+                  boxSizing: "border-box",
+                  position: "relative",
+                  cursor: "zoom-in",
                 }}
-              />
-            </figure>
-          );
-        })}
+              >
+                {/* next/image gives us per-device resizing + WebP/AVIF
+                    conversion via Vercel's optimizer. On the GH Pages
+                    build it falls back to the raw file (unoptimized
+                    flag is set in next.config.ts). */}
+                <Image
+                  src={asset(img.src)}
+                  alt={img.alt}
+                  width={img.width}
+                  height={img.height}
+                  sizes="100vw"
+                  draggable={false}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    width: "auto",
+                    height: "auto",
+                    objectFit: "contain",
+                    display: "block",
+                    pointerEvents: "none",
+                  }}
+                />
+              </figure>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Pull-up bottom sheet with the long-form description + credits. */}
-      <GalleryBottomSheet
-        open={sheetOpen}
-        onToggle={() => setSheetOpen((o) => !o)}
+      {/* Bottom info panel. Slides off-screen in fullscreen mode. */}
+      <GalleryInfoPanel
+        meta={meta}
         desc={desc}
+        hidden={fullscreen}
       />
     </div>
   );
 }
 
-const SHEET_PEEK_HEIGHT = 56;
-const SHEET_OPEN_VH = 70;
-
-/** Pull-up bottom sheet. Tap the handle to toggle between the peek
- * state (just a title bar) and expanded (~70vh, scrollable body). */
-function GalleryBottomSheet({
-  open,
-  onToggle,
+/** Bottom-anchored info panel showing the project's venue, dates, and
+ * description. Visible in group mode, slides off-screen in fullscreen
+ * mode. The body scrolls if the description is taller than the panel. */
+function GalleryInfoPanel({
+  meta,
   desc,
+  hidden,
 }: {
-  open: boolean;
-  onToggle: () => void;
+  meta: typeof WORKS[number] | undefined;
   desc: Description | undefined;
+  hidden: boolean;
 }) {
-  const hasContent = !!desc && (desc.body.length > 0 || desc.credits.length > 0);
   return (
     <div
       style={{
@@ -877,132 +929,95 @@ function GalleryBottomSheet({
         right: 0,
         bottom: 0,
         zIndex: 20,
-        height: `${SHEET_OPEN_VH}vh`,
-        transform: open
-          ? "translateY(0)"
-          : `translateY(calc(100% - ${SHEET_PEEK_HEIGHT}px))`,
+        height: `${PANEL_VH}vh`,
+        transform: hidden ? "translateY(100%)" : "translateY(0)",
         transition: "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)",
         background: "#fff",
         borderTop: "1px solid #eee",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        boxShadow: "0 -8px 24px rgba(0,0,0,0.06)",
         display: "flex",
         flexDirection: "column",
         willChange: "transform",
+        pointerEvents: hidden ? "none" : "auto",
       }}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-label={open ? "Hide details" : "Show details"}
-        style={{
-          appearance: "none",
-          background: "transparent",
-          border: 0,
-          padding: 0,
-          textAlign: "left",
-          cursor: "pointer",
-          color: "inherit",
-          font: "inherit",
-          flexShrink: 0,
-        }}
-      >
+      {meta ? (
         <div
           style={{
+            padding: "14px 20px 8px",
             display: "flex",
-            justifyContent: "center",
-            paddingTop: 8,
-          }}
-        >
-          <span
-            style={{
-              display: "block",
-              width: 36,
-              height: 4,
-              borderRadius: 2,
-              background: "#ddd",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
             justifyContent: "space-between",
-            padding: "8px 16px 12px",
-            fontSize: 12,
-            color: "#111",
-          }}
-        >
-          <span>About this exhibition</span>
-          <span
-            style={{
-              fontSize: 14,
-              color: "#999",
-              transform: open ? "rotate(180deg)" : "rotate(0)",
-              transition: "transform 200ms",
-              display: "inline-block",
-            }}
-          >
-            ↑
-          </span>
-        </div>
-      </button>
-
-      {hasContent ? (
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            WebkitOverflowScrolling: "touch",
-            padding: "0 20px 32px",
-            fontSize: 13,
-            lineHeight: 1.65,
-            color: "#111",
-          }}
-        >
-          {desc!.body
-            .split("\n\n")
-            .filter((p) => p.trim().length > 0)
-            .map((para, i) => (
-              <p key={i} style={{ margin: i === 0 ? "8px 0 0" : "1em 0 0" }}>
-                {para}
-              </p>
-            ))}
-          {desc!.credits.length > 0 ? (
-            <div
-              style={{
-                marginTop: 28,
-                paddingTop: 16,
-                borderTop: "1px solid #eee",
-                fontSize: 11,
-                fontStyle: "italic",
-                color: "#999",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {desc!.credits.map((c, i) => (
-                <p key={i} style={{ margin: i === 0 ? 0 : "0.5em 0 0" }}>
-                  {c}
-                </p>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <div
-          style={{
-            padding: "8px 20px 20px",
-            fontSize: 12,
+            gap: 12,
+            fontSize: 11,
             color: "#999",
             fontStyle: "italic",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            flexShrink: 0,
           }}
         >
-          No description available.
+          <span>
+            {meta.venue}
+            {meta.city ? `, ${meta.city}` : ""}
+          </span>
+          {meta.date ? <span>{meta.date}</span> : null}
         </div>
-      )}
+      ) : null}
+
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          padding: "4px 20px 24px",
+          fontSize: 13,
+          lineHeight: 1.6,
+          color: "#111",
+        }}
+      >
+        {desc && desc.body
+          ? desc.body
+              .split("\n\n")
+              .filter((p) => p.trim().length > 0)
+              .map((para, i) => (
+                <p
+                  key={i}
+                  style={{ margin: i === 0 ? "0" : "1em 0 0" }}
+                >
+                  {para}
+                </p>
+              ))
+          : (
+            <p
+              style={{
+                margin: 0,
+                fontStyle: "italic",
+                color: "#999",
+              }}
+            >
+              No description yet.
+            </p>
+          )}
+        {desc && desc.credits.length > 0 ? (
+          <div
+            style={{
+              marginTop: 24,
+              paddingTop: 12,
+              borderTop: "1px solid #eee",
+              fontSize: 11,
+              fontStyle: "italic",
+              color: "#999",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {desc.credits.map((c, i) => (
+              <p key={i} style={{ margin: i === 0 ? 0 : "0.5em 0 0" }}>
+                {c}
+              </p>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

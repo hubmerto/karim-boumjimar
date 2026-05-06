@@ -1,26 +1,31 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AboutView } from "@/components/views/AboutView";
 import { BioView } from "@/components/views/BioView";
 import { NewsView } from "@/components/views/NewsView";
+import { asset } from "@/lib/paths";
 import { useSelection, type View } from "@/lib/store";
 
 /**
- * Mobile-only nav. Three small italic text links in the top-right
- * (Bio, About, News) over the Pixi canvas. Tapping one swaps the
- * `view` in the store from "exhibitions" → that view, which makes
- * the corresponding TextView scaffold cover the canvas. A close X
- * appears top-right to return to the canvas.
+ * Mobile-only chrome:
+ *  - Top header bar (fixed, full-width): logo centered, menu icon
+ *    in the right corner.
+ *  - Tap the menu → full-screen menu overlay with the navigation
+ *    items (Bio / About / News).
+ *  - Pick a menu item → corresponding TextView covers everything.
+ *  - Each text view has a close X to return to the canvas.
  *
- * The links are hidden whenever a view is open (the X handles
- * navigation in that case), so we never show two competing nav
- * affordances at the same time.
+ * The whole header is hidden when a project gallery is open (the
+ * gallery has its own header) and when a text view is up (the X
+ * handles closing it).
  */
-const LINKS: ReadonlyArray<{
+type MenuItem = {
   label: string;
   view: Exclude<View, "exhibitions" | "grant">;
-}> = [
+};
+
+const MENU_ITEMS: ReadonlyArray<MenuItem> = [
   { label: "Bio", view: "bio" },
   { label: "About", view: "about" },
   { label: "News", view: "news" },
@@ -30,74 +35,224 @@ export function MobileNav() {
   const view = useSelection((s) => s.view);
   const setView = useSelection((s) => s.setView);
   const galleryOpen = useSelection((s) => s.openProjectKey != null);
-  const open = view !== "exhibitions";
-  // Hide the BIO / ABOUT / NEWS tab cluster when EITHER a text view
-  // is open (the X handles closing it) OR a project gallery is open
-  // over the canvas (the gallery has its own header + close button).
-  const navHidden = open || galleryOpen;
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Esc key closes the overlay (mostly for desktop ?pixi=1 testing —
-  // mobile users hit the X).
+  const viewOpen = view !== "exhibitions";
+  // Hide the entire top bar when a gallery or a text view is up.
+  // The gallery has its own controls; the text view has its own X.
+  const headerHidden = viewOpen || galleryOpen;
+
+  // Esc closes both the menu overlay and any open text view.
   useEffect(() => {
-    if (!open) return;
+    if (!menuOpen && !viewOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setView("exhibitions");
+      if (e.key !== "Escape") return;
+      if (menuOpen) setMenuOpen(false);
+      else if (viewOpen) setView("exhibitions");
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, setView]);
+  }, [menuOpen, viewOpen, setView]);
+
+  // Lock body scroll while the menu is up.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
 
   return (
     <>
-      {/* Tab links — visible over the canvas, hidden when a view is open. */}
-      <nav
-        aria-label="Sections"
+      {/* Fixed top header bar — logo centered, menu button right. */}
+      <header
         style={{
           position: "fixed",
-          top: 14,
-          right: 14,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 52,
           zIndex: 30,
-          display: navHidden ? "none" : "flex",
-          gap: 16,
-          fontSize: 10,
-          fontStyle: "italic",
-          textTransform: "uppercase",
-          letterSpacing: "0.1em",
-          color: "#111",
-          // Subtle white wash so the links stay readable when a tile
-          // happens to sit underneath them.
-          background: "rgba(255,255,255,0.78)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
-          padding: "6px 10px",
-          borderRadius: 4,
+          display: headerHidden ? "none" : "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 12px",
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0.92), rgba(255,255,255,0))",
+          pointerEvents: "none",
         }}
       >
-        {LINKS.map((link) => (
-          <button
-            key={link.view}
-            type="button"
-            onClick={() => setView(link.view)}
+        {/* Logo centered. Tappable, returns to canvas if a view is open. */}
+        <button
+          type="button"
+          aria-label="Karim Boumjimar"
+          onClick={() => setView("exhibitions")}
+          style={{
+            appearance: "none",
+            background: "transparent",
+            border: 0,
+            padding: "8px 12px",
+            cursor: "pointer",
+            pointerEvents: "auto",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={asset("/logo.svg")}
+            alt="Karim Boumjimar"
+            draggable={false}
             style={{
-              appearance: "none",
-              background: "transparent",
-              border: 0,
-              padding: 0,
-              color: "inherit",
-              cursor: "pointer",
-              font: "inherit",
-              letterSpacing: "inherit",
-              textTransform: "inherit",
-              fontStyle: "inherit",
+              display: "block",
+              height: 18,
+              width: "auto",
+              maxWidth: "60vw",
+              userSelect: "none",
+            }}
+          />
+        </button>
+
+        {/* Menu icon in the right corner. */}
+        <button
+          type="button"
+          aria-label="Open menu"
+          onClick={() => setMenuOpen(true)}
+          style={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            width: 36,
+            height: 36,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 5,
+            appearance: "none",
+            background: "transparent",
+            border: 0,
+            cursor: "pointer",
+            pointerEvents: "auto",
+          }}
+        >
+          {/* Two-line minimalist hamburger (matches the brutalist
+              hairline aesthetic). */}
+          <span
+            aria-hidden
+            style={{ display: "block", width: 22, height: 1, background: "#111" }}
+          />
+          <span
+            aria-hidden
+            style={{ display: "block", width: 22, height: 1, background: "#111" }}
+          />
+        </button>
+      </header>
+
+      {/* Full-screen menu overlay. */}
+      {menuOpen ? (
+        <div
+          role="dialog"
+          aria-label="Menu"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            background: "#fff",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Same header layout as the canvas, but with an X close
+              button instead of the menu icon. */}
+          <header
+            style={{
+              height: 52,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0 12px",
+              position: "relative",
+              flexShrink: 0,
             }}
           >
-            {link.label}
-          </button>
-        ))}
-      </nav>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={asset("/logo.svg")}
+              alt="Karim Boumjimar"
+              draggable={false}
+              style={{
+                display: "block",
+                height: 18,
+                width: "auto",
+                maxWidth: "60vw",
+                userSelect: "none",
+              }}
+            />
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+              style={{
+                position: "absolute",
+                right: 8,
+                top: 8,
+                width: 36,
+                height: 36,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                appearance: "none",
+                background: "transparent",
+                border: 0,
+                color: "#111",
+                fontSize: 22,
+                lineHeight: 1,
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          </header>
 
-      {/* Overlay: full-screen view + close button. */}
-      {open ? (
+          {/* Menu items. Stacked vertically, big tap targets. */}
+          <nav
+            aria-label="Sections"
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              padding: "0 32px",
+              gap: 8,
+            }}
+          >
+            {/* Works = back to the canvas. */}
+            <MenuLink
+              label="Works"
+              onClick={() => {
+                setView("exhibitions");
+                setMenuOpen(false);
+              }}
+            />
+            {MENU_ITEMS.map((item) => (
+              <MenuLink
+                key={item.view}
+                label={item.label}
+                onClick={() => {
+                  setView(item.view);
+                  setMenuOpen(false);
+                }}
+              />
+            ))}
+          </nav>
+        </div>
+      ) : null}
+
+      {/* Active text view + close button. */}
+      {viewOpen ? (
         <>
           {view === "bio" ? <BioView /> : null}
           {view === "about" ? <AboutView /> : null}
@@ -109,7 +264,7 @@ export function MobileNav() {
             style={{
               position: "fixed",
               top: 8,
-              right: 12,
+              right: 8,
               zIndex: 60,
               background: "transparent",
               border: 0,
@@ -117,7 +272,7 @@ export function MobileNav() {
               lineHeight: 1,
               color: "#111",
               cursor: "pointer",
-              padding: "6px 8px",
+              padding: "6px 10px",
             }}
           >
             ×
@@ -125,5 +280,35 @@ export function MobileNav() {
         </>
       ) : null}
     </>
+  );
+}
+
+function MenuLink({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        appearance: "none",
+        background: "transparent",
+        border: 0,
+        padding: "12px 0",
+        textAlign: "left",
+        fontSize: 32,
+        lineHeight: 1.1,
+        color: "#111",
+        cursor: "pointer",
+        font: "inherit",
+        fontWeight: 400,
+      }}
+    >
+      {label}
+    </button>
   );
 }
