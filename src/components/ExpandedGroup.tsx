@@ -117,8 +117,16 @@ export function ExpandedGroup() {
 
   const works = useMemo(() => {
     if (!displayKey) return [];
-    return WORKS.filter((w) => `${w.title}|${w.year}` === displayKey);
-  }, [displayKey]);
+    const list = WORKS.filter((w) => `${w.title}|${w.year}` === displayKey);
+    // Rotate so the tile the user actually tapped becomes index 0
+    // — the tapped photo is the FIRST in the carousel, with the
+    // remaining photos following in their original order (wrap
+    // around). Falls back to the natural order if no selection.
+    if (!selectedId) return list;
+    const idx = list.findIndex((w) => w.id === selectedId);
+    if (idx <= 0) return list;
+    return [...list.slice(idx), ...list.slice(0, idx)];
+  }, [displayKey, selectedId]);
 
   const heading = useMemo(() => {
     if (!displayKey) return null;
@@ -158,18 +166,6 @@ export function ExpandedGroup() {
     const t = setTimeout(() => setPhase("open"), TRANSITION_MS + 40);
     return () => clearTimeout(t);
   }, [phase, displayKey]);
-
-  // Scroll the carousel so the tile the user actually tapped lands
-  // first. Without this the strip always opened at index 0
-  // regardless of which photo launched it.
-  useLayoutEffect(() => {
-    if (!displayKey || !selectedId) return;
-    const target = itemRefs.current.get(selectedId);
-    const scroller = scrollRef.current;
-    if (!target || !scroller) return;
-    const targetLeft = target.offsetLeft - scroller.offsetLeft;
-    scroller.scrollLeft = targetLeft;
-  }, [displayKey, selectedId]);
 
   // FLIP close: animate each item back to its canvas-tile rect, then unmount.
   useLayoutEffect(() => {
