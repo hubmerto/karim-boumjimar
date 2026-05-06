@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Libre_Baskerville } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
@@ -85,6 +87,11 @@ export default function RootLayout({
     <html lang="en" className={libre.variable}>
       <body>
         <ErrorBoundary>{children}</ErrorBoundary>
+        {/* Vercel Web Analytics + Speed Insights — privacy-friendly,
+            no cookies, no consent banner needed. Captures pageviews
+            and Core Web Vitals to the Vercel dashboard. */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
