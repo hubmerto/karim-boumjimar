@@ -58,13 +58,26 @@ export function InspectorSheet() {
     };
   }, []);
 
-  // Auto-expand when a work is selected so the user can see its metadata.
+  // Auto-expand when a work is selected so the user can see its
+  // metadata — but NOT when the gallery is open. In gallery view the
+  // sheet stays at peek (just header bar) so the carousel keeps the
+  // full canvas height; user can pull it up to read whenever.
   useEffect(() => {
-    if (selected) {
+    if (selected && !expandedGroupKey) {
       setMode("default");
       setSnap((s) => (s === "peek" ? "mid" : s));
     }
-  }, [selected]);
+  }, [selected, expandedGroupKey]);
+
+  // When the gallery opens, snap the sheet down to peek so it doesn't
+  // sit over the strip. When it closes, leave whatever snap the user
+  // had so the group view returns to a sensible state.
+  useEffect(() => {
+    if (expandedGroupKey) {
+      setMode("default");
+      setSnap("peek");
+    }
+  }, [expandedGroupKey]);
 
   // Handle drag from the grab region.
   const onGrabPointerDown = useCallback(
@@ -121,9 +134,6 @@ export function InspectorSheet() {
   // Only meaningful on the exhibitions canvas; other views show their own full content.
   // Must come AFTER all hooks to satisfy the rules of hooks.
   if (view !== "exhibitions") return null;
-  // Hide entirely while the gallery view is open so the horizontal strip
-  // gets the full canvas height on mobile.
-  if (expandedGroupKey) return null;
   // Hide unless the user has actively selected something. The default
   // (no-selection) sheet was clutter; site navigation lives in the top
   // menu now.

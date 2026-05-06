@@ -34,14 +34,16 @@ const OG_IMAGES = [
   { url: "/og-image-square.png", width: 1200, height: 1200 },
 ];
 
-// Disable the browser's own pinch-zoom: the canvas has its own pan/zoom
-// and the two compete on iOS. viewportFit:"cover" lets fixed UI extend
-// under the notch / home indicator on modern iPhones.
+// Allow user-zoom (accessibility requirement, also flagged by
+// Lighthouse). The canvas's internal pinch-zoom takes priority over
+// the browser default while the user is touching the canvas wrapper
+// (touch-action:none + custom touch handlers); on text/legal pages
+// the browser's native zoom is now available again.
+// viewportFit:"cover" lets fixed UI extend under the notch / home
+// indicator on modern iPhones.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
