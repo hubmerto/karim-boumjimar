@@ -896,9 +896,20 @@ function PixiGallery({
   );
 }
 
-/** Bottom-anchored info panel showing the project's venue, dates, and
- * description. Visible in group mode, slides off-screen in fullscreen
- * mode. The body scrolls if the description is taller than the panel. */
+/** Two stacked pullable sheets at the bottom of the gallery. Each
+ * has a peek (just a header bar) and an expanded state (~70vh /
+ * ~50vh respectively). Sheets are independent — tap either header
+ * to toggle. Both slide off-screen in fullscreen mode.
+ *
+ * Layout:
+ *   Description sheet (bottom)  — peek 56px, expanded 75vh
+ *   Info sheet      (above it)  — peek 56px, expanded 50vh
+ * In peek state the user sees two stacked bars; each scrolls
+ * internally when expanded. */
+const SHEET_PEEK = 56;
+const DESC_OPEN_VH = 75;
+const INFO_OPEN_VH = 50;
+
 function GalleryInfoPanel({
   meta,
   desc,
@@ -908,93 +919,83 @@ function GalleryInfoPanel({
   desc: Description | undefined;
   hidden: boolean;
 }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 20,
-        height: `${PANEL_VH}vh`,
-        transform: hidden ? "translateY(100%)" : "translateY(0)",
-        transition: "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)",
-        background: "#fff",
-        borderTop: "1px solid #eee",
-        display: "flex",
-        flexDirection: "column",
-        willChange: "transform",
-        pointerEvents: hidden ? "none" : "auto",
-      }}
-    >
-      {meta ? (
-        <div
-          style={{
-            padding: "14px 20px 8px",
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            fontSize: 11,
-            color: "#999",
-            fontStyle: "italic",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            flexShrink: 0,
-          }}
-        >
-          <span>
-            {meta.venue}
-            {meta.city ? `, ${meta.city}` : ""}
-          </span>
-          {meta.date ? <span>{meta.date}</span> : null}
-        </div>
-      ) : null}
+  const [descOpen, setDescOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-          padding: "4px 20px 24px",
-          fontSize: 13,
-          lineHeight: 1.6,
-          color: "#111",
-        }}
+  // Build the info-sheet content from the work's metadata + the
+  // description's `credits` array (text by / curation by /
+  // photography by — see scripts/build-works-v2.mjs for how those
+  // get split out of the long-form body).
+  const infoLines = useMemo(() => {
+    const lines: string[] = [];
+    if (meta?.venue) {
+      lines.push(meta.city ? `${meta.venue}, ${meta.city}` : meta.venue);
+    }
+    if (meta?.date) lines.push(meta.date);
+    return lines;
+  }, [meta]);
+
+  return (
+    <>
+      {/* DESCRIPTION SHEET — sits at the very bottom. */}
+      <Sheet
+        zIndex={20}
+        bottomOffset={0}
+        peekHeight={SHEET_PEEK}
+        openHeight={`${DESC_OPEN_VH}vh`}
+        open={descOpen}
+        onToggle={() => setDescOpen((o) => !o)}
+        title="About this exhibition"
+        hidden={hidden}
       >
-        {desc && desc.body
-          ? desc.body
-              .split("\n\n")
-              .filter((p) => p.trim().length > 0)
-              .map((para, i) => (
-                <p
-                  key={i}
-                  style={{ margin: i === 0 ? "0" : "1em 0 0" }}
-                >
-                  {para}
-                </p>
-              ))
-          : (
-            <p
-              style={{
-                margin: 0,
-                fontStyle: "italic",
-                color: "#999",
-              }}
-            >
-              No description yet.
-            </p>
-          )}
+        {desc && desc.body ? (
+          desc.body
+            .split("\n\n")
+            .filter((p) => p.trim().length > 0)
+            .map((para, i) => (
+              <p key={i} style={{ margin: i === 0 ? "0" : "1em 0 0" }}>
+                {para}
+              </p>
+            ))
+        ) : (
+          <p style={{ margin: 0, fontStyle: "italic", color: "#999" }}>
+            No description yet.
+          </p>
+        )}
+      </Sheet>
+
+      {/* INFO SHEET — sits 56px above the description sheet, so when
+          both are collapsed the user sees two stacked bars. */}
+      <Sheet
+        zIndex={21}
+        bottomOffset={SHEET_PEEK}
+        peekHeight={SHEET_PEEK}
+        openHeight={`${INFO_OPEN_VH}vh`}
+        open={infoOpen}
+        onToggle={() => setInfoOpen((o) => !o)}
+        title={
+          infoLines.length > 0 ? infoLines.join(" · ") : "Exhibition details"
+        }
+        hidden={hidden}
+      >
+        {infoLines.length > 0 ? (
+          <div style={{ marginBottom: desc?.credits.length ? 24 : 0 }}>
+            {infoLines.map((line, i) => (
+              <p key={i} style={{ margin: i === 0 ? 0 : "0.4em 0 0" }}>
+                {line}
+              </p>
+            ))}
+          </div>
+        ) : null}
         {desc && desc.credits.length > 0 ? (
           <div
             style={{
-              marginTop: 24,
-              paddingTop: 12,
-              borderTop: "1px solid #eee",
-              fontSize: 11,
+              paddingTop: infoLines.length > 0 ? 16 : 0,
+              borderTop: infoLines.length > 0 ? "1px solid #eee" : "none",
               fontStyle: "italic",
               color: "#999",
               whiteSpace: "pre-wrap",
+              fontSize: 12,
             }}
           >
             {desc.credits.map((c, i) => (
@@ -1004,6 +1005,153 @@ function GalleryInfoPanel({
             ))}
           </div>
         ) : null}
+        {infoLines.length === 0 &&
+        (!desc || desc.credits.length === 0) ? (
+          <p style={{ margin: 0, fontStyle: "italic", color: "#999" }}>
+            No additional info.
+          </p>
+        ) : null}
+      </Sheet>
+    </>
+  );
+}
+
+/** Single bottom sheet with a tap-to-toggle header. Header is always
+ * visible (peek state). When toggled open, the sheet grows upward to
+ * `openHeight` and the body becomes scrollable. */
+function Sheet({
+  zIndex,
+  bottomOffset,
+  peekHeight,
+  openHeight,
+  open,
+  onToggle,
+  title,
+  hidden,
+  children,
+}: {
+  zIndex: number;
+  bottomOffset: number;
+  peekHeight: number;
+  openHeight: string;
+  open: boolean;
+  onToggle: () => void;
+  title: string;
+  hidden: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: bottomOffset,
+        zIndex,
+        height: open ? openHeight : peekHeight,
+        transform: hidden
+          ? `translateY(calc(100% + ${bottomOffset}px))`
+          : "translateY(0)",
+        transition:
+          "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), height 280ms cubic-bezier(0.32, 0.72, 0, 1)",
+        background: "#fff",
+        borderTop: "1px solid #eee",
+        borderTopLeftRadius: 14,
+        borderTopRightRadius: 14,
+        boxShadow: open ? "0 -8px 24px rgba(0,0,0,0.06)" : "none",
+        display: "flex",
+        flexDirection: "column",
+        willChange: "transform, height",
+        pointerEvents: hidden ? "none" : "auto",
+        overflow: "hidden",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
+        style={{
+          appearance: "none",
+          background: "transparent",
+          border: 0,
+          padding: 0,
+          textAlign: "left",
+          cursor: "pointer",
+          color: "inherit",
+          font: "inherit",
+          flexShrink: 0,
+        }}
+      >
+        {/* Drag-handle pill — pure visual affordance for now (the
+            interaction is just tap, no actual drag yet). */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            paddingTop: 8,
+          }}
+        >
+          <span
+            style={{
+              display: "block",
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              background: "#ddd",
+            }}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            padding: "6px 18px 12px",
+            fontSize: 12,
+            color: "#111",
+          }}
+        >
+          <span
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {title}
+          </span>
+          <span
+            aria-hidden
+            style={{
+              fontSize: 14,
+              color: "#999",
+              transform: open ? "rotate(180deg)" : "rotate(0)",
+              transition: "transform 200ms",
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          >
+            ↑
+          </span>
+        </div>
+      </button>
+
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          padding: "0 20px 28px",
+          fontSize: 13,
+          lineHeight: 1.6,
+          color: "#111",
+        }}
+      >
+        {children}
       </div>
     </div>
   );
