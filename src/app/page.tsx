@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { CrashOverlay } from "@/components/CrashOverlay";
 import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
@@ -21,6 +22,17 @@ import { useSelection } from "@/lib/store";
 export default function Home() {
   const indexOpen = useSelection((s) => s.indexOpen);
   const setIndexOpen = useSelection((s) => s.setIndexOpen);
+  const setView = useSelection((s) => s.setView);
+
+  // Reset the store's view to "exhibitions" whenever the home
+  // page mounts. Without this, navigating from /about (or any
+  // other text route) back to "/" via the LeftToolbar's
+  // Exhibitions link would land here with view still set to
+  // whatever it was before, and ViewSwitcher would keep showing
+  // the text view instead of the canvas.
+  useEffect(() => {
+    setView("exhibitions");
+  }, [setView]);
 
   return (
     <>
