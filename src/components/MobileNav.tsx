@@ -1,46 +1,57 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AboutView } from "@/components/views/AboutView";
 import { BioView } from "@/components/views/BioView";
+import { GrantView } from "@/components/views/GrantView";
+import { Index } from "@/components/Index";
 import { NewsView } from "@/components/views/NewsView";
+import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { asset } from "@/lib/paths";
 import { useSelection, type View } from "@/lib/store";
 
 /**
  * Mobile-only chrome:
- *  - Top header bar (fixed, full-width): logo centered, menu icon
- *    in the right corner.
- *  - Tap the menu → full-screen menu overlay with the navigation
- *    items (Bio / About / News).
- *  - Pick a menu item → corresponding TextView covers everything.
- *  - Each text view has a close X to return to the canvas.
+ *  - Top header bar (fixed, full-width): logo centered, two-line
+ *    menu icon in the right corner.
+ *  - Tap menu icon -> full-screen menu overlay (centered, bold,
+ *    same items as the desktop LeftToolbar plus Index, plus the
+ *    desktop's footer info pinned at the bottom).
+ *  - Selecting Exhibitions returns to the canvas.
+ *  - Selecting Index opens the works-index drawer.
+ *  - Selecting any other item shows that TextView.
  *
- * The whole header is hidden when a project gallery is open (the
- * gallery has its own header) and when a text view is up (the X
- * handles closing it).
+ * The header is hidden whenever a project gallery is open (the
+ * gallery has its own header) or a text view is up (the X handles
+ * closing it).
  */
-type MenuItem = {
-  label: string;
-  view: Exclude<View, "exhibitions" | "grant">;
-};
+type MenuItem = { key: View | "index"; label: string };
 
+// Match the desktop LeftToolbar order, with Index pinned to the top
+// (mirrors the desktop layout where Index is its own button above the
+// section list).
 const MENU_ITEMS: ReadonlyArray<MenuItem> = [
-  { label: "Bio", view: "bio" },
-  { label: "About", view: "about" },
-  { label: "News", view: "news" },
+  { key: "index", label: "Index" },
+  { key: "exhibitions", label: "Exhibitions" },
+  { key: "news", label: "News" },
+  { key: "bio", label: "Bio" },
+  { key: "about", label: "About" },
+  { key: "grant", label: "Grant" },
 ];
 
 export function MobileNav() {
   const view = useSelection((s) => s.view);
   const setView = useSelection((s) => s.setView);
   const galleryOpen = useSelection((s) => s.openProjectKey != null);
+  const indexOpen = useSelection((s) => s.indexOpen);
+  const setIndexOpen = useSelection((s) => s.setIndexOpen);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const viewOpen = view !== "exhibitions";
-  // Hide the entire top bar when a gallery or a text view is up.
-  // The gallery has its own controls; the text view has its own X.
-  const headerHidden = viewOpen || galleryOpen;
+  // Hide the entire top bar when a gallery, a text view, OR the
+  // works index is up. Each of those has its own controls.
+  const headerHidden = viewOpen || galleryOpen || indexOpen;
 
   // Esc closes both the menu overlay and any open text view.
   useEffect(() => {
@@ -64,6 +75,16 @@ export function MobileNav() {
     };
   }, [menuOpen]);
 
+  function pickItem(key: View | "index") {
+    setMenuOpen(false);
+    if (key === "index") {
+      // Index opens its own drawer instead of swapping the view.
+      setIndexOpen(true);
+      return;
+    }
+    setView(key);
+  }
+
   return (
     <>
       {/* Fixed top header bar — logo centered, menu button right. */}
@@ -73,7 +94,7 @@ export function MobileNav() {
           top: 0,
           left: 0,
           right: 0,
-          height: 52,
+          height: 64,
           zIndex: 30,
           display: headerHidden ? "none" : "flex",
           alignItems: "center",
@@ -105,9 +126,9 @@ export function MobileNav() {
             draggable={false}
             style={{
               display: "block",
-              height: 18,
+              height: 32,
               width: "auto",
-              maxWidth: "60vw",
+              maxWidth: "70vw",
               userSelect: "none",
             }}
           />
@@ -121,7 +142,7 @@ export function MobileNav() {
           style={{
             position: "absolute",
             right: 8,
-            top: 8,
+            top: 14,
             width: 36,
             height: 36,
             display: "flex",
@@ -164,11 +185,10 @@ export function MobileNav() {
             flexDirection: "column",
           }}
         >
-          {/* Same header layout as the canvas, but with an X close
-              button instead of the menu icon. */}
+          {/* Same header layout as the canvas but with X instead of menu. */}
           <header
             style={{
-              height: 52,
+              height: 64,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -184,9 +204,9 @@ export function MobileNav() {
               draggable={false}
               style={{
                 display: "block",
-                height: 18,
+                height: 32,
                 width: "auto",
-                maxWidth: "60vw",
+                maxWidth: "70vw",
                 userSelect: "none",
               }}
             />
@@ -197,7 +217,7 @@ export function MobileNav() {
               style={{
                 position: "absolute",
                 right: 8,
-                top: 8,
+                top: 14,
                 width: 36,
                 height: 36,
                 display: "flex",
@@ -207,7 +227,7 @@ export function MobileNav() {
                 background: "transparent",
                 border: 0,
                 color: "#111",
-                fontSize: 22,
+                fontSize: 26,
                 lineHeight: 1,
                 cursor: "pointer",
               }}
@@ -216,38 +236,75 @@ export function MobileNav() {
             </button>
           </header>
 
-          {/* Menu items. Stacked vertically, big tap targets. */}
+          {/* Menu items — centered, bold, big tap targets. */}
           <nav
             aria-label="Sections"
             style={{
               flex: 1,
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
+              alignItems: "center",
               justifyContent: "center",
-              padding: "0 32px",
-              gap: 8,
+              padding: "0 24px",
+              gap: 4,
             }}
           >
-            {/* Works = back to the canvas. */}
-            <MenuLink
-              label="Works"
-              onClick={() => {
-                setView("exhibitions");
-                setMenuOpen(false);
-              }}
-            />
             {MENU_ITEMS.map((item) => (
               <MenuLink
-                key={item.view}
+                key={item.key}
                 label={item.label}
-                onClick={() => {
-                  setView(item.view);
-                  setMenuOpen(false);
-                }}
+                onClick={() => pickItem(item.key)}
               />
             ))}
           </nav>
+
+          {/* Footer — artist info + contact + legal. */}
+          <footer
+            style={{
+              padding: "20px 24px 32px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 12,
+              color: "#999",
+              lineHeight: 1.5,
+              flexShrink: 0,
+              borderTop: "1px solid #eee",
+            }}
+          >
+            <div style={{ color: "#111" }}>{ARTIST_NAME}</div>
+            <a
+              href={`mailto:${CONTACT.email}`}
+              style={{ color: "#999", textDecoration: "none" }}
+            >
+              {CONTACT.email}
+            </a>
+            <a
+              href={CONTACT.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#999", textDecoration: "none" }}
+            >
+              {CONTACT.instagram}
+            </a>
+            <div style={{ display: "flex", gap: 16, paddingTop: 6 }}>
+              <Link
+                href="/imprint"
+                onClick={() => setMenuOpen(false)}
+                style={{ color: "#999", textDecoration: "none" }}
+              >
+                Imprint
+              </Link>
+              <Link
+                href="/privacy"
+                onClick={() => setMenuOpen(false)}
+                style={{ color: "#999", textDecoration: "none" }}
+              >
+                Privacy
+              </Link>
+            </div>
+          </footer>
         </div>
       ) : null}
 
@@ -257,6 +314,7 @@ export function MobileNav() {
           {view === "bio" ? <BioView /> : null}
           {view === "about" ? <AboutView /> : null}
           {view === "news" ? <NewsView /> : null}
+          {view === "grant" ? <GrantView /> : null}
           <button
             type="button"
             onClick={() => setView("exhibitions")}
@@ -279,6 +337,9 @@ export function MobileNav() {
           </button>
         </>
       ) : null}
+
+      {/* Works index drawer (shared with desktop). */}
+      <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
     </>
   );
 }
@@ -298,14 +359,15 @@ function MenuLink({
         appearance: "none",
         background: "transparent",
         border: 0,
-        padding: "12px 0",
-        textAlign: "left",
-        fontSize: 32,
+        padding: "10px 0",
+        textAlign: "center",
+        fontSize: 36,
         lineHeight: 1.1,
         color: "#111",
         cursor: "pointer",
         font: "inherit",
-        fontWeight: 400,
+        fontWeight: 700,
+        letterSpacing: "-0.01em",
       }}
     >
       {label}

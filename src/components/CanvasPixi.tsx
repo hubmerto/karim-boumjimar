@@ -1,7 +1,14 @@
 "use client";
 
 import { Application, extend, useTick } from "@pixi/react";
-import { Assets, Container, Sprite, Texture, type Sprite as PixiSpriteType } from "pixi.js";
+import {
+  Assets,
+  Container,
+  Sprite,
+  Texture,
+  type Container as PixiContainerType,
+  type Sprite as PixiSpriteType,
+} from "pixi.js";
 import Image from "next/image";
 import {
   useCallback,
@@ -276,28 +283,48 @@ export function CanvasPixi() {
   const transformRef = useRef(transform);
   transformRef.current = transform;
 
-  // Coalesce transform updates to one per animation frame. Pinch and
-  // touchmove can fire 60+ times per second; without this each event
-  // triggers a React render of the whole sprite tree.
-  const pendingTransformRef = useRef<Transform | null>(null);
-  const rafRef = useRef<number | null>(null);
+  // Mirror gallery-open state in a ref so the touch handlers below
+  // (which are bound once via addEventListener) can early-return when
+  // a gallery is up — without it, the wrapper's preventDefault on
+  // touchmove blocks the gallery carousel's native horizontal scroll.
+
+  // Direct ref to the underlying PIXI Container so pinch/pan can
+  // mutate its x/y/scale without going through React state. Skipping
+  // the React reconciler per touchmove keeps pinch zoom buttery
+  // (the previous rAF-throttled setState approach still cost a full
+  // re-render of CanvasPixi every frame).
+  const pixiContainerRef = useRef<PixiContainerType | null>(null);
+  const settleTimeoutRef = useRef<number | null>(null);
+
+  // Apply a transform mutation: write to the PIXI container
+  // directly, update the transformRef, and schedule a debounced
+  // setState to "settle" the React state once the user stops
+  // interacting (so programmatic transforms — fitAll etc. — still
+  // work via setTransform).
   const applyTransform = useCallback(
     (updater: (prev: Transform) => Transform) => {
-      const current = pendingTransformRef.current ?? transformRef.current;
-      pendingTransformRef.current = updater(current);
-      if (rafRef.current !== null) return;
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        const next = pendingTransformRef.current;
-        pendingTransformRef.current = null;
-        if (next) setTransform(next);
-      });
+      const next = updater(transformRef.current);
+      transformRef.current = next;
+      const c = pixiContainerRef.current;
+      if (c) {
+        c.x = next.tx;
+        c.y = next.ty;
+        c.scale.set(next.scale);
+      }
+      if (settleTimeoutRef.current != null) {
+        window.clearTimeout(settleTimeoutRef.current);
+      }
+      settleTimeoutRef.current = window.setTimeout(() => {
+        settleTimeoutRef.current = null;
+        setTransform(transformRef.current);
+      }, 120);
     },
     [],
   );
   useEffect(
     () => () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (settleTimeoutRef.current != null)
+        window.clearTimeout(settleTimeoutRef.current);
     },
     [],
   );
@@ -307,6 +334,10 @@ export function CanvasPixi() {
     if (!el) return;
 
     function onTouchStart(e: TouchEvent) {
+      // When a project gallery is up, leave touches alone so the
+      // gallery's horizontal-snap carousel and pull-up sheets can
+      // scroll natively.
+      if (openProjectRef.current) return;
       if (e.touches.length === 2) {
         e.preventDefault();
         const t1 = e.touches[0];
@@ -332,6 +363,7 @@ export function CanvasPixi() {
       }
     }
     function onTouchMove(e: TouchEvent) {
+      if (openProjectRef.current) return;
       if (e.touches.length === 2 && pinchRef.current) {
         e.preventDefault();
         const t1 = e.touches[0];
@@ -457,6 +489,8 @@ export function CanvasPixi() {
   // overlap the gallery's close button + image counter).
   const openProject = useSelection((s) => s.openProjectKey);
   const setOpenProject = useSelection((s) => s.setOpenProjectKey);
+  const openProjectRef = useRef(openProject);
+  openProjectRef.current = openProject;
   const tapTrackerRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const onSpriteDown = useCallback((e: { global: { x: number; y: number } }) => {
     tapTrackerRef.current = {
@@ -498,7 +532,12 @@ export function CanvasPixi() {
           resolution={typeof window !== "undefined" ? Math.min(1.5, window.devicePixelRatio || 1) : 1}
           autoDensity
         >
-          <pixiContainer x={transform.tx} y={transform.ty} scale={transform.scale}>
+          <pixiContainer
+            ref={pixiContainerRef}
+            x={transform.tx}
+            y={transform.ty}
+            scale={transform.scale}
+          >
             <TileLayer
               sprites={sprites}
               onSpriteDown={onSpriteDown}
@@ -768,6 +807,10 @@ function PixiGallery({
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
+        // Explicit touch-action — the Pixi canvas wrapper sets
+        // touchAction: none for pinch/pan capture; the gallery needs
+        // to opt back in or its carousel + sheets won't scroll.
+        touchAction: "auto",
       }}
     >
       {/* Floating header — sits above the carousel so images can run
@@ -838,6 +881,9 @@ function PixiGallery({
           overflowY: "hidden",
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
+          // Allow horizontal swipe only — vertical drags fall through
+          // to the bottom sheets so they can be opened by pulling up.
+          touchAction: "pan-x",
         }}
       >
         {works.map((w) => {
@@ -1149,6 +1195,7 @@ function Sheet({
           fontSize: 13,
           lineHeight: 1.6,
           color: "#111",
+          touchAction: "pan-y",
         }}
       >
         {children}
