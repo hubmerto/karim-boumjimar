@@ -981,6 +981,13 @@ function TileLayer({
   // positions without iterating the sprites array each frame.
   const specByIdRef = useRef<Map<string, SpriteSpec>>(new Map());
   for (const s of sprites) specByIdRef.current.set(s.id, s);
+  // Track which sprite ids we've already initialised (set alpha=0
+  // + bento position on first mount). React re-fires the ref
+  // callback on every sprites-prop change because the inline
+  // arrow function has a new identity each render — without this
+  // gate the sprite's alpha would snap back to 0 every progressive
+  // texture-load setTextures call, causing the bento to BLINK.
+  const initializedRef = useRef<Set<string>>(new Set());
   // Mirror splashGone + spread + selectedGroupKey in refs so the
   // always-on tick reads the live values without re-binding the
   // callback.
@@ -1059,20 +1066,24 @@ function TileLayer({
           ref={(node: PixiSpriteType | null) => {
             if (node) {
               spriteRefs.current.set(s.id, node);
-              // FIRST mount: start invisible at the bento position.
-              // Don't stamp mountedAt — the ticker stamps it the
-              // first frame splash is gone, so the fade-in starts
-              // in sync with the camera intro animation. We also
-              // initialise x/y here (vs JSX prop) so the ticker's
-              // per-frame mutations aren't smashed by re-renders.
-              node.alpha = 0;
-              node.x = s.bentoX;
-              node.y = s.bentoY;
+              // FIRST mount only: start invisible at the bento
+              // position. React re-fires this callback whenever
+              // the parent's sprites prop changes (and the inline
+              // arrow has a new identity each render), so guard
+              // with initializedRef — otherwise alpha + position
+              // get snapped back to bento every progressive
+              // texture load and the bento blinks.
+              if (!initializedRef.current.has(s.id)) {
+                initializedRef.current.add(s.id);
+                node.alpha = 0;
+                node.x = s.bentoX;
+                node.y = s.bentoY;
+              }
             } else {
               spriteRefs.current.delete(s.id);
-              // Keep mountedAt — if React re-fires the ref callback
-              // (e.g. callback identity changed between renders) the
-              // sprite shouldn't restart its fade.
+              // Keep mountedAt + initializedRef — even if React
+              // re-fires the ref callback the sprite stays
+              // logically mounted from our point of view.
             }
           }}
           texture={s.tex}
