@@ -153,15 +153,91 @@ function bentoLayout(works: typeof WORKS) {
   return map;
 }
 
-/** Lay tiles out clustered by their project group, mirroring the
- * desktop's mobile baseOffsets layout. Each project's works keep
- * their relative canvas positions (so tiles in the same group cluster
- * together visually) and the groups themselves are arranged in a
- * 2-column vertical stack ordered by year (newest first).
+/** Place extras (non-curated works) in a small grid just below
+ * their group's cores in the bento. When the user selects a group,
+ * the cores DON'T move — they stay in the diamond — and the
+ * extras for that group fade in at these positions, giving the
+ * "missing pictures appear next to the group" effect the user
+ * asked for. Other groups' extras stay invisible.
  *
- * Used as the SPREAD target — tiles animate from bento (overview) to
- * this cluster layout when a group is selected, the same way desktop
- * tiles disperse from bento to canvas positions. */
+ * Position relative to cores' bento bbox:
+ *   - Centered horizontally at the cores' centroid
+ *   - Stacked in a 4-column grid below the cores' bbox
+ */
+function extrasNearCoresLayout(
+  works: typeof WORKS,
+  coreIds: Set<string>,
+  bento: Map<string, { x: number; y: number; w: number; h: number }>,
+) {
+  const result = new Map<
+    string,
+    { x: number; y: number; w: number; h: number }
+  >();
+
+  const byGroup = new Map<string, typeof WORKS>();
+  for (const w of works) {
+    const key = `${w.title}|${w.year}`;
+    let arr = byGroup.get(key);
+    if (!arr) {
+      arr = [];
+      byGroup.set(key, arr);
+    }
+    arr.push(w);
+  }
+
+  for (const [, groupWorks] of byGroup) {
+    const coreSlots: { x: number; y: number; w: number; h: number }[] = [];
+    for (const w of groupWorks) {
+      if (!coreIds.has(w.id)) continue;
+      const slot = bento.get(w.id);
+      if (slot) coreSlots.push(slot);
+    }
+    if (coreSlots.length === 0) continue;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let cellW = 0;
+    let cellH = 0;
+    for (const s of coreSlots) {
+      if (s.x < minX) minX = s.x;
+      if (s.y < minY) minY = s.y;
+      if (s.x + s.w > maxX) maxX = s.x + s.w;
+      if (s.y + s.h > maxY) maxY = s.y + s.h;
+      if (s.w > cellW) cellW = s.w;
+      if (s.h > cellH) cellH = s.h;
+    }
+    const cx = (minX + maxX) / 2;
+
+    const extras = groupWorks.filter((w) => !coreIds.has(w.id));
+    if (extras.length === 0) continue;
+
+    const COLS = 4;
+    const GAP = 24;
+    const stride = cellW + GAP;
+    const yStart = maxY + GAP * 2;
+    extras.forEach((w, i) => {
+      const wb = workBounds(w);
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      const xCenter = cx + (col - (COLS - 1) / 2) * stride;
+      const yCenter = yStart + row * (cellH + GAP) + cellH / 2;
+      result.set(w.id, {
+        x: xCenter - wb.width / 2,
+        y: yCenter - wb.height / 2,
+        w: wb.width,
+        h: wb.height,
+      });
+    });
+  }
+  return result;
+}
+
+/** (Legacy) — clustered layout in a 2-col vertical stack. No
+ * longer used as the spread target (cores now stay at bento and
+ * extras appear via extrasNearCoresLayout) but kept available for
+ * potential future use. */
 function clusterLayout(works: typeof WORKS) {
   const groupsMap = new Map<string, typeof WORKS>();
   for (const w of works) {
@@ -287,18 +363,20 @@ export function CanvasPixi() {
   }, [isMobile]);
 
   // Bento layout: only the curated cores get bento positions.
-  // Extras have no bento entry — they sit at their cluster slot in
-  // overview (invisible because their tier is "extra").
+  // Extras have no bento entry — they sit at their extras-grid
+  // position (invisible in overview, visible only when their group
+  // is selected).
   const bentoMap = useMemo(() => {
     if (!isMobile) return null;
     return bentoLayout(WORKS.filter((w) => coreIds.has(w.id)));
   }, [isMobile, coreIds]);
-  // Cluster layout — covers ALL works so each project's full
-  // gallery has positions to flow into when its group is selected.
-  const clusterMap = useMemo(
-    () => (isMobile ? clusterLayout(displayWorks) : null),
-    [isMobile, displayWorks],
-  );
+  // Extras grid: each extra is positioned in a 4-col grid right
+  // below its group's cores. Cores DON'T move when a group is
+  // selected — only the extras for that group fade in here.
+  const extrasMap = useMemo(() => {
+    if (!isMobile || !bentoMap) return null;
+    return extrasNearCoresLayout(WORKS, coreIds, bentoMap);
+  }, [isMobile, bentoMap, coreIds]);
 
   // Compute viewport size on mount and on resize. Avoids SSR issues by
   // staying null until we know the real window size.
@@ -357,11 +435,26 @@ export function CanvasPixi() {
       scale: targetScale,
     };
 
-    // Cubic ease-out tween over INTRO_REVEAL_MS. Same shape as the
-    // group-zoom but slower so it overlaps the staggered sprite
-    // fade-in. Mutates the PIXI container directly per frame and
-    // syncs React state on settle.
-    const start = transformRef.current;
+    // Snap the camera to a CENTERED start position at a smaller
+    // scale so the intro reads as "already centered, zooming in"
+    // rather than sliding diagonally from the top-left default
+    // (tx=0,ty=0,scale=0.05). Cubic ease-out tween over
+    // INTRO_REVEAL_MS overlaps the staggered sprite fade-in.
+    const startScale = targetScale * 0.55;
+    const start: Transform = {
+      tx: size.w / 2 - cx * startScale,
+      ty: size.h / 2 - cy * startScale,
+      scale: startScale,
+    };
+    transformRef.current = start;
+    {
+      const c = pixiContainerRef.current;
+      if (c) {
+        c.x = start.tx;
+        c.y = start.ty;
+        c.scale.set(start.scale);
+      }
+    }
     const t0 = performance.now();
     if (introAnimRef.current != null) cancelAnimationFrame(introAnimRef.current);
     function tick(now: number) {
@@ -406,14 +499,15 @@ export function CanvasPixi() {
     // Find all sprites that belong to this group and compute the
     // bbox in canvas-space. Falls back to no-op if no rects yet
     // (textures still loading).
-    // Use CLUSTER positions for the bbox — the sprites animate
-    // from bento -> cluster when the group view opens, so the
-    // camera should target where the tiles WILL BE, not where they
-    // currently sit on the bento.
+    // Camera fits the group's cores (bento positions, fixed) +
+    // their extras (extras-grid positions, also fixed). Cores are
+    // already where they sit in overview, but the camera zooms in
+    // so they fill the frame; extras fade in below them within the
+    // same frame.
     const memberRects: { x: number; y: number; w: number; h: number }[] = [];
     for (const w of displayWorks) {
       if (`${w.title}|${w.year}` !== navTargetGroupKey) continue;
-      const slot = clusterMap?.get(w.id) ?? bentoMap?.get(w.id);
+      const slot = bentoMap?.get(w.id) ?? extrasMap?.get(w.id);
       if (slot) memberRects.push(slot);
       else {
         const wb = workBounds(w);
@@ -492,7 +586,7 @@ export function CanvasPixi() {
         animRafRef.current = null;
       }
     };
-  }, [navTargetGroupKey, size, displayWorks, bentoMap, clusterMap, clearNav]);
+  }, [navTargetGroupKey, size, displayWorks, bentoMap, extrasMap, clearNav]);
 
   // Progressive texture load. Loads ALL works' thumbs (so the
   // group view can show the full project assembled in place), but
@@ -740,36 +834,42 @@ export function CanvasPixi() {
         const tex = textures.get(w.id);
         if (!tex) return null;
         const projectKey = `${w.title}|${w.year}`;
-        const bento = bentoMap?.get(w.id);
-        const cluster = clusterMap?.get(w.id);
         const wb = workBounds(w);
         const isCore = coreIds.has(w.id);
-        const clusterX = cluster?.x ?? wb.minX;
-        const clusterY = cluster?.y ?? wb.minY;
-        // Cores have a bento position. Extras sit at their cluster
-        // slot in overview too (no movement on spread, only fade).
-        const bentoX = bento?.x ?? clusterX;
-        const bentoY = bento?.y ?? clusterY;
-        const w_ = bento?.w ?? cluster?.w ?? wb.width;
-        const h_ = bento?.h ?? cluster?.h ?? wb.height;
+        // Cores anchor at their bento slot. Extras anchor at the
+        // extras-grid slot (just below their group's cores). Both
+        // are STATIC — neither moves between overview and group
+        // view. The "group view" stage is signalled by:
+        //   - camera zooming to fit the group's cores + extras
+        //   - extras' alpha lerping 0 -> 1 (visible only when their
+        //     project matches the selected group)
+        const slot = isCore ? bentoMap?.get(w.id) : extrasMap?.get(w.id);
+        const x = slot?.x ?? wb.minX;
+        const y = slot?.y ?? wb.minY;
+        const w_ = slot?.w ?? wb.width;
+        const h_ = slot?.h ?? wb.height;
         return {
           id: w.id,
           workId: w.id,
           projectKey,
           tex,
           tier: (isCore ? "core" : "extra") as "core" | "extra",
-          x: bentoX,
-          y: bentoY,
+          x,
+          y,
           w: w_,
           h: h_,
-          bentoX,
-          bentoY,
-          clusterX,
-          clusterY,
+          // Position is static — bento and cluster targets are the
+          // same. The TileLayer's spread tween is a no-op for the
+          // position channel; only the alpha channel changes between
+          // overview and group view.
+          bentoX: x,
+          bentoY: y,
+          clusterX: x,
+          clusterY: y,
         };
       })
       .filter((s): s is NonNullable<typeof s> => Boolean(s));
-  }, [textures, displayWorks, bentoMap, clusterMap, coreIds]);
+  }, [textures, displayWorks, bentoMap, extrasMap, coreIds]);
 
   // Tap-to-select. Two-stage interaction matches desktop's WorkTile:
   //  - First tap: selectWork — camera zooms to the group, the
