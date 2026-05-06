@@ -19,14 +19,43 @@ extend({ Container, Sprite });
 /**
  * WebGL canvas rendering of the works. One <canvas> element, all tiles
  * drawn as GPU sprites. Replaces the DOM-per-tile approach that iOS
- * Safari was killing with the hung-page watchdog (too much main-thread
- * compositor work for 100+ animated layers).
+ * Safari was killing with the hung-page watchdog.
  *
- * v1 scope: render every work at its natural canvas position, support
- * pan + pinch zoom, that's it. No bento, no fade-in, no tap select yet
- * -- those layer on once we confirm rendering itself doesn't crash.
+ * On mobile we render only N representative tiles per project (the
+ * gallery view shows the full set when the user taps in). Desktop
+ * renders all 123 sprites.
  */
+const MOBILE_TILES_PER_PROJECT = 3;
+
 type Transform = { tx: number; ty: number; scale: number };
+
+/** Pick first / middle / last for a project so the canvas has a spread
+ * sample rather than three near-identical installation shots. */
+function curateForMobile() {
+  const byGroup = new Map<string, typeof WORKS>();
+  for (const w of WORKS) {
+    const key = `${w.title}|${w.year}`;
+    let arr = byGroup.get(key);
+    if (!arr) {
+      arr = [];
+      byGroup.set(key, arr);
+    }
+    arr.push(w);
+  }
+  const out: typeof WORKS = [];
+  for (const arr of byGroup.values()) {
+    if (arr.length <= MOBILE_TILES_PER_PROJECT) {
+      out.push(...arr);
+    } else {
+      out.push(
+        arr[0],
+        arr[Math.floor(arr.length / 2)],
+        arr[arr.length - 1],
+      );
+    }
+  }
+  return out;
+}
 
 export function CanvasPixi() {
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -36,6 +65,22 @@ export function CanvasPixi() {
     ty: 0,
     scale: 0.05,
   }));
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Decide curated subset (mobile) vs full set (desktop) based on
+  // viewport width. Re-runs on orientation change.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  const displayWorks = useMemo(
+    () => (isMobile ? curateForMobile() : WORKS),
+    [isMobile],
+  );
 
   // Compute viewport size on mount and on resize. Avoids SSR issues by
   // staying null until we know the real window size.
@@ -52,14 +97,14 @@ export function CanvasPixi() {
     };
   }, []);
 
-  // Initial framing: fit all works into the viewport once we know size.
+  // Initial framing: fit displayed works into the viewport once size known.
   useEffect(() => {
-    if (!size) return;
+    if (!size || displayWorks.length === 0) return;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    for (const w of WORKS) {
+    for (const w of displayWorks) {
       const wb = workBounds(w);
       if (wb.minX < minX) minX = wb.minX;
       if (wb.minY < minY) minY = wb.minY;
@@ -76,15 +121,16 @@ export function CanvasPixi() {
       ty: size.h / 2 - cy * scale,
       scale,
     });
-  }, [size]);
+  }, [size, displayWorks]);
 
-  // Progressive texture load -- one image per microtask so we don't block
-  // the main thread with 100 simultaneous decodes.
+  // Progressive texture load. Only loads the displayed subset (mobile =
+  // ~39 tiles, desktop = 123). The rest are loaded on-demand when the
+  // gallery opens.
   useEffect(() => {
     let cancelled = false;
     const map = new Map<string, Texture>();
     async function loadAll() {
-      for (const w of WORKS) {
+      for (const w of displayWorks) {
         if (cancelled) return;
         const src = asset(w.images[0]?.src ?? "");
         if (!src) continue;
@@ -92,9 +138,7 @@ export function CanvasPixi() {
           const tex = await Assets.load(src);
           if (cancelled) return;
           map.set(w.id, tex);
-          // Update visible state every ~5 textures so the canvas paints
-          // progressively rather than waiting for everything.
-          if (map.size % 5 === 0 || map.size === WORKS.length) {
+          if (map.size % 5 === 0 || map.size === displayWorks.length) {
             setTextures(new Map(map));
           }
         } catch (e) {
@@ -107,7 +151,7 @@ export function CanvasPixi() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [displayWorks]);
 
   // Drag pan + pinch zoom. Lives on the wrapping div so we don't fight
   // PIXI's interaction system; it just moves the transform state and
@@ -242,13 +286,22 @@ export function CanvasPixi() {
   }, [transform.scale]);
 
   const sprites = useMemo(() => {
-    return WORKS.map((w) => {
-      const tex = textures.get(w.id);
-      if (!tex) return null;
-      const wb = workBounds(w);
-      return { id: w.id, tex, x: wb.minX, y: wb.minY, w: wb.width, h: wb.height };
-    }).filter((s): s is NonNullable<typeof s> => Boolean(s));
-  }, [textures]);
+    return displayWorks
+      .map((w) => {
+        const tex = textures.get(w.id);
+        if (!tex) return null;
+        const wb = workBounds(w);
+        return {
+          id: w.id,
+          tex,
+          x: wb.minX,
+          y: wb.minY,
+          w: wb.width,
+          h: wb.height,
+        };
+      })
+      .filter((s): s is NonNullable<typeof s> => Boolean(s));
+  }, [textures, displayWorks]);
 
   const wrapperStyle: CSSProperties = {
     position: "fixed",
@@ -296,7 +349,8 @@ export function CanvasPixi() {
           zIndex: 10,
         }}
       >
-        pixi · {sprites.length}/{WORKS.length} loaded
+        pixi · {sprites.length}/{displayWorks.length} loaded
+        {isMobile ? ` · mobile (curated)` : ` · desktop (full)`}
       </div>
     </div>
   );
