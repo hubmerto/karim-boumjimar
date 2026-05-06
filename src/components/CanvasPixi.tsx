@@ -455,12 +455,14 @@ export function CanvasPixi() {
       scale: targetScale,
     };
 
-    // Cubic ease-out tween over 900ms via rAF, mutating both the
-    // PIXI container and React state at the end so the rest of the
-    // app sees the settled value.
+    // Cubic ease-out tween via rAF, mutating both the PIXI
+    // container and React state at the end. 1800ms gives the user
+    // enough time to perceive the camera move as deliberate; the
+    // sprite spread (in TileLayer's useTick) is paced to settle
+    // around the same time.
     const start = transformRef.current;
     const t0 = performance.now();
-    const DURATION = 900;
+    const DURATION = 1800;
     if (animRafRef.current != null) cancelAnimationFrame(animRafRef.current);
     function tick(now: number) {
       const t = Math.min(1, (now - t0) / DURATION);
@@ -988,6 +990,27 @@ function TileLayer({
   // gate the sprite's alpha would snap back to 0 every progressive
   // texture-load setTextures call, causing the bento to BLINK.
   const initializedRef = useRef<Set<string>>(new Set());
+
+  // Time-based bento <-> cluster tween. Snapshots the start
+  // position of every sprite at the moment `spread` flips so
+  // the tick can interpolate over a fixed duration with cubic
+  // easing — matched to the camera zoom (1800ms) so tiles arrive
+  // at their cluster slots the same time the camera lands.
+  const SPREAD_TWEEN_MS = 1800;
+  const spreadTweenStartRef = useRef<number | null>(null);
+  const spreadFromRef = useRef<Map<string, { x: number; y: number }>>(
+    new Map(),
+  );
+  useEffect(() => {
+    const now = performance.now();
+    spreadTweenStartRef.current = now;
+    const snap = new Map<string, { x: number; y: number }>();
+    for (const [id, sprite] of spriteRefs.current) {
+      if (!sprite) continue;
+      snap.set(id, { x: sprite.x, y: sprite.y });
+    }
+    spreadFromRef.current = snap;
+  }, [spread]);
   // Mirror splashGone + spread + selectedGroupKey in refs so the
   // always-on tick reads the live values without re-binding the
   // callback.
@@ -1044,17 +1067,32 @@ function TileLayer({
       const isCore = spec.tier === "core";
       const inSelectedGroup = isSpread && spec.projectKey === selKey;
       const targetAlpha = isCore || inSelectedGroup ? intro : 0;
-      // Lerp alpha for smooth fade-in/out of extras between groups.
-      sprite.alpha += (targetAlpha - sprite.alpha) * 0.12;
+      // Slower alpha lerp (0.06 ≈ ~700ms time constant) so extras
+      // feather in/out instead of popping when the user switches
+      // between group views.
+      sprite.alpha += (targetAlpha - sprite.alpha) * 0.06;
 
-      // Position (bento <-> cluster lerp). 0.08 lerp factor at 60fps
-      // gives a ~500ms-feeling settle. Cores move from bento to
-      // cluster on spread; extras don't move (their bento equals
-      // their cluster).
+      // Position: time-based tween from the snapshotted "from"
+      // position to the current target (bento or cluster). Cubic
+      // in-out easing so tiles drift in (slow start) and settle
+      // (slow end) — synced to the 1800ms camera zoom.
+      const tweenStart = spreadTweenStartRef.current;
       const targetX = isSpread ? spec.clusterX : spec.bentoX;
       const targetY = isSpread ? spec.clusterY : spec.bentoY;
-      sprite.x += (targetX - sprite.x) * 0.08;
-      sprite.y += (targetY - sprite.y) * 0.08;
+      if (tweenStart != null) {
+        const t = Math.min(1, (now - tweenStart) / SPREAD_TWEEN_MS);
+        const e =
+          t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // cubic in-out
+        const from = spreadFromRef.current.get(id);
+        const fromX = from?.x ?? targetX;
+        const fromY = from?.y ?? targetY;
+        sprite.x = fromX + (targetX - fromX) * e;
+        sprite.y = fromY + (targetY - fromY) * e;
+      } else {
+        // No tween yet (initial mount) — snap to target.
+        sprite.x = targetX;
+        sprite.y = targetY;
+      }
     }
   });
 
