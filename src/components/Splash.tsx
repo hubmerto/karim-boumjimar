@@ -5,8 +5,14 @@ import { ARTIST_NAME } from "@/data/bio";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 
-const HOLD_MS = 700;
-const FADE_MS = 900;
+// Longer hold than the bare minimum: the canvas is still mounting +
+// loading textures behind the splash. A fuller 2.2s preload window
+// means by the time the splash fades, sprites are textured and
+// ready to start their staggered fade-in alongside the camera zoom
+// (matched to the ~6s reveal — see tileFadeTiming + initial-zoom
+// in CanvasPixi).
+const HOLD_MS = 2200;
+const FADE_MS = 1000;
 const EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 const SESSION_KEY = "kbz_splash_seen";
 

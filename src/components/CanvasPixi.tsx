@@ -205,7 +205,12 @@ export function CanvasPixi() {
     };
   }, []);
 
-  // Initial framing: fit displayed works into the viewport once size known.
+  // Initial framing: animate camera from a tighter zoom out to the
+  // bento fit over INTRO_REVEAL_MS — matched to the tile fade-in
+  // window so the camera SETTLES the same instant the last sprite
+  // reaches alpha 1. The starting transform is the very-zoomed-out
+  // useState default; the target is the bento-fit transform.
+  const introAnimRef = useRef<number | null>(null);
   useEffect(() => {
     if (!size || displayWorks.length === 0) return;
     let minX = Infinity;
@@ -230,21 +235,51 @@ export function CanvasPixi() {
     }
     const bboxW = Math.max(1, maxX - minX);
     const bboxH = Math.max(1, maxY - minY);
-    // On mobile the bento is a tall vertical diamond — fitting the
-    // whole height makes images tiny with huge horizontal margins.
-    // Fit by width instead and let the top/bottom rows clip; the
-    // user can pan vertically to reach them. Desktop still fits
-    // both axes.
-    const scale = isMobile
+    const targetScale = isMobile
       ? (size.w / bboxW) * 0.95
       : Math.min(size.w / bboxW, size.h / bboxH) * 0.85;
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
-    setTransform({
-      tx: size.w / 2 - cx * scale,
-      ty: size.h / 2 - cy * scale,
-      scale,
-    });
+    const target: Transform = {
+      tx: size.w / 2 - cx * targetScale,
+      ty: size.h / 2 - cy * targetScale,
+      scale: targetScale,
+    };
+
+    // Cubic ease-out tween over INTRO_REVEAL_MS. Same shape as the
+    // group-zoom but slower so it overlaps the staggered sprite
+    // fade-in. Mutates the PIXI container directly per frame and
+    // syncs React state on settle.
+    const start = transformRef.current;
+    const t0 = performance.now();
+    if (introAnimRef.current != null) cancelAnimationFrame(introAnimRef.current);
+    function tick(now: number) {
+      const t = Math.min(1, (now - t0) / INTRO_REVEAL_MS);
+      const e = 1 - Math.pow(1 - t, 3);
+      const tx = start.tx + (target.tx - start.tx) * e;
+      const ty = start.ty + (target.ty - start.ty) * e;
+      const scale = start.scale + (target.scale - start.scale) * e;
+      transformRef.current = { tx, ty, scale };
+      const c = pixiContainerRef.current;
+      if (c) {
+        c.x = tx;
+        c.y = ty;
+        c.scale.set(scale);
+      }
+      if (t < 1) {
+        introAnimRef.current = requestAnimationFrame(tick);
+      } else {
+        introAnimRef.current = null;
+        setTransform({ tx, ty, scale });
+      }
+    }
+    introAnimRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (introAnimRef.current != null) {
+        cancelAnimationFrame(introAnimRef.current);
+        introAnimRef.current = null;
+      }
+    };
   }, [size, displayWorks, bentoMap, isMobile]);
 
   // Camera zoom-to-group on first tap. Mirrors the desktop behaviour:
@@ -742,21 +777,23 @@ type SpriteSpec = {
   h: number;
 };
 
+/** Per-tile fade-in timing. Designed so EVERY tile finishes by the
+ * 6s mark — matched exactly to the initial camera zoom duration so
+ * the last sprite reaches alpha 1 the same instant the zoom settles.
+ * Worst case = MAX_DELAY + DURATION = 4500 + 1500 = 6000ms. */
+const INTRO_REVEAL_MS = 6000;
+const TILE_DURATION_MS = 1500;
+const TILE_MAX_DELAY_MS = INTRO_REVEAL_MS - TILE_DURATION_MS;
+
 function tileFadeTiming(id: string): { delay: number; duration: number } {
-  // Stable hash → two pseudo-random 0..1 floats per tile id.
+  // Stable hash → pseudo-random 0..1 float per tile id.
   let h = 0;
   for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
-  const r1 = (() => {
-    const x = Math.sin(h) * 10000;
-    return x - Math.floor(x);
-  })();
-  const r2 = (() => {
-    const x = Math.sin(h * 1.71 + 1) * 10000;
-    return x - Math.floor(x);
-  })();
+  const x = Math.sin(h) * 10000;
+  const r = x - Math.floor(x);
   return {
-    delay: Math.round(r1 * 5000),
-    duration: Math.round(1000 + r2 * 1000),
+    delay: Math.round(r * TILE_MAX_DELAY_MS),
+    duration: TILE_DURATION_MS,
   };
 }
 
