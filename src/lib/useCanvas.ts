@@ -549,7 +549,18 @@ export function useCanvas(
           maxX = Math.max(maxX, wb.maxX + off.x);
           maxY = Math.max(maxY, wb.maxY + off.y);
         }
-        const groupBbox = { minX, minY, maxX, maxY };
+        // Expand to include the GroupOutline padding (56px) and the
+        // group label that floats above the outline. Without this,
+        // wider/longer titles ("Spring Has Arrived" etc.) clipped off
+        // the top of the canvas frame after the camera settled.
+        const OUTLINE_PAD = 56;
+        const TITLE_HEAD_ROOM = 90;
+        const groupBbox = {
+          minX: minX - OUTLINE_PAD,
+          minY: minY - OUTLINE_PAD - TITLE_HEAD_ROOM,
+          maxX: maxX + OUTLINE_PAD,
+          maxY: maxY + OUTLINE_PAD,
+        };
         // Defer one frame so the canvas container has begun its CSS
         // transition (left/right changing as toolbar slides + right
         // panels mount). 2800ms is the sweet spot: calm without feeling
