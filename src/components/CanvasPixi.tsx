@@ -445,9 +445,10 @@ export function CanvasPixi() {
     const targetScale = isMobile
       ? (size.w / bboxW) * 0.95
       : Math.min(size.w / bboxW, size.h / bboxH) * 0.85;
-    // Stash the bento-fit scale so the touch handlers can detect
-    // pinch-out exit from group view.
+    // Stash the bento-fit scale + content bbox so the touch
+    // handlers can detect pinch-out exit AND clamp pan.
     bentoFitScaleRef.current = targetScale;
+    bentoBboxRef.current = { minX, minY, maxX, maxY };
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     const target: Transform = {
@@ -698,6 +699,16 @@ export function CanvasPixi() {
   // applyTransform callback can read the current value to decide
   // when to auto-deselect (pinch out past bento exits group view).
   const bentoFitScaleRef = useRef(0);
+  // Bento content bbox in canvas-space — used to clamp pan so the
+  // user can't drag the canvas off into empty space.
+  const bentoBboxRef = useRef<{
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null>(null);
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
   const deselect = useSelection((s) => s.deselect);
   const deselectRef = useRef(deselect);
   deselectRef.current = deselect;
@@ -709,7 +720,30 @@ export function CanvasPixi() {
   // work via setTransform).
   const applyTransform = useCallback(
     (updater: (prev: Transform) => Transform) => {
-      const next = updater(transformRef.current);
+      let next = updater(transformRef.current);
+      // Clamp pan: keep the bento content at least KEEP_VISIBLE px
+      // inside the viewport so the user can't drag off into empty
+      // canvas. Both axes clamped independently.
+      const bbox = bentoBboxRef.current;
+      const sz = sizeRef.current;
+      if (bbox && sz) {
+        const KEEP_VISIBLE = 120;
+        const scaledMinX = bbox.minX * next.scale;
+        const scaledMaxX = bbox.maxX * next.scale;
+        const scaledMinY = bbox.minY * next.scale;
+        const scaledMaxY = bbox.maxY * next.scale;
+        // tx range: bento right edge >= KEEP_VISIBLE from left of
+        // viewport, bento left edge <= viewport.w - KEEP_VISIBLE
+        const txMin = KEEP_VISIBLE - scaledMaxX;
+        const txMax = sz.w - KEEP_VISIBLE - scaledMinX;
+        const tyMin = KEEP_VISIBLE - scaledMaxY;
+        const tyMax = sz.h - KEEP_VISIBLE - scaledMinY;
+        next = {
+          ...next,
+          tx: Math.max(txMin, Math.min(txMax, next.tx)),
+          ty: Math.max(tyMin, Math.min(tyMax, next.ty)),
+        };
+      }
       transformRef.current = next;
       const c = pixiContainerRef.current;
       if (c) {
