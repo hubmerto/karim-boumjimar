@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ARTIST_NAME } from "@/data/bio";
 import { useSelection } from "@/lib/store";
 import { WORKS } from "@/data/works";
 import { DefaultView, SelectedView } from "@/components/InspectorContent";
@@ -169,13 +168,21 @@ export function InspectorSheet() {
                 if (mode === "index") setMode("default");
                 else setSnap((s) => (s === "peek" ? "mid" : "peek"));
               }}
-              className="text-ui text-ink"
+              className="flex items-center gap-2 text-ui text-ink"
+              aria-label={
+                snap === "peek" ? "Open inspector" : "Close inspector"
+              }
             >
-              {mode === "index"
-                ? "← back"
-                : selected
-                  ? selected.title
-                  : ARTIST_NAME}
+              {mode === "index" ? (
+                "← back"
+              ) : (
+                <>
+                  <span aria-hidden className="text-mute">
+                    {snap === "peek" ? "↑" : "↓"}
+                  </span>
+                  <span>{selected ? "Work" : "About"}</span>
+                </>
+              )}
             </button>
             <button
               type="button"

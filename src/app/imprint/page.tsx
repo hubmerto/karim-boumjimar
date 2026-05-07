@@ -27,17 +27,16 @@ export default function ImprintPage() {
         <p>
           Phone: +45 53 65 33 56
           <br />
-          Email:{""}
+          Email:{" "}
           <a
-            className="underline-offset-2 hover:underline"
+            className="underline underline-offset-2 hover:text-mute"
             href="mailto:karim@karimboumjimar.com"
           >
             karim@karimboumjimar.com
           </a>
           <br />
-          Web:{""}
           <a
-            className="underline-offset-2 hover:underline"
+            className="underline underline-offset-2 hover:text-mute"
             href="https://karimboumjimar.com"
             rel="noopener noreferrer"
             target="_blank"
@@ -51,9 +50,8 @@ export default function ImprintPage() {
         <p>
           Designed and developed by Humberto Gesser.
           <br />
-          Web:{""}
           <a
-            className="underline-offset-2 hover:underline"
+            className="underline underline-offset-2 hover:text-mute"
             href="https://hubmerto.com"
             rel="noopener noreferrer"
             target="_blank"

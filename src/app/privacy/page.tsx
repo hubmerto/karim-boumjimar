@@ -28,7 +28,7 @@ export default function PrivacyPage() {
         <p>
           Email:{""}
           <a
-            className="underline-offset-2 hover:underline"
+            className="underline underline-offset-2 hover:text-mute"
             href="mailto:karim@karimboumjimar.com"
           >
             karim@karimboumjimar.com
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
             GitHub Pages (GitHub, Inc., 88 Colin P. Kelly Jr. Street, San
             Francisco, California 94107, USA); see{""}
             <a
-              className="underline-offset-2 hover:underline"
+              className="underline underline-offset-2 hover:text-mute"
               href="https://github.com/site/privacy"
               rel="noopener noreferrer"
               target="_blank"
@@ -120,14 +120,14 @@ export default function PrivacyPage() {
           Denmark
           <br />
           <a
-            className="underline-offset-2 hover:underline"
+            className="underline underline-offset-2 hover:text-mute"
             href="mailto:dt@datatilsynet.dk"
           >
             dt@datatilsynet.dk
           </a>
           <br />
           <a
-            className="underline-offset-2 hover:underline"
+            className="underline underline-offset-2 hover:text-mute"
             href="https://datatilsynet.dk"
             rel="noopener noreferrer"
             target="_blank"

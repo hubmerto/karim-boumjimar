@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { CrashOverlay } from "@/components/CrashOverlay";
+import { GroupViewControls } from "@/components/GroupViewControls";
 import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
 import { LeftToolbar } from "@/components/LeftToolbar";
@@ -39,6 +40,7 @@ export default function Home() {
       <TopBar />
       <LeftToolbar />
       <ViewSwitcher />
+      <GroupViewControls />
       <InspectorSheet />
       <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
       <Splash />
