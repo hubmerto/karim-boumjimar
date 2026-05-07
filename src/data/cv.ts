@@ -9,10 +9,16 @@ export type CvEntry = {
   city?: string;
   country?: string;
   note?: string;
-  /** External page (institution / press article / programme page).
-   * When present, BioView renders the entry as a link with an ↗ glyph
-   * matching the News page convention. */
+  /** Primary external page for the entry (institution / programme /
+   * press article). BioView wraps ONLY the entry's title in this
+   * link — the rest of the line (venue, city) renders as plain text.
+   * Trailing ↗ glyph matches the News page convention. */
   url?: string;
+  /** Trailing press citations for an entry that has both a venue
+   * link AND outside coverage. Renders as " — press: [Source] ↗" at
+   * the end of the line, each in its own anchor (so the venue link
+   * and press link are never nested or fighting for the same span). */
+  press?: { label: string; url: string }[];
 };
 
 export const CV_BIO = {
@@ -54,6 +60,20 @@ export const CV_SOLO: CvEntry[] = [
     city: "Copenhagen",
     country: "DK",
     url: "https://frederiksbergmuseerne.dk/en/udstillinger/karim-boumjimar/",
+    press: [
+      // TODO: re-check connectivity. Returned a timeout (curl exit
+      // 28) when HEAD-checked from the build sandbox on 7 May 2026,
+      // but the audit verified the URL as Y from a browser; likely
+      // a sandbox / geofencing artifact. Keep the link wired.
+      {
+        label: "Munchies Art Club",
+        url: "https://www.munchiesart.club/karim-boumjimar-bodies-construction-mostings/",
+      },
+      {
+        label: "Art Viewer",
+        url: "https://artviewer.org/karim-boumjimar-at-frederiksberg-museum/",
+      },
+    ],
   },
   {
     year: "2026",
@@ -69,7 +89,16 @@ export const CV_SOLO: CvEntry[] = [
     venue: "O—Overgaden, Institute of Contemporary Art",
     city: "Copenhagen",
     country: "DK",
+    // Audit: overgaden.org/en/exhibitions/ slug was marked "partial"
+    // (specific page slug not located); using Art Viewer's review as
+    // the primary citation, with the Alice Folker overview as press.
     url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
+    press: [
+      {
+        label: "Alice Folker overview",
+        url: "https://alicefolker.dk/exhibitions/39-karim-boumjimar-pandemonium-paradiso-o-overgaden/overview/",
+      },
+    ],
   },
   {
     year: "2025",
@@ -77,7 +106,13 @@ export const CV_SOLO: CvEntry[] = [
     venue: "CFHILL",
     city: "Stockholm",
     country: "SE",
-    url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
+    url: "https://www.contemporaryartlibrary.org/project/karim-boumjimar-61510",
+    press: [
+      {
+        label: "Cultbytes",
+        url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
+      },
+    ],
   },
   {
     year: "2025",
@@ -193,6 +228,12 @@ export const CV_GROUP: CvEntry[] = [
     city: "Lleida",
     country: "ES",
     url: "https://www.lapanera.cat/en/programming/expositions/ecologies-queer-aberracions-naturalment-subversives",
+    press: [
+      {
+        label: "Arts Help",
+        url: "https://www.artshelp.com/queer-ecologies-by-karim-boumjimar-chaotic-drawings-for-queer-rights/",
+      },
+    ],
   },
   {
     year: "2023",

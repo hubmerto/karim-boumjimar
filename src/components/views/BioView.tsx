@@ -191,13 +191,31 @@ function CvBlock({ label, entries }: { label: string; entries: CvEntry[] }) {
   );
 }
 
-/** Renders the title/venue/city/country/note line for a CV entry. If
- * the entry has a `url`, the whole line wraps in an external link
- * with a trailing ↗ glyph (matching the News page convention). */
+/** Renders one CV row. Only the entry's title is wrapped in the
+ * primary anchor — venue / city / country / note render as plain
+ * text. Trailing press citations (if any) render as their own
+ * inline anchors after a "— press:" marker, so the venue link and
+ * press link never nest or fight for the same span. */
 function CvEntryBody({ entry: e }: { entry: CvEntry }) {
-  const inner = (
-    <>
-      <span className="text-ink">{e.title}</span>
+  const titleNode = e.url ? (
+    <a
+      href={e.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-ink hover:text-mute"
+    >
+      {e.title}
+      <span aria-hidden className="ml-1 text-xs text-mute">
+        ↗
+      </span>
+    </a>
+  ) : (
+    <span className="text-ink">{e.title}</span>
+  );
+
+  return (
+    <span>
+      {titleNode}
       {e.venue ? <span className="text-ink">, {e.venue}</span> : null}
       {e.city ? (
         <span className="text-mute">
@@ -206,24 +224,27 @@ function CvEntryBody({ entry: e }: { entry: CvEntry }) {
         </span>
       ) : null}
       {e.note ? <span className="italic text-mute"> ({e.note})</span> : null}
-      {e.url ? (
-        <span aria-hidden className="ml-1 text-xs text-mute">
-          ↗
+      {e.press && e.press.length > 0 ? (
+        <span className="text-mute">
+          {" — press: "}
+          {e.press.map((p, i) => (
+            <span key={p.url}>
+              {i > 0 ? ", " : null}
+              <a
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink hover:text-mute"
+              >
+                {p.label}
+                <span aria-hidden className="ml-1 text-xs text-mute">
+                  ↗
+                </span>
+              </a>
+            </span>
+          ))}
         </span>
       ) : null}
-    </>
+    </span>
   );
-  if (e.url) {
-    return (
-      <a
-        href={e.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:[&_.text-ink]:text-mute"
-      >
-        {inner}
-      </a>
-    );
-  }
-  return <span>{inner}</span>;
 }

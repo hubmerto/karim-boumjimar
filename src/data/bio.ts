@@ -79,164 +79,246 @@ export const CONTACT = {
   instagramUrl: "https://www.instagram.com/beigetype/",
 };
 
+/**
+ * News entry shape. The render rule is "anchor the title, nothing
+ * else": NewsView wraps the `title` substring in an external `<a>`
+ * (with trailing ↗) when `url` is present, then renders any
+ * `prefix` before it and `suffix` after it as plain text. Press
+ * citations attached to an entry render as their own inline links
+ * after a "— press:" marker, so a venue link and a press link
+ * never nest.
+ *
+ * Examples:
+ *   { title: "Pandemonium Paradiso",
+ *     suffix: ", O—Overgaden, Copenhagen — through 26 October 2025",
+ *     url: "..." }
+ *     → "<a>Pandemonium Paradiso ↗</a>, O—Overgaden, ..."
+ *
+ *   { prefix: "Featured in", title: "Politiken", url: "..." }
+ *     → "Featured in <a>Politiken ↗</a>"
+ */
 export type NewsEntry = {
   date: string;
-  text: string;
+  /** Anchored substring when `url` is present. */
+  title: string;
+  /** Plain text rendered before the title. */
+  prefix?: string;
+  /** Plain text rendered after the title. */
+  suffix?: string;
+  /** Primary external link wrapping the title. */
   url?: string;
+  /** Trailing inline citations (each its own anchor). */
+  press?: { label: string; url: string }[];
 };
 
-/** Reverse-chronological. The metadata `date` is the news-publication
- * (or show opening) date; the `text` body collapses duplication by
- * dropping that date and quoting only the closing day where the show
- * runs across multiple months. Exhibition-type descriptors ("solo
- * exhibition" / "group exhibition" / "duo exhibition") are dropped —
- * the section is "News" and the venue tells the rest of the story. */
+/** Reverse-chronological. */
 export const NEWS: NewsEntry[] = [
   {
     date: "19 June 2026",
-    text: "Génération Céramique, Fondation d’entreprise Bernardaud, Limoges — through 30 April 2027",
+    title: "Génération Céramique",
+    suffix: ", Fondation d’entreprise Bernardaud, Limoges — through 30 April 2027",
     url: "https://www.bernardaud.com/en/us/news/exposition-generation-ceramique",
   },
   {
     date: "9 June 2026",
-    text: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship; working grant, Danish Arts Foundation",
+    title: "Carl Nielsen and Anne Marie Carl-Nielsen Scholarship",
+    suffix: "; working grant, Danish Arts Foundation",
   },
   {
     date: "10 April 2026",
-    text: "Rites of Affection, Malva Museum, Lahti — through 13 September 2026. Film premiere: Traces of Spring.",
+    title: "Rites of Affection",
+    suffix:
+      ", Malva Museum, Lahti — through 13 September 2026. Film premiere: Traces of Spring.",
     url: "https://malvamuseo.fi/en/exhibitions/karim-boumjimar-rites-of-affection/",
   },
   {
     date: "28 March 2026",
-    text: "Bodies Under Construction, Møstings, Frederiksberg Museums — through 7 June 2026",
+    title: "Bodies Under Construction",
+    suffix: ", Møstings, Frederiksberg Museums — through 7 June 2026",
     url: "https://frederiksbergmuseerne.dk/en/udstillinger/karim-boumjimar/",
+    press: [
+      // TODO: re-check Munchies Art Club connectivity. Returned curl
+      // exit 28 (timeout) from the build sandbox on 7 May 2026 but
+      // the audit verified it as Y from a browser; keep wired.
+      {
+        label: "Munchies Art Club",
+        url: "https://www.munchiesart.club/karim-boumjimar-bodies-construction-mostings/",
+      },
+      {
+        label: "Art Viewer",
+        url: "https://artviewer.org/karim-boumjimar-at-frederiksberg-museum/",
+      },
+    ],
   },
   {
     date: "8 March 2026",
-    text: "I Can Buy Myself Flowers, Kunsthal N — through 2 August 2026",
+    title: "I Can Buy Myself Flowers",
+    suffix: ", Kunsthal N — through 2 August 2026",
     url: "https://kunsthaln.dk/en/udstilling/i-can-buy-myself-flowers/",
   },
   {
     date: "5 March 2026",
-    text: "Beauty is the Best Defense, Jessica Silverman Gallery, San Francisco — through 11 April 2026",
+    title: "Beauty is the Best Defense",
+    suffix: ", Jessica Silverman Gallery, San Francisco — through 11 April 2026",
     url: "https://jessicasilvermangallery.com/online-shows/beauty-is-the-best-defense-ovr/",
   },
   {
     date: "5 February 2026",
-    text: "Featured in Politiken",
+    prefix: "Featured in",
+    title: "Politiken",
     url: "https://politiken.dk/ibyen/art10617381/%C2%BBDer-er-ikke-s%C3%A5-meget-jeg-f%C3%B8ler-jeg-g%C3%A5r-glip-af.-Jo-m%C3%A5ske-lige-et-par-n%C3%A6tter-mere-p%C3%A5-Berghain%C2%AB",
   },
   {
     date: "24 January 2026",
-    text: "Body Politics, Kuntsi Museum of Modern Art, Vaasa — through 4 April 2026",
+    title: "Body Politics",
+    suffix: ", Kuntsi Museum of Modern Art, Vaasa — through 4 April 2026",
     url: "https://vaasa.fi/koe-ja-nae/kulttuuria-vaasassa-ja-seudulla/vaasan-museot/nayttelyt-ja-tapahtumat/miettinen-collection-body-politics/",
   },
   {
     date: "23 January 2026",
-    text: "Birds of Paradise, Viborg Kunsthal — through 10 May 2026",
+    title: "Birds of Paradise",
+    suffix: ", Viborg Kunsthal — through 10 May 2026",
     url: "https://artviewer.org/karim-boumjimar-at-viborg-kunsthal/",
   },
   {
     date: "18 December 2025",
-    text: "Featured in Cultbytes",
+    prefix: "Featured in",
+    title: "Cultbytes",
     url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
   },
   {
     date: "10 December 2025",
-    text: "Featured in Dagens Industri Weekend",
+    prefix: "Featured in",
+    title: "Dagens Industri Weekend",
     url: "https://www.di.se/nyheter/mestadels-formogna-som-koper-mina-verk/",
   },
   {
     date: "21 November 2025",
-    text: "Ulrica Hydman Vallien Foundation Talent Scholarship",
+    title: "Ulrica Hydman Vallien Foundation Talent Scholarship",
     url: "https://www.ulricahydmanvalliensstiftelse.se/the-scholarships/",
   },
   {
     date: "21 November 2025",
-    text: "Stockholm Cosmologies, Liljevalchs Konsthall, Stockholm — through 11 January 2026",
+    title: "Stockholm Cosmologies",
+    suffix: ", Liljevalchs Konsthall, Stockholm — through 11 January 2026",
     url: "https://liljevalchs.se/en/kalender/stockholm-cosmologies/",
   },
   {
     date: "14 November 2025",
-    text: "Deep Cuts, CFHILL, Stockholm — through 30 December 2025",
+    title: "Deep Cuts",
+    suffix: ", CFHILL, Stockholm — through 30 December 2025",
     url: "https://www.contemporaryartlibrary.org/project/karim-boumjimar-61510",
+    press: [
+      {
+        label: "Cultbytes",
+        url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
+      },
+    ],
   },
   {
     date: "1 November 2025",
-    text: "I Will Look Into the Earth, Kunsthalle Helsinki — through 11 January 2026",
+    title: "I Will Look Into the Earth",
+    suffix: ", Kunsthalle Helsinki — through 11 January 2026",
     url: "https://taidehalli.fi/en/events/i-will-look-into-the-earth/",
   },
   {
     date: "18 October 2025",
-    text: "This Is Just the Beginning, Miettinen Collection, Berlin — through 31 December 2025",
+    title: "This Is Just the Beginning",
+    suffix: ", Miettinen Collection, Berlin — through 31 December 2025",
     url: "https://miettinen-collection.de/2025/10/26/this-is-just-the-beginning/",
   },
   {
     date: "9 October 2025",
-    text: "Mouths, Vessels, Portals, Alice Folker Gallery, Copenhagen — through 28 November 2025",
+    title: "Mouths, Vessels, Portals",
+    suffix: ", Alice Folker Gallery, Copenhagen — through 28 November 2025",
     url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/",
   },
   {
     date: "29 August 2025",
-    text: "Pandemonium Paradiso, O—Overgaden, Copenhagen — through 26 October 2025",
+    title: "Pandemonium Paradiso",
+    suffix: ", O—Overgaden, Copenhagen — through 26 October 2025",
     url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
+    press: [
+      {
+        label: "Alice Folker overview",
+        url: "https://alicefolker.dk/exhibitions/39-karim-boumjimar-pandemonium-paradiso-o-overgaden/overview/",
+      },
+    ],
   },
   {
     date: "27 June 2025",
-    text: "Featured in ELLE Danmark",
+    prefix: "Featured in",
+    title: "ELLE Danmark",
     url: "https://elle.dk/agenda/karriere/billedkunstner-karim-boumjimar-at-springe-ud-som-kunstner-var-i-virkeligheden-svaerere-end-at-springe-ud-som-queer/",
   },
   {
     date: "20 June 2025",
-    text: "When Form Becomes Attitude, Robert Grunenberg, Berlin — through 9 August 2025",
+    title: "When Form Becomes Attitude",
+    suffix: ", Robert Grunenberg, Berlin — through 9 August 2025",
     url: "https://robertgrunenberg.com/exhibition/when-form-becomes-attitude/",
   },
   {
     date: "17 May 2025",
-    text: "Drawings from the Hotel, Pori Art Museum — through 6 July 2025",
+    title: "Drawings from the Hotel",
+    suffix: ", Pori Art Museum — through 6 July 2025",
     url: "https://www.poriartmuseum.fi/en/events/karim-boumjimar-drawings-from-the-hotel-2/",
   },
   {
     date: "11 April 2025",
-    text: "Symbiosis received the 2025 Blix Prize, Kunsthal Charlottenborg",
+    title: "Symbiosis",
+    suffix: " received the 2025 Blix Prize, Kunsthal Charlottenborg",
   },
   {
     date: "4 April 2025",
-    text: "MiArt, Milan — participation 4 April 2025 – 6 April 2025",
+    title: "MiArt, Milan",
+    suffix: " — participation 4 April 2025 – 6 April 2025",
   },
   {
     date: "6 February 2025",
-    text: "Charlottenborg Spring Exhibition, Kunsthal Charlottenborg — through 9 March 2025",
+    title: "Charlottenborg Spring Exhibition",
+    suffix: ", Kunsthal Charlottenborg — through 9 March 2025",
     url: "https://artmap.com/kunsthalcharlottenborg/exhibition/charlottenborg-spring-exhibition-2025",
   },
   {
     date: "17 January 2025",
-    text: "Kultuur, TINA Gallery, London — through 1 March 2025",
+    title: "Kultuur",
+    suffix: ", TINA Gallery, London — through 1 March 2025",
     url: "https://saliva.live/exhibitions/66c4dd65",
   },
   {
     date: "7 January 2025",
-    text: "Named one of Frieze “Ten Artists to Watch in 2025”",
+    prefix: "Named one of",
+    title: "Frieze “Ten Artists to Watch in 2025”",
     url: "https://www.frieze.com/article/ten-artists-watch-2025",
   },
   {
     date: "11 November 2024",
-    text: "Featured in Politiken",
+    prefix: "Featured in",
+    title: "Politiken",
     url: "https://politiken.dk/kultur/design/art10131168/%C2%BBHun-stod-og-peb-s%C3%A5-jeg-hev-hende-op-i-sengen.-Det-skulle-jeg-nok-ikke-have-gjort%C2%AB",
   },
   {
     date: "28 October 2023",
-    text: "Queer Ecologies: Naturally Subversive Aberrations, Centre d’Art la Panera, Lleida — through 28 January 2024",
+    title: "Queer Ecologies: Naturally Subversive Aberrations",
+    suffix: ", Centre d’Art la Panera, Lleida — through 28 January 2024",
     url: "https://www.lapanera.cat/en/programming/expositions/ecologies-queer-aberracions-naturalment-subversives",
+    press: [
+      {
+        label: "Arts Help",
+        url: "https://www.artshelp.com/queer-ecologies-by-karim-boumjimar-chaotic-drawings-for-queer-rights/",
+      },
+    ],
   },
   {
     date: "4 May 2023",
-    text: "Fear and Fauna, ARIEL – Feminism in the Aesthetic — through 18 June 2023",
+    title: "Fear and Fauna",
+    suffix: ", ARIEL – Feminism in the Aesthetic — through 18 June 2023",
     url: "https://arielfeminisms.dk/#upcoming-fear-and-fauna",
   },
   {
     date: "13 August 2021",
-    text: "Psychopathia Sexualis, O—Overgaden, Copenhagen — through 10 October 2021",
+    title: "Psychopathia Sexualis",
+    suffix: ", O—Overgaden, Copenhagen — through 10 October 2021",
     url: "https://overgaden.org/en/exhibitions/psychopathia-sexualis",
   },
 ];
