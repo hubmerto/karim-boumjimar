@@ -75,6 +75,15 @@ export function InspectorSheet() {
     }
   }, [expandedGroupKey]);
 
+  // Programmatic snap override (used by /showcase/mobile to pull the
+  // tab up + down for the recording loop). Real users never set this
+  // because nothing in the production UI dispatches the action — it
+  // only flips when an auto-pilot demo is driving the surface.
+  const externalSnap = useSelection((s) => s.inspectorSheetSnap);
+  useEffect(() => {
+    if (externalSnap) setSnap(externalSnap);
+  }, [externalSnap]);
+
   // Handle drag from the grab region.
   const onGrabPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {

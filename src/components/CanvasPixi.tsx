@@ -447,8 +447,9 @@ export function CanvasPixi() {
     if (introAnimRef.current != null) cancelAnimationFrame(introAnimRef.current);
     // Block taps until this fresh intro tick reaches t = 1.
     introCompleteRef.current = false;
+    const introRevealMs = getIntroRevealMs();
     function tick(now: number) {
-      const t = Math.min(1, (now - t0) / INTRO_REVEAL_MS);
+      const t = Math.min(1, (now - t0) / introRevealMs);
       const e = 1 - Math.pow(1 - t, 3);
       const tx = start.tx + (target.tx - start.tx) * e;
       const ty = start.ty + (target.ty - start.ty) * e;
@@ -1215,10 +1216,28 @@ type SpriteSpec = {
 /** Per-tile fade-in timing. Designed so EVERY tile finishes by the
  * 6s mark — matched exactly to the initial camera zoom duration so
  * the last sprite reaches alpha 1 the same instant the zoom settles.
- * Worst case = MAX_DELAY + DURATION = 4500 + 1500 = 6000ms. */
-const INTRO_REVEAL_MS = 6000;
-const TILE_DURATION_MS = 1500;
-const TILE_MAX_DELAY_MS = INTRO_REVEAL_MS - TILE_DURATION_MS;
+ * Worst case = MAX_DELAY + DURATION = 4500 + 1500 = 6000ms.
+ *
+ * The /showcase/mobile route can flip `window.__FAST_INTRO__` to
+ * cut these durations roughly in half (3.5 s reveal) for a tighter
+ * recording loop. The flag is read lazily so the production site
+ * always pays the full duration and a route-scoped opt-in can
+ * shorten it without affecting anyone else. */
+function isFastIntro(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(
+    (window as { __FAST_INTRO__?: boolean }).__FAST_INTRO__,
+  );
+}
+function getIntroRevealMs() {
+  return isFastIntro() ? 3500 : 6000;
+}
+function getTileDurationMs() {
+  return isFastIntro() ? 900 : 1500;
+}
+function getTileMaxDelayMs() {
+  return getIntroRevealMs() - getTileDurationMs();
+}
 
 function tileFadeTiming(id: string): { delay: number; duration: number } {
   // Stable hash → pseudo-random 0..1 float per tile id.
@@ -1227,8 +1246,8 @@ function tileFadeTiming(id: string): { delay: number; duration: number } {
   const x = Math.sin(h) * 10000;
   const r = x - Math.floor(x);
   return {
-    delay: Math.round(r * TILE_MAX_DELAY_MS),
-    duration: TILE_DURATION_MS,
+    delay: Math.round(r * getTileMaxDelayMs()),
+    duration: getTileDurationMs(),
   };
 }
 

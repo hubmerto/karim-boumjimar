@@ -2,6 +2,12 @@ import { create } from "zustand";
 
 export type View = "exhibitions" | "news" | "bio" | "about" | "grant";
 
+/** Mobile InspectorSheet snap states. Mirrors the local Snap union
+ * inside InspectorSheet.tsx — duplicated here because the type
+ * lives in a non-exported file and the showcase route needs to
+ * dispatch snap changes from outside the sheet. */
+export type InspectorSheetSnap = "peek" | "mid" | "full";
+
 type CanvasState = {
   view: View;
   setView: (v: View) => void;
@@ -50,6 +56,12 @@ type CanvasState = {
    * to the bento overview (top-bar logo click). Canvas hooks watch
    * this and animate the camera back to the fit-all bento target. */
   navResetOverviewToken: number;
+  /** Programmatic override for the mobile InspectorSheet snap.
+   * `null` = sheet uses its internal default behaviour (peek when a
+   * group selects, etc.). Any string forces the sheet to that snap
+   * state. Used by /showcase/mobile to pull the tab up + down. */
+  inspectorSheetSnap: InspectorSheetSnap | null;
+  setInspectorSheetSnap: (snap: InspectorSheetSnap | null) => void;
   /** Reset to the home/overview state — clears selection, view,
    * toolbarHidden, and bumps navResetOverviewToken so the camera
    * animates back to the bento. */
@@ -137,6 +149,8 @@ export const useSelection = create<CanvasState>((set) => ({
       toolbarHidden: true,
     }),
   navResetOverviewToken: 0,
+  inspectorSheetSnap: null,
+  setInspectorSheetSnap: (snap) => set({ inspectorSheetSnap: snap }),
   resetToOverview: () =>
     set((s) => ({
       view: "exhibitions",
