@@ -325,6 +325,11 @@ export function ExpandedGroup() {
       </button>
       <div
         ref={scrollRef}
+        // data-gallery-strip lets the showcase /showcase route's
+        // AutoPilot find this scroller via document.querySelector
+        // and animate scrollLeft for the demo recording. No-op for
+        // normal users — the attribute is harmless metadata.
+        data-gallery-strip
         className="flex h-full w-full items-center gap-8 px-4 pt-14"
         style={{
           overflowX: phase === "open" ? "auto" : "hidden",

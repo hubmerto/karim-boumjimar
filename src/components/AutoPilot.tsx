@@ -1,54 +1,47 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelection } from "@/lib/store";
 
 /**
- * Headless component that drives the showcase route's looping
- * demo. Dispatches store actions on a fixed schedule that matches
- * the actual animation durations elsewhere in the codebase, so
- * each beat fully lands before the next one fires.
+ * Headless component that drives the /showcase route's looping
+ * demo. Cycle:
  *
- * Loop shape:
- *   intro reveal → for each project:
- *     selectGroup     → camera flies in, tiles disperse, outlines fade
- *     expandGroup     → FLIP open into the gallery strip
- *     hold            → beat showing the photos
- *     collapseGroup   → FLIP close (the genie effect)
- *     hold            → beat showing the spread again
- *     resetToOverview → camera flies back to the bento
- *     hold            → brief beat at overview
+ *   white covers screen → fade out
+ *   bento overview holds briefly
+ *   selectGroup(Birds of Paradise) → camera flies in, tiles
+ *     disperse, outlines fade in
+ *   group view lingers (3 s)
+ *   expandGroup → FLIP-open into the gallery strip
+ *   gallery auto-scrolls horizontally to the end (3 s)
+ *   collapseGroup → FLIP-close (genie back to canvas tiles)
+ *   resetToOverview → camera zooms back to bento
+ *   white fades back in over the bento → loop resets
  *
- * Renders nothing — it only manipulates the store. Cancellable
- * via unmount; all timers honour a `cancelled` flag so a route
- * change doesn't leave actions firing into a dead store.
+ * Recording tip: capture from one peak-white moment to the next
+ * peak-white moment for a perfectly seamless loop. The first
+ * iteration runs the canvas's intro reveal under the white
+ * cover, so by the time the white fades out the bento is
+ * already at its 100 % rest scale.
  */
 
-// Curated project list for the demo cycle. Each entry is a
-// `${title}|${year}` group key matching what works.ts produces.
-// Pick visually rich, well-photographed projects so the gallery
-// strip looks great in the recording.
-const SHOWCASE_PROJECTS = [
-  "Bodies Under Construction|2026",
-  "Pandemonium Paradiso|2025",
-  "Birds of Paradise|2026",
-];
+const PROJECT_KEY = "Birds of Paradise|2026";
 
 // Each timing buffers a small comfort margin past the underlying
 // animation duration so the next action doesn't trip mid-tween.
-//   - INTRO_SETTLE: useCanvas INTRO_REVEAL_MS (6000) + buffer
-//   - GROUP_FLY_IN: animateTransform 4500 in the navTargetGroupKey effect
-//   - GALLERY_OPEN/CLOSE: ExpandedGroup TRANSITION_MS (2400) + buffer
-//   - RESET_FLY_BACK: animateTransform 1500 in the logo-reset effect
 const T = {
-  INTRO_SETTLE: 6500,
-  GROUP_FLY_IN: 5000,
-  GALLERY_OPEN: 3000,
-  GALLERY_HOLD: 2500,
-  GALLERY_CLOSE: 3000,
-  SPREAD_HOLD: 1200,
-  RESET_FLY_BACK: 2000,
-  BENTO_HOLD: 800,
+  // First-run cover: long enough for INTRO_REVEAL_MS (6000) + tile
+  // fade stagger to land. Subsequent loops only see WHITE_HOLD.
+  INITIAL_COVER: 6500,
+  WHITE_FADE: 800,
+  WHITE_HOLD: 600,
+  BENTO_HOLD: 1000,
+  GROUP_FLY_IN: 5000, // animateTransform 4500 in nav effect + buffer
+  GROUP_LINGER: 3000, // requested: hold the cluster on screen
+  GALLERY_OPEN: 3000, // FLIP open = 2400 + decode buffer
+  GALLERY_SCROLL: 3000, // requested: 3 s scroll-to-end
+  GALLERY_CLOSE: 3000, // FLIP close = 2400 + buffer
+  RESET_FLY_BACK: 2000, // reset animateTransform = 1500 + buffer
 };
 
 export function AutoPilot() {
@@ -58,14 +51,16 @@ export function AutoPilot() {
   const collapseGroup = useSelection((s) => s.collapseGroup);
   const resetToOverview = useSelection((s) => s.resetToOverview);
 
+  // White overlay covers everything between cycles. Starts at 1
+  // so the first paint of /showcase is solid white — the canvas's
+  // intro reveal animation plays under it, hidden, and is already
+  // settled by the time we fade the white away.
+  const [whiteOpacity, setWhiteOpacity] = useState(1);
+
   useEffect(() => {
-    // Splash is intentionally not mounted on the showcase route,
-    // so splashGone never flips on its own. Flip it manually so
-    // the canvas's intro reveal effect (75% → 100% bento) fires.
     setSplashGone(true);
 
     let cancelled = false;
-    let cycle = 0;
 
     function wait(ms: number) {
       return new Promise<void>((resolve) => {
@@ -75,38 +70,99 @@ export function AutoPilot() {
       });
     }
 
+    // Animate the gallery strip's scrollLeft from current to the
+    // far right, with eased timing. We can't use scroll-behaviour:
+    // smooth because that's browser-paced and won't honour our 3 s
+    // duration; ease-in-out cubic on rAF gives a deterministic
+    // glide that matches the rest of the site's motion language.
+    function scrollGalleryToEnd(durationMs: number) {
+      return new Promise<void>((resolve) => {
+        const el = document.querySelector(
+          "[data-gallery-strip]",
+        ) as HTMLElement | null;
+        if (!el) {
+          resolve();
+          return;
+        }
+        const startScroll = el.scrollLeft;
+        const targetScroll = el.scrollWidth - el.clientWidth;
+        if (targetScroll <= startScroll + 1) {
+          resolve();
+          return;
+        }
+        const startTs = performance.now();
+        function tick(now: number) {
+          if (cancelled) {
+            resolve();
+            return;
+          }
+          const t = Math.min(1, (now - startTs) / durationMs);
+          // ease-in-out cubic: gentle start + finish, sustained mid.
+          const eased =
+            t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          el!.scrollLeft = startScroll + (targetScroll - startScroll) * eased;
+          if (t < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            resolve();
+          }
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+
     async function loop() {
-      // Wait for the intro reveal to play out once at the very
-      // start. Subsequent cycles already begin at the bento
-      // overview thanks to resetToOverview, so they only need
-      // BENTO_HOLD between iterations.
-      await wait(T.INTRO_SETTLE);
+      // First-run cover: hold the white in place while the canvas
+      // does its intro reveal under it.
+      await wait(T.INITIAL_COVER);
       if (cancelled) return;
 
       while (!cancelled) {
-        const key = SHOWCASE_PROJECTS[cycle % SHOWCASE_PROJECTS.length];
-        cycle++;
+        // 1. Fade the white away to reveal the bento diamond.
+        setWhiteOpacity(0);
+        await wait(T.WHITE_FADE);
+        if (cancelled) return;
 
-        selectGroup(key);
+        // 2. Bento holds for a beat.
+        await wait(T.BENTO_HOLD);
+        if (cancelled) return;
+
+        // 3. Select Birds of Paradise → camera flies into group.
+        selectGroup(PROJECT_KEY);
         await wait(T.GROUP_FLY_IN);
         if (cancelled) return;
 
-        expandGroup(key);
-        await wait(T.GALLERY_OPEN + T.GALLERY_HOLD);
+        // 4. Group view linger.
+        await wait(T.GROUP_LINGER);
         if (cancelled) return;
 
+        // 5. Open the gallery strip (FLIP-open animation).
+        expandGroup(PROJECT_KEY);
+        await wait(T.GALLERY_OPEN);
+        if (cancelled) return;
+
+        // 6. Auto-scroll the strip horizontally to its far end.
+        await scrollGalleryToEnd(T.GALLERY_SCROLL);
+        if (cancelled) return;
+
+        // 7. Close the gallery — genie back to canvas tiles.
         collapseGroup();
         await wait(T.GALLERY_CLOSE);
         if (cancelled) return;
 
-        await wait(T.SPREAD_HOLD);
-        if (cancelled) return;
-
+        // 8. Camera zooms out, back to the bento overview.
         resetToOverview();
         await wait(T.RESET_FLY_BACK);
         if (cancelled) return;
 
-        await wait(T.BENTO_HOLD);
+        // 9. Fade the white in to cover everything → loop reset.
+        setWhiteOpacity(1);
+        await wait(T.WHITE_FADE);
+        if (cancelled) return;
+
+        // 10. Hold full white briefly so a recording loop has a
+        // crisp bookend frame to wrap on.
+        await wait(T.WHITE_HOLD);
       }
     }
 
@@ -123,5 +179,18 @@ export function AutoPilot() {
     resetToOverview,
   ]);
 
-  return null;
+  // Full-screen white wipe. z-50 sits above the gallery (z-20),
+  // the toolbars, and the project panel — it's the topmost layer
+  // during transitions. pointer-events-none so it never intercepts
+  // anything (the auto-pilot is the only intended interactor).
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-50 bg-canvas"
+      style={{
+        opacity: whiteOpacity,
+        transition: `opacity ${T.WHITE_FADE}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+      }}
+    />
+  );
 }
