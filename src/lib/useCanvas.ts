@@ -269,12 +269,21 @@ export function useCanvas(
   // tiles spread out (groups apart) once the camera passes 125% of the
   // bento fit, and re-pack to bento once it drops back below 75%. The
   // 50% gap is hysteresis so the layout doesn't flicker near a threshold.
+  // When we re-pack to bento we're visually back at the overview, so
+  // any pinned project context (Inspector + ProjectPanel) is no longer
+  // relevant — drop it. Skip if the gallery is open: that flow has
+  // its own close path and we don't want a stray scale change while
+  // ExpandedGroup is mounted to nuke the selection underneath it.
   useEffect(() => {
     if (!bentoFit) return;
     if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
       setDispersion(1);
     } else if (transform.scale <= bentoFit * 0.75 && dispersion === 1) {
       setDispersion(0);
+      const s = useSelection.getState();
+      if (!s.expandedGroupKey && (s.selectedId || s.selectedGroupKey)) {
+        s.deselect();
+      }
     }
   }, [transform.scale, bentoFit, dispersion]);
 

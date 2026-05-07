@@ -13,21 +13,30 @@ const ITEMS: { key: View; label: string; href: string }[] = [
 
 export function LeftToolbar() {
   const view = useSelection((s) => s.view);
-  const condensed = useSelection((s) => !!(s.selectedId || s.selectedGroupKey));
-  const deselect = useSelection((s) => s.deselect);
+  // Hide the toolbar based on the user-controlled flag, not the raw
+  // selection state. Closing the right-side panels (×, Esc, zoom-out,
+  // canvas bg click) keeps the toolbar slid off until the user
+  // explicitly opens it via the › handle. On non-canvas routes the
+  // flag is forcibly ignored: there's nothing to "select" there, so
+  // the nav should always be visible.
+  const toolbarHidden = useSelection((s) => s.toolbarHidden);
+  const hidden = view === "exhibitions" && toolbarHidden;
+  const showToolbar = useSelection((s) => s.showToolbar);
   const indexOpen = useSelection((s) => s.indexOpen);
   const setIndexOpen = useSelection((s) => s.setIndexOpen);
 
   return (
     <>
-      {/* Re-open handle, only visible when condensed. Clicking expands the toolbar. */}
+      {/* Re-open handle, only visible when the toolbar is slid off.
+          Clicking deselects the current project and brings the nav
+          back. */}
       <button
         type="button"
-        onClick={deselect}
+        onClick={showToolbar}
         aria-label="Show sections"
         title="Show sections"
         className={`fixed left-0 top-12 bottom-0 z-30 hidden w-6 items-center justify-center border-r border-line bg-canvas text-mute hover:text-ink md:flex ${
-          condensed ? "opacity-100" : "pointer-events-none opacity-0"
+          hidden ? "opacity-100" : "pointer-events-none opacity-0"
         } transition-opacity duration-200`}
       >
         <span className="text-caption">›</span>
@@ -36,7 +45,7 @@ export function LeftToolbar() {
       <nav
         aria-label="Sections"
         className={`fixed left-0 top-12 bottom-0 z-20 hidden w-[200px] flex-col justify-between border-r border-line bg-canvas transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] md:flex ${
-          condensed ? "-translate-x-full" : "translate-x-0"
+          hidden ? "-translate-x-full" : "translate-x-0"
         }`}
       >
         <div>

@@ -18,6 +18,14 @@ type CanvasState = {
    * mobile menu can open it too. */
   indexOpen: boolean;
   setIndexOpen: (open: boolean) => void;
+  /** Whether the desktop LeftToolbar is slid off-screen. Kept separate
+   * from the selection state so closing the right-side panels (via ×,
+   * Esc, canvas-bg click, zoom-out, etc.) doesn't auto-pop the toolbar
+   * back in. The user opens it explicitly via the › handle (which also
+   * deselects) or by changing view via the top bar. */
+  toolbarHidden: boolean;
+  /** Reveal the toolbar AND clear any selection. Used by the › handle. */
+  showToolbar: () => void;
   /** True once the splash logo has fully faded out (or was skipped via the
    * sessionStorage cache). Tiles wait on this to start their fade-in so the
    * animation isn't wasted behind the splash. */
@@ -51,6 +59,9 @@ export const useSelection = create<CanvasState>((set) => ({
       selectedId: null,
       selectedGroupKey: null,
       expandedGroupKey: null,
+      // Switching views is an explicit navigation, so the toolbar
+      // should be visible on the destination route.
+      toolbarHidden: false,
     }),
   selectedId: null,
   selectedGroupKey: null,
@@ -59,6 +70,14 @@ export const useSelection = create<CanvasState>((set) => ({
   navTargetGroupKey: null,
   indexOpen: false,
   setIndexOpen: (open) => set({ indexOpen: open }),
+  toolbarHidden: false,
+  showToolbar: () =>
+    set({
+      toolbarHidden: false,
+      selectedId: null,
+      selectedGroupKey: null,
+      expandedGroupKey: null,
+    }),
   splashGone: false,
   setSplashGone: (v) => set({ splashGone: v }),
   select: (id) => set({ selectedId: id }),
@@ -67,17 +86,23 @@ export const useSelection = create<CanvasState>((set) => ({
       selectedId: id,
       selectedGroupKey: groupKey,
       navTargetGroupKey: groupKey,
+      toolbarHidden: true,
     }),
   selectGroup: (key) =>
     set({
       selectedGroupKey: key,
       selectedId: null,
       navTargetGroupKey: key,
+      toolbarHidden: true,
     }),
   closeInspector: () => set({ selectedId: null }),
   // Closing the project sidebar should NOT kill the gallery. Gallery view
   // is independent and may be exited via its own close affordances.
   closeProject: () => set({ selectedGroupKey: null }),
+  // Generic deselect — used by zoom-out, canvas-bg click, Esc, the
+  // GroupViewControls × button. Deliberately does NOT touch
+  // toolbarHidden: those exits are about the project context, not a
+  // request to bring the site nav back.
   deselect: () =>
     set({ selectedId: null, selectedGroupKey: null, expandedGroupKey: null }),
   expandGroup: (key) => set({ expandedGroupKey: key, selectedGroupKey: key }),
@@ -93,6 +118,7 @@ export const useSelection = create<CanvasState>((set) => ({
       selectedGroupKey: null,
       expandedGroupKey: null,
       view: "exhibitions",
+      toolbarHidden: true,
     }),
   navigateToGroup: (key) =>
     set({
@@ -101,6 +127,7 @@ export const useSelection = create<CanvasState>((set) => ({
       selectedId: null,
       expandedGroupKey: null,
       view: "exhibitions",
+      toolbarHidden: true,
     }),
   clearNav: () => set({ navTargetWorkId: null, navTargetGroupKey: null }),
 }));
