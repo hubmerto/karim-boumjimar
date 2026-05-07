@@ -14,8 +14,15 @@ import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 import { thumbSrc } from "@/lib/thumbs";
 
-const TRANSITION_MS = 1500;
-const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+// Slower FLIP so photos visibly travel between their canvas-tile
+// position and their gallery-strip slot. 1500ms still read as a snap
+// when many tiles were close to their destination — at 2400ms the
+// trajectory of each image is legible. Easing softened to `0.22, 1,
+// 0.36, 1` (the same curve WorkTile uses for the bento spread) so
+// the whole motion system feels like one settle, not two different
+// ones glued together.
+const TRANSITION_MS = 2400;
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 type Phase = "opening" | "open" | "closing";
 
