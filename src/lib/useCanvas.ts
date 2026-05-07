@@ -563,6 +563,8 @@ export function useCanvas(
   const navTargetWorkId = useSelection((s) => s.navTargetWorkId);
   const navTargetGroupKey = useSelection((s) => s.navTargetGroupKey);
   const clearNav = useSelection((s) => s.clearNav);
+  const indexOpen = useSelection((s) => s.indexOpen);
+  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   useEffect(() => {
     // Tile / group clicks count as the first interaction. The animations
     // below take the camera past the spread threshold, which then drives
@@ -632,6 +634,52 @@ export function useCanvas(
     animateTransform,
     destOffsets,
   ]);
+
+  // When the Index drawer toggles while a group is selected, re-fit
+  // the camera so the cluster lands in the canvas area BETWEEN the
+  // index (left) and the project panel (right). viewportRect already
+  // treats the open index as 420 px of left chrome, so the same
+  // fitBboxTransform call relocates the cluster correctly. Without
+  // this, opening the index over a settled group view leaves the
+  // group sitting partly behind the drawer.
+  useEffect(() => {
+    if (!selectedGroupKey) return;
+    const groupWorks = works.filter(
+      (w) => `${w.title}|${w.year}` === selectedGroupKey,
+    );
+    if (!groupWorks.length) return;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const w of groupWorks) {
+      const wb = workBounds(w);
+      const off = destOffsets?.get(w.id) ?? { x: 0, y: 0 };
+      minX = Math.min(minX, wb.minX + off.x);
+      minY = Math.min(minY, wb.minY + off.y);
+      maxX = Math.max(maxX, wb.maxX + off.x);
+      maxY = Math.max(maxY, wb.maxY + off.y);
+    }
+    const OUTLINE_PAD = 56;
+    const TITLE_HEAD_ROOM = 90;
+    const groupBbox = {
+      minX: minX - OUTLINE_PAD,
+      minY: minY - OUTLINE_PAD - TITLE_HEAD_ROOM,
+      maxX: maxX + OUTLINE_PAD,
+      maxY: maxY + OUTLINE_PAD,
+    };
+    requestAnimationFrame(() => {
+      animateTransform(
+        fitBboxTransform(groupBbox, viewportRect(), 0.92),
+        1500,
+      );
+    });
+    // selectedGroupKey is intentionally NOT in deps: this effect's
+    // job is to react to indexOpen specifically. selectedGroupKey
+    // changes are already handled by the navTargetGroupKey effect
+    // above — re-running here would double-animate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indexOpen]);
 
   const cursor = isDragging ? "grabbing" : spaceHeld ? "grab" : "default";
 
