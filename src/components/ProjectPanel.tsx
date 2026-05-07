@@ -146,12 +146,15 @@ export function ProjectContent({
             .split(/\n\n+/)
             .filter(Boolean)
             .map((para, i) => (
-              // text-pretty: flush-left, ragged-right. Lines fill
-              // up to the next overflow, last line falls
-              // naturally short. The "pretty" part prevents
-              // single-word orphans on the last line, otherwise
-              // it's the natural newspaper-column look.
-              <p key={i} className="text-pretty">
+              // text-align: justify with auto hyphenation. Both
+              // left AND right edges flush to the panel — matches
+              // the work-field rows above. Without `hyphens-auto`
+              // the browser would stretch word-spacing on short
+              // lines to reach the right edge ("rivers" of white
+              // space); with it, long words break at syllable
+              // boundaries instead, so word-spacing stays close
+              // to default.
+              <p key={i} className="text-justify hyphens-auto">
                 {para}
               </p>
             ))}
