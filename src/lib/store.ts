@@ -35,9 +35,7 @@ type CanvasState = {
   /** Click a tile: highlights that tile, pins its group, and zooms to the group. */
   selectWork: (id: string, groupKey: string) => void;
   selectGroup: (key: string | null) => void;
-  /** Closes only the right-side TITLE/YEAR Inspector. */
-  closeInspector: () => void;
-  /** Closes only the rightmost project description panel. */
+  /** Closes the merged ProjectPanel (work fields + project description). */
   closeProject: () => void;
   deselect: () => void;
   /** Open the horizontal full-height strip view for the given group. */
@@ -95,10 +93,11 @@ export const useSelection = create<CanvasState>((set) => ({
       navTargetGroupKey: key,
       toolbarHidden: true,
     }),
-  closeInspector: () => set({ selectedId: null }),
-  // Closing the project sidebar should NOT kill the gallery. Gallery view
-  // is independent and may be exited via its own close affordances.
-  closeProject: () => set({ selectedGroupKey: null }),
+  // Closing the panel clears BOTH the work selection and the group
+  // selection — there's no longer a separate Inspector aside, so
+  // there's nothing left to keep the work-only state pinned for.
+  closeProject: () =>
+    set({ selectedId: null, selectedGroupKey: null }),
   // Generic deselect — used by zoom-out, canvas-bg click, Esc, the
   // GroupViewControls × button. Deliberately does NOT touch
   // toolbarHidden: those exits are about the project context, not a

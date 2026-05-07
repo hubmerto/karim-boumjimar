@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@/components/Canvas";
 import { CanvasPixi } from "@/components/CanvasPixi";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
-import { RightStack } from "@/components/RightStack";
+import { ProjectPanel } from "@/components/ProjectPanel";
 import { AboutView } from "@/components/views/AboutView";
 import { BioView } from "@/components/views/BioView";
 import { GrantView } from "@/components/views/GrantView";
@@ -56,7 +56,12 @@ export function ViewSwitcher() {
     ) : (
       <>
         <Canvas />
-        <RightStack />
+        {/* Single right-side panel — work fields + project description
+            in one stack. Replaces the previous Inspector + ProjectPanel
+            split. */}
+        <div className="fixed right-0 top-12 bottom-0 z-10 hidden md:flex">
+          <ProjectPanel />
+        </div>
       </>
     );
   }

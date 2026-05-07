@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelection } from "@/lib/store";
-import { WORKS } from "@/data/works";
-import { DefaultView, SelectedView } from "@/components/InspectorContent";
+import { DefaultView } from "@/components/InspectorContent";
 import { ProjectContent } from "@/components/ProjectPanel";
 
 type Snap = "peek" | "mid" | "full";
@@ -34,9 +33,6 @@ export function InspectorSheet() {
   const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
-  const selected = selectedId
-    ? (WORKS.find((w) => w.id === selectedId) ?? null)
-    : null;
 
   const [snap, setSnap] = useState<Snap>("peek");
   const [dragDelta, setDragDelta] = useState(0);
@@ -65,10 +61,10 @@ export function InspectorSheet() {
   // way of the cluster. The user can drag the handle up to read
   // (mid -> full snap states still work via the drag gesture).
   useEffect(() => {
-    if (selected && !expandedGroupKey) {
+    if (selectedId && !expandedGroupKey) {
       setSnap("peek");
     }
-  }, [selected, expandedGroupKey]);
+  }, [selectedId, expandedGroupKey]);
 
   // When the gallery opens, snap the sheet down to peek so it doesn't
   // sit over the strip. When it closes, leave whatever snap the user
@@ -150,7 +146,7 @@ export function InspectorSheet() {
   // Hide unless the user has actively selected something. The default
   // (no-selection) sheet was clutter; site navigation lives in the top
   // menu now.
-  if (!selected && !selectedGroupKey) return null;
+  if (!selectedId && !selectedGroupKey) return null;
 
   return (
     <div
@@ -186,15 +182,11 @@ export function InspectorSheet() {
           className="flex-1 space-y-8 overflow-y-auto px-4 pt-3 pb-5"
           style={{ overscrollBehavior: "contain" }}
         >
-          {selected ? (
-            <SelectedView work={selected} sheetToggle={sheetToggle} />
-          ) : null}
-          {selectedGroupKey ? (
-            <div className={selected ? "border-t border-line pt-6" : ""}>
-              <ProjectContent sheetToggle={sheetToggle} />
-            </div>
-          ) : null}
-          {!selected && !selectedGroupKey ? <DefaultView /> : null}
+          {selectedGroupKey || selectedId ? (
+            <ProjectContent sheetToggle={sheetToggle} />
+          ) : (
+            <DefaultView />
+          )}
         </div>
       </div>
     </div>

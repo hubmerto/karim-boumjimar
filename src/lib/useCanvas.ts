@@ -26,7 +26,8 @@ const TOPBAR_H = 48;
 export const LEFT_TOOLBAR_W_FULL = 200;
 // Width of the slim "show sections" handle when the toolbar is hidden.
 export const LEFT_TOOLBAR_W_CONDENSED = 24;
-const INSPECTOR_W = 300;
+// Single merged ProjectPanel covers both the work fields and the
+// project description. The previous Inspector aside is gone.
 const PROJECT_PANEL_W = 360;
 const SHEET_TOP_RESERVE = 64; // matches InspectorSheet TOP_RESERVE_PX
 const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
@@ -53,12 +54,10 @@ function viewportRect() {
   const { selectedId, selectedGroupKey, expandedGroupKey } =
     useSelection.getState();
   const leftW = isDesktop ? leftWidth() : 0;
-  // Right panels render independently: Inspector when a tile is selected,
-  // ProjectPanel when a group is selected. Subtract whichever are visible
-  // so groups center within the actual free canvas area.
-  const rightW = isDesktop
-    ? (selectedId ? INSPECTOR_W : 0) + (selectedGroupKey ? PROJECT_PANEL_W : 0)
-    : 0;
+  // Single ProjectPanel renders when anything is selected. Subtract
+  // its width so groups center within the actual free canvas area.
+  const rightW =
+    isDesktop && (selectedId || selectedGroupKey) ? PROJECT_PANEL_W : 0;
   // Mobile bottom sheet: only renders when the user has actively selected
   // something AND the gallery isn't open. When it's visible it sits at
   // "mid" snap (~55% of its full height showing), so subtract the matching

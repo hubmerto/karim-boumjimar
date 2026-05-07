@@ -1,8 +1,7 @@
 "use client";
 
 import { ARTIST_NAME, BIO_LONG, CONTACT, REPRESENTATION } from "@/data/bio";
-import { useSelection } from "@/lib/store";
-import type { Work, Medium } from "@/types/work";
+import type { Medium } from "@/types/work";
 
 export const MEDIUM_LABEL: Record<Medium, string> = {
   ceramic: "Ceramic",
@@ -56,80 +55,6 @@ export function DefaultView() {
           {CONTACT.instagram}
         </a>
       </Section>
-    </div>
-  );
-}
-
-type SelectedViewProps = {
-  work: Work;
-  /**
-   * When provided, the section header arrow mirrors the sheet snap
-   * state (↓ open / ↑ peek) and tapping it toggles the sheet
-   * instead of closing the work. Used by the mobile InspectorSheet.
-   */
-  sheetToggle?: { isOpen: boolean; onToggle: () => void };
-};
-
-export function SelectedView({ work, sheetToggle }: SelectedViewProps) {
-  const closeInspector = useSelection((s) => s.closeInspector);
-  const rows: { label: string; value: string | undefined }[] = [
-    { label: "TITLE", value: work.title },
-    { label: "YEAR", value: String(work.year) },
-    { label: "MEDIUM", value: MEDIUM_LABEL[work.medium] },
-    { label: "MATERIALS", value: work.materials },
-    { label: "DIMENSIONS", value: work.dimensions },
-    { label: "EXHIBITION", value: work.exhibition },
-    { label: "VENUE", value: work.venue },
-    { label: "CITY", value: work.city },
-    { label: "DATE", value: work.date },
-    { label: "PHOTO", value: work.photoCredit },
-    { label: "COLLECTION", value: work.collection },
-  ].filter((r): r is { label: string; value: string } => Boolean(r.value));
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
-          Work
-        </span>
-        {sheetToggle ? (
-          <button
-            type="button"
-            onClick={sheetToggle.onToggle}
-            aria-label={
-              sheetToggle.isOpen ? "Close inspector" : "Open inspector"
-            }
-            className="text-base leading-none text-mute hover:text-ink"
-          >
-            {sheetToggle.isOpen ? "↓" : "↑"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={closeInspector}
-            aria-label="Close inspector"
-            className="text-base leading-none text-mute hover:text-ink"
-          >
-            →
-          </button>
-        )}
-      </div>
-      <dl className="space-y-3">
-        {rows.map((row) => (
-          <div key={row.label} className="grid grid-cols-[76px_1fr] gap-x-3">
-            <dt className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
-              {row.label}
-            </dt>
-            <dd className="text-ui leading-[1.55] text-ink break-words">
-              {row.label === "YEAR" || row.label === "DATE" ? (
-                <time>{row.value}</time>
-              ) : (
-                row.value
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
     </div>
   );
 }

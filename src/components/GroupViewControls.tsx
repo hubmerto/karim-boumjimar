@@ -13,7 +13,6 @@ import { useSelection } from "@/lib/store";
  */
 export function GroupViewControls() {
   const view = useSelection((s) => s.view);
-  const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const deselect = useSelection((s) => s.deselect);
@@ -22,18 +21,12 @@ export function GroupViewControls() {
   if (view !== "exhibitions") return null;
   if (!selectedGroupKey || expandedGroupKey) return null;
 
-  // Match the canvas's right-edge offsets in Canvas.tsx so the
-  // buttons sit just inside the canvas viewport, not under the
-  // project panel / inspector. Mobile has no side panels so the
-  // buttons hug the viewport edge there.
-  const desktopRight =
-    selectedId && selectedGroupKey
-      ? "md:right-[676px]" // Inspector(300) + ProjectPanel(360) + 16px
-      : "md:right-[376px]"; // ProjectPanel(360) + 16px
-
+  // Sit just inside the canvas viewport's right edge so the buttons
+  // never fall behind the merged ProjectPanel (360 px) on desktop.
+  // Mobile has no side panel — the buttons hug the viewport edge.
   return (
     <div
-      className={`fixed top-16 right-4 z-30 flex items-center gap-1 ${desktopRight}`}
+      className="fixed top-16 right-4 z-30 flex items-center gap-1 md:right-[376px]"
       role="toolbar"
       aria-label="Group view controls"
     >
