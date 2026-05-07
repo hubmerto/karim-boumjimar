@@ -5,23 +5,19 @@ import { useSelection } from "@/lib/store";
 
 /**
  * Headless component that drives the /showcase/navigation route's
- * looping demo. Cycle:
+ * looping demo. Cycle (uniform 1 s linger per project for a
+ * tight ambient pace):
  *
  *   index drawer open, camera at Beauty is the Best Defense
- *     → linger 3 s
- *   index switches to Pandemonium Paradiso
- *     → camera flies to that cluster
- *     → linger 2 s
- *   index switches to Spring Has Arrived
- *     → camera flies
- *     → linger 2 s
- *   index switches back to Beauty is the Best Defense
- *     → camera flies
+ *     → linger 1 s
+ *   index switches to Pandemonium Paradiso → camera flies → 1 s
+ *   index switches to Spring Has Arrived   → camera flies → 1 s
+ *   index switches back to Beauty          → camera flies
  *     → loop (now back at the cycle's start state)
  *
- * Recording tip: capture from one "Beauty 3 s linger" frame to
- * the next. Total cycle ~22 s. The loop is naturally seamless —
- * start and end both rest on Beauty with the index open and
+ * Recording tip: capture from one Beauty linger to the next.
+ * Total cycle ~18 s. The loop is naturally seamless — start
+ * and end both rest on Beauty with the index open and
  * highlighted on the same row, so no white wipe is needed.
  *
  * The Index component highlights whichever row matches the
@@ -40,10 +36,11 @@ const T = {
   // Brief settle so the index drawer mounts + the canvas decides
   // it's ready before the first navigateToGroup fires.
   INITIAL_SETTLE: 800,
-  // The "anchor" linger on Beauty at the top of every cycle.
-  ANCHOR_LINGER: 3000,
-  // Linger after each subsequent project's camera arrival.
-  PER_PROJECT_LINGER: 2000,
+  // Per-project linger after every camera arrival. Was 2-3 s but
+  // requested tighter — 1 s reads as a beat, then the next nav
+  // fires. Same value for the anchor (Beauty) so the cycle has
+  // uniform pacing instead of one project visibly dwelling longer.
+  PROJECT_LINGER: 1000,
   // Camera fly-in. Matches animateTransform(4500) inside the
   // navTargetGroupKey effect, plus a small comfort buffer so the
   // next action doesn't fire while the wrapper transition is
@@ -88,7 +85,7 @@ export function AutoPilotNav() {
       while (!cancelled) {
         // 1. Anchor linger — index highlights Beauty, camera at
         //    Beauty's cluster.
-        await wait(T.ANCHOR_LINGER);
+        await wait(T.PROJECT_LINGER);
         if (cancelled) return;
 
         // 2. Cycle through the rest of the projects in order.
@@ -96,7 +93,7 @@ export function AutoPilotNav() {
           navigateToGroup(PROJECTS[i]);
           await wait(T.GROUP_FLY_IN);
           if (cancelled) return;
-          await wait(T.PER_PROJECT_LINGER);
+          await wait(T.PROJECT_LINGER);
           if (cancelled) return;
         }
 
