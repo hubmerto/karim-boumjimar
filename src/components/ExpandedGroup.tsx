@@ -127,21 +127,29 @@ export function ExpandedGroup() {
   }, [displayKey]);
 
   // FLIP open: place each item at its canvas-tile rect, then transition to
-  // its natural gallery position.
+  // its natural gallery position. We animate the <img> inside the wrapper
+  // (not the wrapper itself) — the wrapper has flex+items-center layout
+  // and the img sits at h-[88%] vertically centered, so transforming the
+  // wrapper would land the image with 6% padding top/bottom relative to
+  // the source rect. After unmount the canvas tile fills its rect with
+  // no padding, and the user sees a size jump on the cut. Animating the
+  // img directly means the visible image's rect is the FLIP target,
+  // which matches the tile's rect after handoff.
   useLayoutEffect(() => {
     if (phase !== "opening" || !displayKey) return;
     const items = itemRefs.current;
     items.forEach((el, id) => {
       const src = sourceRectsRef.current.get(id);
       if (!src) return;
-      const dst = el.getBoundingClientRect();
+      const target = el.querySelector("img") ?? el;
+      const dst = target.getBoundingClientRect();
       if (dst.width === 0 || dst.height === 0) return;
       const dx = src.left - dst.left;
       const dy = src.top - dst.top;
       const s = Math.min(src.width / dst.width, src.height / dst.height);
-      el.style.transition = "none";
-      el.style.transformOrigin = "top left";
-      el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+      target.style.transition = "none";
+      target.style.transformOrigin = "top left";
+      target.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
       el.style.opacity = "1";
     });
     // Force reflow before transition kicks in. Scoped to the wrapper
@@ -151,8 +159,9 @@ export function ExpandedGroup() {
     if (wrapperRef.current) void wrapperRef.current.offsetHeight;
     requestAnimationFrame(() => {
       items.forEach((el) => {
-        el.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
-        el.style.transform = "";
+        const target = el.querySelector("img") ?? el;
+        target.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
+        target.style.transform = "";
       });
     });
     const t = setTimeout(() => setPhase("open"), TRANSITION_MS + 40);
@@ -166,14 +175,15 @@ export function ExpandedGroup() {
     items.forEach((el, id) => {
       const src = sourceRectsRef.current.get(id);
       if (!src) return;
-      const dst = el.getBoundingClientRect();
+      const target = el.querySelector("img") ?? el;
+      const dst = target.getBoundingClientRect();
       if (dst.width === 0 || dst.height === 0) return;
       const dx = src.left - dst.left;
       const dy = src.top - dst.top;
       const s = Math.min(src.width / dst.width, src.height / dst.height);
-      el.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
-      el.style.transformOrigin = "top left";
-      el.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+      target.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
+      target.style.transformOrigin = "top left";
+      target.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
     });
     const t = setTimeout(() => setDisplayKey(null), TRANSITION_MS + 40);
     return () => clearTimeout(t);
