@@ -408,8 +408,19 @@ export function useCanvas(
 
   // Drive dispersion from the current zoom level with hysteresis. The
   // tiles spread out (groups apart) once the camera passes 125% of the
-  // bento fit, and re-pack to bento once it drops back below 75%. The
-  // 50% gap is hysteresis so the layout doesn't flicker near a threshold.
+  // bento fit, and re-pack to bento once it drops back to or below
+  // bentoFit. The 25 % gap (1.0 → 1.25) is hysteresis so the layout
+  // doesn't flicker near the threshold.
+  //
+  // The lower bound used to be 0.75 * bentoFit, but at that aggressive
+  // a value the dispersion-tracker never fired during a logo-reset
+  // (whose camera target is exactly bentoFit), and the bento "diamond"
+  // never re-formed at the end of the cycle — tiles stayed at their
+  // cluster positions even though the camera was framed at overview
+  // scale. Tightening the lower bound to bentoFit makes the reset
+  // tween cross the threshold cleanly and tiles re-pack into the
+  // diamond as the camera lands.
+  //
   // When we re-pack to bento we're visually back at the overview, so
   // any pinned project context (Inspector + ProjectPanel) is no longer
   // relevant — drop it AND reveal the LeftToolbar (showToolbar clears
@@ -423,7 +434,7 @@ export function useCanvas(
     if (!bentoFit) return;
     if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
       setDispersion(1);
-    } else if (transform.scale <= bentoFit * 0.75 && dispersion === 1) {
+    } else if (transform.scale <= bentoFit && dispersion === 1) {
       setDispersion(0);
       const s = useSelection.getState();
       if (!s.expandedGroupKey && (s.selectedId || s.selectedGroupKey)) {

@@ -7,6 +7,7 @@ import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
 import { LeftToolbar } from "@/components/LeftToolbar";
 import { PreloadGalleryImages } from "@/components/PreloadGalleryImages";
+import { Splash } from "@/components/Splash";
 import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
@@ -49,6 +50,9 @@ export default function ShowcasePage() {
       <GroupViewControls />
       <InspectorSheet />
       <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
+      {/* forcePlay so the logo intro fires on every showcase visit
+          regardless of the per-tab sessionStorage gate. */}
+      <Splash forcePlay />
       <PreloadGalleryImages />
       <AutoPilot />
     </>

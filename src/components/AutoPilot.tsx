@@ -7,22 +7,28 @@ import { useSelection } from "@/lib/store";
  * Headless component that drives the /showcase route's looping
  * demo. Cycle:
  *
- *   white covers screen → fade out
+ *   first run only:
+ *     splash logo plays (handled by <Splash forcePlay />)
+ *     intro reveal — bento zooms 75% → 100% as tiles fade in
  *   bento overview holds briefly
- *   selectGroup(Birds of Paradise) → camera flies in, tiles
- *     disperse, outlines fade in
+ *   selectGroup(Bodies Under Construction) → camera flies in,
+ *     tiles disperse from the diamond into the cluster grid
  *   group view lingers (3 s)
  *   expandGroup → FLIP-open into the gallery strip
  *   gallery auto-scrolls horizontally to the end (3 s)
  *   collapseGroup → FLIP-close (genie back to canvas tiles)
- *   resetToOverview → camera zooms back to bento
- *   white fades back in over the bento → loop resets
+ *   resetToOverview → camera zooms back AND tiles re-pack into
+ *     the bento diamond (the threshold change in useCanvas now
+ *     fires dispersion=0 as the camera passes bentoFit)
+ *   final diamond linger (3 s)
+ *   white fades in over the diamond → loop resets
+ *   subsequent iterations: white fades out → bento → repeat
  *
- * Recording tip: capture from one peak-white moment to the next
- * peak-white moment for a perfectly seamless loop. The first
- * iteration runs the canvas's intro reveal under the white
- * cover, so by the time the white fades out the bento is
- * already at its 100 % rest scale.
+ * Recording tip: capture from page-load through one full white-
+ * fade-in for the full intro experience (splash + first cycle).
+ * For a tight repeating loop without the splash, capture from
+ * one peak-white moment to the next — that gives ~24 s of clean
+ * ambient demo with no branding overhead.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
@@ -30,9 +36,11 @@ const PROJECT_KEY = "Bodies Under Construction|2026";
 // Each timing buffers a small comfort margin past the underlying
 // animation duration so the next action doesn't trip mid-tween.
 const T = {
-  // First-run cover: long enough for INTRO_REVEAL_MS (6000) + tile
-  // fade stagger to land. Subsequent loops only see WHITE_HOLD.
-  INITIAL_COVER: 6500,
+  // First-run intro: Splash HOLD_MS (2200) + FADE_MS (1000) +
+  // INTRO_REVEAL_MS (6000) + small buffer. The splash + intro
+  // reveal play in full view (white overlay starts transparent)
+  // before the demo cycle's actions fire.
+  INITIAL_INTRO: 9500,
   WHITE_FADE: 800,
   WHITE_HOLD: 600,
   BENTO_HOLD: 1000,
@@ -41,26 +49,27 @@ const T = {
   GALLERY_OPEN: 3000, // FLIP open = 2400 + decode buffer
   GALLERY_SCROLL: 3000, // requested: 3 s scroll-to-end
   GALLERY_CLOSE: 3000, // FLIP close = 2400 + buffer
-  RESET_FLY_BACK: 2000, // reset animateTransform = 1500 + buffer
+  // Reset: 1500 ms camera animateTransform PLUS the tile re-bento
+  // tween that fires once the camera crosses the bentoFit threshold
+  // (WorkTile.transition = 2800 ms). Without that headroom the white
+  // wipe starts before the diamond has finished re-forming.
+  RESET_FLY_BACK: 4500,
   FINAL_DIAMOND_HOLD: 3000, // requested: linger on the diamond at the end
 };
 
 export function AutoPilot() {
-  const setSplashGone = useSelection((s) => s.setSplashGone);
   const selectGroup = useSelection((s) => s.selectGroup);
   const expandGroup = useSelection((s) => s.expandGroup);
   const collapseGroup = useSelection((s) => s.collapseGroup);
   const resetToOverview = useSelection((s) => s.resetToOverview);
 
-  // White overlay covers everything between cycles. Starts at 1
-  // so the first paint of /showcase is solid white — the canvas's
-  // intro reveal animation plays under it, hidden, and is already
-  // settled by the time we fade the white away.
-  const [whiteOpacity, setWhiteOpacity] = useState(1);
+  // White overlay sits transparent for the first cycle so the
+  // splash + intro reveal play in full view. After every demo
+  // cycle ends it fades up to opaque, holds briefly as a clean
+  // bookend frame, then fades out for the next iteration.
+  const [whiteOpacity, setWhiteOpacity] = useState(0);
 
   useEffect(() => {
-    setSplashGone(true);
-
     let cancelled = false;
 
     function wait(ms: number) {
@@ -113,20 +122,31 @@ export function AutoPilot() {
     }
 
     async function loop() {
-      // First-run cover: hold the white in place while the canvas
-      // does its intro reveal under it.
-      await wait(T.INITIAL_COVER);
+      // First-run only: let the splash + intro reveal play out
+      // before the demo cycle starts dispatching actions. The
+      // white overlay is already transparent (initial state), so
+      // the user actually sees the logo and tile fade-in.
+      await wait(T.INITIAL_INTRO);
       if (cancelled) return;
 
-      while (!cancelled) {
-        // 1. Fade the white away to reveal the bento diamond.
-        setWhiteOpacity(0);
-        await wait(T.WHITE_FADE);
-        if (cancelled) return;
+      // First cycle skips the WHITE_FADE-out (already transparent)
+      // and BENTO_HOLD (we just spent INTRO_INTRO holding the
+      // bento at 100 % rest). Subsequent cycles run the full
+      // dance: white fade out → bento hold → demo.
+      let firstCycle = true;
 
-        // 2. Bento holds for a beat.
-        await wait(T.BENTO_HOLD);
-        if (cancelled) return;
+      while (!cancelled) {
+        if (!firstCycle) {
+          // 1. Fade the white away to reveal the bento diamond.
+          setWhiteOpacity(0);
+          await wait(T.WHITE_FADE);
+          if (cancelled) return;
+
+          // 2. Bento holds for a beat.
+          await wait(T.BENTO_HOLD);
+          if (cancelled) return;
+        }
+        firstCycle = false;
 
         // 3. Select Birds of Paradise → camera flies into group.
         selectGroup(PROJECT_KEY);
@@ -180,13 +200,7 @@ export function AutoPilot() {
     return () => {
       cancelled = true;
     };
-  }, [
-    setSplashGone,
-    selectGroup,
-    expandGroup,
-    collapseGroup,
-    resetToOverview,
-  ]);
+  }, [selectGroup, expandGroup, collapseGroup, resetToOverview]);
 
   // Full-screen white wipe. z-50 sits above the gallery (z-20),
   // the toolbars, and the project panel — it's the topmost layer

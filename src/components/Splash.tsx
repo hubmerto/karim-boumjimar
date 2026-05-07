@@ -16,15 +16,18 @@ const FADE_MS = 1000;
 const EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 const SESSION_KEY = "kbz_splash_seen";
 
-export function Splash() {
+export function Splash({ forcePlay = false }: { forcePlay?: boolean } = {}) {
   // Skip the splash on any reload within the same tab. Mobile browsers
   // sometimes reload the page (back-forward cache, address-bar gesture,
   // memory pressure); replaying the splash mid-session is jarring.
+  // The /showcase routes pass forcePlay so the splash always animates
+  // — recording demos need the logo intro on every reload.
   const [phase, setPhase] = useState<"in" | "out" | "gone">("in");
   const setSplashGone = useSelection((s) => s.setSplashGone);
 
   useEffect(() => {
     if (
+      !forcePlay &&
       typeof sessionStorage !== "undefined" &&
       sessionStorage.getItem(SESSION_KEY)
     ) {
@@ -46,7 +49,7 @@ export function Splash() {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [setSplashGone]);
+  }, [setSplashGone, forcePlay]);
 
   if (phase === "gone") return null;
 
