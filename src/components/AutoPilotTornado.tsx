@@ -127,12 +127,16 @@ export function AutoPilotTornado() {
           const dir = s1 < 0.5 ? -1 : 1;
           return {
             tile,
-            radius: 80 + 220 * s1, // px
+            // Tighter radii so tiles wobble around their slot
+            // instead of flying off-screen. 30-100 px range — most
+            // tiles overlap their neighbours during the swirl,
+            // which reads as chaos without escaping the frame.
+            radius: 30 + 70 * s1, // px
             angularSpeed: dir * (1.4 + 2.6 * s1) * Math.PI * 2, // rad/s
             phase: s2 * Math.PI * 2,
-            sway: 30 + 90 * s2, // px vertical sway
+            sway: 12 + 30 * s2, // px vertical sway
             swayFreq: (0.7 + 1.3 * s2) * Math.PI * 2, // rad/s
-            rotSpeed: (s1 - 0.5) * 720, // deg/s, can be negative
+            rotSpeed: (s1 - 0.5) * 540, // deg/s, can be negative
           };
         });
 
