@@ -339,6 +339,36 @@ export function Canvas() {
     return map;
   }, [groups, colCounts]);
 
+  // Per-group bbox of where tiles actually land at full dispersion
+  // (the cluster-grid layout above). Used by GroupOutline so the
+  // frame fits the cluster, not the natural workBounds — without
+  // this, the new per-project cluster math leaves some tiles
+  // outside the outline. When a tile has no baseOffset (mobile
+  // overview, or fallback), it defaults to (0,0) which is the
+  // natural position — same as the old behaviour.
+  const spreadBboxByGroup = useMemo(() => {
+    const result = new Map<
+      string,
+      { minX: number; minY: number; maxX: number; maxY: number }
+    >();
+    for (const g of groups) {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const w of g.works) {
+        const wb = workBounds(w);
+        const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
+        minX = Math.min(minX, wb.minX + off.x);
+        minY = Math.min(minY, wb.minY + off.y);
+        maxX = Math.max(maxX, wb.maxX + off.x);
+        maxY = Math.max(maxY, wb.maxY + off.y);
+      }
+      result.set(g.key, { minX, minY, maxX, maxY });
+    }
+    return result;
+  }, [groups, baseOffsets]);
+
   // dispersion is now driven by zoom (set inside useCanvas), so it lives
   // alongside the transform from the same hook below.
 
@@ -458,20 +488,31 @@ export function Canvas() {
             willChange: "transform",
           }}
         >
-          {groups.map((g) => (
-            <GroupOutline
-              key={g.key}
-              groupKey={g.key}
-              workIds={g.works.map((w) => w.id)}
-              minX={g.minX}
-              minY={g.minY}
-              maxX={g.maxX}
-              maxY={g.maxY}
-              label={g.label}
-              year={g.year}
-              canvasScale={transform.scale}
-            />
-          ))}
+          {groups.map((g) => {
+            // Use the spread bbox (where tiles actually land at
+            // dispersion=1) so the outline frames the cluster
+            // grid. Falls back to the natural worksBounds if the
+            // spread map hasn't populated yet.
+            const sb = spreadBboxByGroup.get(g.key);
+            const minX = sb?.minX ?? g.minX;
+            const minY = sb?.minY ?? g.minY;
+            const maxX = sb?.maxX ?? g.maxX;
+            const maxY = sb?.maxY ?? g.maxY;
+            return (
+              <GroupOutline
+                key={g.key}
+                groupKey={g.key}
+                workIds={g.works.map((w) => w.id)}
+                minX={minX}
+                minY={minY}
+                maxX={maxX}
+                maxY={maxY}
+                label={g.label}
+                year={g.year}
+                canvasScale={transform.scale}
+              />
+            );
+          })}
           {displayWorks.map((w) => (
             <WorkTile key={w.id} work={w} />
           ))}

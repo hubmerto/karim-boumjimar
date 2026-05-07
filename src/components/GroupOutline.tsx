@@ -39,12 +39,12 @@ function GroupOutlineImpl({
     if (s.selectedId && workIds.includes(s.selectedId)) return true;
     return false;
   });
-  const { dispersion, baseOffsets } = useDispersion();
-  // All tiles in a group share the same baseOffset, so peek at the first.
-  const baseOffset = baseOffsets.get(workIds[0]) ?? { x: 0, y: 0 };
-  const dx = Math.round(baseOffset.x * dispersion);
-  const dy = Math.round(baseOffset.y * dispersion);
-
+  const { dispersion } = useDispersion();
+  // The bbox passed in is already the SPREAD bbox (computed in
+  // Canvas.tsx from baseOffsets so each tile's per-project cluster
+  // slot is included). No per-tile translate hack here — that
+  // assumed all tiles in a group moved as a unit, which the new
+  // cluster math no longer does.
   const x = minX - pad;
   const y = minY - pad;
   const w = maxX - minX + pad * 2;
@@ -61,12 +61,9 @@ function GroupOutlineImpl({
         top: Math.round(y),
         width: Math.round(w),
         height: Math.round(h),
-        transform: `translate(${dx}px, ${dy}px)`,
         opacity: dispersion,
-        // Outline + label position track the group's baseOffset (mobile
-        // 2-col stack); fade in after the spread settles.
         transition:
-          "transform 2200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms",
+          "opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms",
         pointerEvents: dispersion === 0 ? "none" : "auto",
       }}
       onClick={(e) => {
