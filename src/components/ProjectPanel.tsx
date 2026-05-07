@@ -62,6 +62,9 @@ export function ProjectContent({
 
   if (!work) return null;
 
+  // PHOTO sits in the credits block at the bottom, not the About
+  // fields — credits are credits regardless of whether they came
+  // from works.ts.photoCredit or descriptions.ts.credits[].
   const rows: { label: string; value: string | undefined }[] = [
     { label: "TITLE", value: work.title },
     { label: "YEAR", value: String(work.year) },
@@ -72,9 +75,21 @@ export function ProjectContent({
     { label: "VENUE", value: work.venue },
     { label: "CITY", value: work.city },
     { label: "DATE", value: work.date },
-    { label: "PHOTO", value: work.photoCredit },
     { label: "COLLECTION", value: work.collection },
   ].filter((r): r is { label: string; value: string } => Boolean(r.value));
+
+  // Merge per-work photoCredit into the description's credit list,
+  // skipping if the descriptions.ts entry already covers photography
+  // (Glory on Earth, Spring Has Arrived, Symbiosis MFA, Rites — these
+  // already have an Installation Photography / Photography credit
+  // and we don't want to duplicate it).
+  const credits = (() => {
+    const base = description?.credits ?? [];
+    if (!work.photoCredit) return base;
+    const alreadyHasPhoto = base.some((c) => /photo/i.test(c.label));
+    if (alreadyHasPhoto) return base;
+    return [...base, { label: "Photography", value: work.photoCredit }];
+  })();
 
   return (
     <div className="space-y-6">
@@ -130,13 +145,13 @@ export function ProjectContent({
           {description.body}
         </div>
       ) : null}
-      {description && description.credits.length > 0 ? (
+      {credits.length > 0 ? (
         <div className="border-t border-line pt-4">
           <div className="italic text-meta uppercase tracking-[0.1em] text-mute">
             Credits
           </div>
           <div className="mt-4 space-y-4">
-            {description.credits.map((credit, i) => (
+            {credits.map((credit, i) => (
               <div key={i}>
                 <div className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
                   {credit.label}
