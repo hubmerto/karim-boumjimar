@@ -49,9 +49,18 @@ export function Index({
   onClose: () => void;
 }) {
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
+  const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const [sort, setSort] = useState<Sort>("chronological");
   const [activeIdx, setActiveIdx] = useState(0);
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Close the index when the gallery opens — having both stacked is
+  // visually noisy and the gallery wants the full width. Picking
+  // another project from the index keeps it open so the user can
+  // hop between projects without re-opening.
+  useEffect(() => {
+    if (open && expandedGroupKey) onClose();
+  }, [open, expandedGroupKey, onClose]);
 
   const entries = useMemo(() => {
     const list = buildEntries();
@@ -87,10 +96,7 @@ export function Index({
       } else if (e.key === "Enter") {
         e.preventDefault();
         const target = entries[activeIdx];
-        if (target) {
-          navigateToGroup(target.groupKey);
-          onClose();
-        }
+        if (target) navigateToGroup(target.groupKey);
       }
     }
     document.addEventListener("keydown", onKey);
@@ -161,10 +167,7 @@ export function Index({
                 role="option"
                 aria-selected={i === activeIdx}
                 onMouseEnter={() => setActiveIdx(i)}
-                onClick={() => {
-                  navigateToGroup(e.groupKey);
-                  onClose();
-                }}
+                onClick={() => navigateToGroup(e.groupKey)}
                 className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-ui ${
                   i === activeIdx
                     ? "bg-line text-ink"

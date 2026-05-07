@@ -29,6 +29,11 @@ export const LEFT_TOOLBAR_W_CONDENSED = 24;
 // Single merged ProjectPanel covers both the work fields and the
 // project description. The previous Inspector aside is gone.
 const PROJECT_PANEL_W = 420;
+// Works Index drawer on the left when open — same width as
+// ProjectPanel for visual symmetry. We treat it as additional
+// left chrome in viewport math so groups still center within the
+// FREE canvas area, not behind the drawer.
+const INDEX_DRAWER_W = 420;
 const SHEET_TOP_RESERVE = 64; // matches InspectorSheet TOP_RESERVE_PX
 const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
 
@@ -51,9 +56,13 @@ function viewportRect() {
     };
   }
   const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const { selectedId, selectedGroupKey, expandedGroupKey } =
+  const { selectedId, selectedGroupKey, expandedGroupKey, indexOpen } =
     useSelection.getState();
-  const leftW = isDesktop ? leftWidth() : 0;
+  // The index drawer slides over the LeftToolbar so we don't add
+  // both — pick the wider of the two when the drawer is open.
+  const baseLeft = isDesktop ? leftWidth() : 0;
+  const leftW =
+    isDesktop && indexOpen ? Math.max(baseLeft, INDEX_DRAWER_W) : baseLeft;
   // Single ProjectPanel renders when anything is selected. Subtract
   // its width so groups center within the actual free canvas area.
   const rightW =
