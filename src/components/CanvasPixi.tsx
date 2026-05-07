@@ -344,6 +344,16 @@ export function CanvasPixi() {
   // reaches alpha 1. Gated on splashGone so the camera reveal doesn't
   // start while the logo is still up.
   const introAnimRef = useRef<number | null>(null);
+  // Stays false until the intro animation completes. Sprite tap
+  // handlers consult this to drop taps that arrive while the camera
+  // is still tweening + sprites are still mid-fade-in. Without this
+  // gate, a fast tap on a big project (Bodies Under Construction,
+  // Pandemonium) starts a navTargetGroupKey rAF loop that fights
+  // the intro rAF loop on the same Pixi container — visually that
+  // surfaces as the gallery snapping back to the bento overview,
+  // and on iOS Safari the simultaneous animations + half-loaded
+  // textures can OOM-kill the tab.
+  const introCompleteRef = useRef(false);
   const splashGone = useSelection((s) => s.splashGone);
   useEffect(() => {
     if (!size || displayWorks.length === 0 || !splashGone) return;
@@ -406,6 +416,8 @@ export function CanvasPixi() {
     }
     const t0 = performance.now();
     if (introAnimRef.current != null) cancelAnimationFrame(introAnimRef.current);
+    // Block taps until this fresh intro tick reaches t = 1.
+    introCompleteRef.current = false;
     function tick(now: number) {
       const t = Math.min(1, (now - t0) / INTRO_REVEAL_MS);
       const e = 1 - Math.pow(1 - t, 3);
@@ -423,6 +435,7 @@ export function CanvasPixi() {
         introAnimRef.current = requestAnimationFrame(tick);
       } else {
         introAnimRef.current = null;
+        introCompleteRef.current = true;
         setTransform({ tx, ty, scale });
       }
     }
@@ -987,6 +1000,14 @@ export function CanvasPixi() {
       const start = tapTrackerRef.current;
       tapTrackerRef.current = null;
       if (!start) return;
+      // Drop any tap that arrives before the intro animation has
+      // finished playing. Two rAF loops fighting for the Pixi
+      // container — intro vs. navTargetGroupKey — produced the
+      // "gallery snaps back to overview" symptom and on iOS Safari
+      // the simultaneous animations + half-loaded textures could
+      // OOM-kill the tab. The user waits a few seconds the FIRST
+      // time and the rest of the session is unaffected.
+      if (!introCompleteRef.current) return;
       const dist = Math.hypot(e.global.x - start.x, e.global.y - start.y);
       const dt = Date.now() - start.t;
       // Treat anything that moved more than 8px or took more than 500ms
