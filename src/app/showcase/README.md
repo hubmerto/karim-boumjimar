@@ -53,34 +53,61 @@ Earlier showcase set; longer cycles, more state changes per loop.
 
 ## Recording workflow
 
-1. Open the URL in a fresh browser window sized to the recommended
-   viewport. For mobile routes, use Chrome DevTools mobile
-   emulation OR open Chrome at a phone-width window:
+### Helper: `pnpm demo <route>`
 
-   ```bash
-   osascript -e '
-   tell application "Google Chrome"
-     activate
-     set newWindow to (make new window)
-     set bounds of newWindow to {120, 80, 510, 924}
-     set URL of active tab of newWindow to "http://localhost:3000/showcase/<route>"
-   end tell'
-   ```
+Opens any showcase route in a fresh Chrome window sized to its
+recommended viewport. Drops a list of sharable URLs in the terminal
+afterward (localhost, WiFi, production):
 
-2. Wait for the first cycle to complete — most routes spend the
+```bash
+pnpm demo                 # print the menu of routes
+pnpm demo sheet           # open /showcase/sheet at 393 × 852
+pnpm demo zoom-desktop    # open /showcase/zoom-desktop at 1280 × 800
+pnpm demo strip-mobile --share   # don't open, just print URLs
+```
+
+### Recording on the dev machine
+
+1. `pnpm dev` (or `pnpm dev:net` if you also want phone access — see
+   below).
+2. `pnpm demo <route>` — opens correctly sized Chrome window.
+3. Wait for the first cycle to complete — most routes spend the
    first cycle on one-time setup (intro reveal, navigation to a
-   starting cluster, etc.). Subsequent cycles are the recording
-   target.
-
-3. Hit record (QuickTime, OBS, ScreenStudio, Kap — your
-   preference).
-
-4. Capture from one loop seam to the next loop seam. The seam is
-   the start state for that route — most are obvious from the
-   route's name + the table above.
-
-5. Stop recording. The clip should loop seamlessly because the
+   starting cluster). Subsequent cycles are the recording target.
+4. Hit record (QuickTime, OBS, ScreenStudio, Kap).
+5. Capture from one loop seam to the next.
+6. Stop recording. The clip should loop seamlessly because the
    start frame matches the end frame.
+
+### Recording on a phone (mobile routes)
+
+The mobile-flavoured routes (`/sheet`, `/sheet-snap`, `/zoom-mobile`,
+`/cluster`, `/strip-mobile`, `/mobile`, `/mobile-sheet`) render the
+WebGL Pixi canvas + InspectorSheet. Recording them on an actual phone
+is the cleanest way to capture them.
+
+Three options:
+
+1. **Same WiFi**: start the dev server with `pnpm dev:net` (binds
+   Next.js to `0.0.0.0`). Run `pnpm demo <route> --share` to print
+   the WiFi URL — copy that URL to your phone (AirDrop, iMessage),
+   open it in Safari, hit screen-record. Both devices must be on
+   the same network.
+
+2. **Production deployment**: every push to `main` triggers a
+   Vercel deploy at `https://www.karimboumjimar.com/showcase/<route>`.
+   Open it on your phone from anywhere, no dev server needed. The
+   showcase routes are all `noindex` so they won't surface in
+   search.
+
+3. **Tunnel** (no shared WiFi, no deploy): `npx ngrok http 3000`
+   gives you a public HTTPS URL pointed at your local dev server.
+   Useful for sharing a link to someone testing on their phone
+   when neither WiFi nor a fresh deploy is available.
+
+The autopilot pauses when the tab is hidden and resumes from cycle
+0 when it becomes visible — handy on iOS Safari where switching
+into the screen recorder briefly hides the tab.
 
 ## Round-trip cleanness
 

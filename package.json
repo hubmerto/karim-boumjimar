@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:net": "next dev -H 0.0.0.0",
+    "demo": "node scripts/open-demo.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
