@@ -59,8 +59,12 @@ export default function ShowcaseZoomMobilePage() {
     zoomCameraBy(ZOOM_IN_FACTOR, ZOOM_DURATION_MS);
     await wait(1500);
 
-    // 6.0s — hold bento until 8.0s.
-    await wait(2000);
+    // 6.0s — hold bento. Bumped to 3.2s (was 2.0s) so the tile
+    // re-bento tween (2.8s, fires when scale drops past
+    // bentoFit and dispersion flips to 0) fully lands before the
+    // loop seam. Without this the next cycle would start with
+    // tiles still partway between cluster and bento positions.
+    await wait(3200);
   });
 
   return (

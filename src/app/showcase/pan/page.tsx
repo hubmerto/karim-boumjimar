@@ -55,11 +55,14 @@ export default function ShowcasePanPage() {
     flickPan(-1.4, 0);
     await wait(1600);
 
-    // 4.8s — hold centre. The two flicks should ~balance, but
-    //        recall the cluster centre to remove residual drift
-    //        so the loop seam is exact.
+    // 4.8s — recall the cluster centre to remove residual drift
+    //        so the loop seam is exact. navigateToGroup tweens
+    //        the camera over 4.5 s; we wait the full duration +
+    //        a small buffer so the recall fully lands before the
+    //        cycle wraps. Total cycle ~10 s (vs the spec's 7 s)
+    //        but the recording loops without a visible jump.
     navigateToGroup(PROJECT_KEY);
-    await wait(2200);
+    await wait(5000);
   });
 
   return (
