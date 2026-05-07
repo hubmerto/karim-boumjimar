@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { DemoFrame } from "@/components/demo/DemoFrame";
 import { useAutopilot } from "@/components/demo/useAutopilot";
+import { LeftToolbar } from "@/components/LeftToolbar";
 import { PreloadGalleryImages } from "@/components/PreloadGalleryImages";
+import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
@@ -61,6 +63,8 @@ export default function ShowcaseFlipPage() {
 
   return (
     <DemoFrame>
+      <TopBar />
+      <LeftToolbar />
       <ViewSwitcher />
       {/* Warm the full-res cache so the gallery doesn't show a
           thumb→full-res swap mid-recording. */}

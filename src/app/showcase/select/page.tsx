@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { DemoFrame } from "@/components/demo/DemoFrame";
 import { useAutopilot } from "@/components/demo/useAutopilot";
+import { LeftToolbar } from "@/components/LeftToolbar";
 import { ProjectPanel } from "@/components/ProjectPanel";
+import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
@@ -63,8 +65,10 @@ export default function ShowcaseSelectPage() {
 
   return (
     <DemoFrame>
+      <TopBar />
+      <LeftToolbar />
       <ViewSwitcher />
-      <div className="fixed right-0 top-0 bottom-0 z-10 flex">
+      <div className="fixed right-0 top-12 bottom-0 z-10 flex">
         <ProjectPanel />
       </div>
     </DemoFrame>

@@ -9,7 +9,9 @@ import { useEffect } from "react";
 import { DemoFrame } from "@/components/demo/DemoFrame";
 import { useAutopilot } from "@/components/demo/useAutopilot";
 import { InspectorSheet } from "@/components/InspectorSheet";
+import { LeftToolbar } from "@/components/LeftToolbar";
 import { PreloadGalleryImages } from "@/components/PreloadGalleryImages";
+import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
@@ -53,6 +55,8 @@ export default function ShowcaseStripMobilePage() {
 
   return (
     <DemoFrame>
+      <TopBar />
+      <LeftToolbar />
       <ViewSwitcher />
       <InspectorSheet />
       <PreloadGalleryImages />

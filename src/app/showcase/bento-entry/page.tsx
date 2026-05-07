@@ -9,6 +9,8 @@ if (typeof window !== "undefined") {
 import { useEffect, useState } from "react";
 import { DemoFrame } from "@/components/demo/DemoFrame";
 import { useAutopilot } from "@/components/demo/useAutopilot";
+import { LeftToolbar } from "@/components/LeftToolbar";
+import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
@@ -70,6 +72,8 @@ export default function ShowcaseBentoEntryPage() {
 
   return (
     <DemoFrame>
+      <TopBar />
+      <LeftToolbar />
       <div style={{ position: "fixed", inset: 0 }}>
         <ViewSwitcher key={cycleKey} />
       </div>

@@ -15,6 +15,8 @@ import { useEffect } from "react";
 import { DemoFrame } from "@/components/demo/DemoFrame";
 import { useAutopilot } from "@/components/demo/useAutopilot";
 import { InspectorSheet } from "@/components/InspectorSheet";
+import { LeftToolbar } from "@/components/LeftToolbar";
+import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
@@ -67,6 +69,8 @@ export default function ShowcaseMobileSheetPage() {
 
   return (
     <DemoFrame>
+      <TopBar />
+      <LeftToolbar />
       <ViewSwitcher />
       <InspectorSheet />
     </DemoFrame>
