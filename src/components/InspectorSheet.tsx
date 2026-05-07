@@ -132,9 +132,14 @@ export function InspectorSheet() {
   }, [snap, vh, dragDelta]);
 
   const isDragging = isDraggingRef.current;
+  // Slower than the original 220 ms — the snap reads as a gentle
+  // pull instead of a punchy click, which fits the rest of the
+  // site's settle-language (camera 1500-4500 ms, gallery FLIP
+  // 2400 ms, tile dispersion 2800 ms). 450 ms is still snappy
+  // enough for everyday taps on the handle.
   const transition = isDragging
     ? "none"
-    : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)";
+    : "transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1)";
 
   // Toggle handler shared by every section header arrow (Work,
   // About). Tapping flips between peek and mid; from full it goes

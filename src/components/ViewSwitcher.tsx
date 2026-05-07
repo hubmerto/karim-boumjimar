@@ -41,6 +41,16 @@ export function ViewSwitcher() {
   // because we render `null` until the viewport is known.
   const [mobile, setMobile] = useState<boolean | null>(null);
   useLayoutEffect(() => {
+    // /showcase/mobile sets this flag synchronously at module-load
+    // time so we always render the WebGL Pixi canvas and the
+    // InspectorSheet, regardless of the actual viewport. Useful for
+    // recording the mobile experience from a desktop browser.
+    const force = (window as { __FORCE_MOBILE__?: boolean })
+      .__FORCE_MOBILE__;
+    if (force) {
+      setMobile(true);
+      return;
+    }
     const mq = window.matchMedia("(max-width: 767px)");
     const update = () => setMobile(mq.matches);
     update();

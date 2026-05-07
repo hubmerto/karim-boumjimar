@@ -43,20 +43,22 @@ const T = {
   // Matches getIntroRevealMs() inside CanvasPixi when
   // window.__FAST_INTRO__ is true.
   INTRO: 4000,
-  BENTO_HOLD: 600,
+  BENTO_HOLD: 500,
   GROUP_FLY_IN: 5000,
-  GROUP_LINGER: 800,
-  // InspectorSheet sequence: pull-up (220 ms transition) + 2 s hold
-  // + pull-down (220 ms) + brief settle.
-  SHEET_UP_HOLD: 2200,
-  SHEET_SETTLE: 600,
+  // InspectorSheet sequence — sole "group view" content. No extra
+  // linger before or after; the sheet motion IS the group-view
+  // beat. Pull-up transition (450 ms) overlaps with the camera's
+  // last frame, then a short hold, then pull-down.
+  SHEET_PULL: 500, // matches the InspectorSheet transition duration
+  SHEET_MID_HOLD: 1100, // visible "tab pulled up" beat
+  SHEET_SETTLE: 200, // tiny pause after pull-down before gallery opens
   GALLERY_OPEN: 3000,
   GALLERY_SCROLL: 3000,
   GALLERY_CLOSE: 3000,
-  POST_CLOSE_LINGER: 1000,
+  POST_CLOSE_LINGER: 600, // brief "tiles settle in cluster grid" beat
   // Reset: 1500 ms camera + 2800 ms tile re-bento.
   RESET_FLY_BACK: 4500,
-  FINAL_DIAMOND_HOLD: 2000,
+  FINAL_DIAMOND_HOLD: 1200,
   WHITE_FADE: 800,
   WHITE_HOLD: 600,
 };
@@ -140,24 +142,20 @@ export function AutoPilotMobile() {
         await wait(T.GROUP_FLY_IN);
         if (cancelled) return;
 
-        // 4. Group view holds for a beat.
-        await wait(T.GROUP_LINGER);
-        if (cancelled) return;
-
-        // 5. Pull the info tab up to "mid" — hold for 2 s — drop
-        //    back to "peek". The InspectorSheet's external-snap
-        //    effect picks up these store changes and animates the
-        //    sheet through its 220 ms transition.
+        // 4. Group view content: pull the info tab up gently, hold,
+        //    pull down gently. No separate linger before/after —
+        //    the sheet motion is the entire group-view beat. The
+        //    sheet's CSS transition (now 450 ms) handles the
+        //    actual easing; we just wait long enough for it to
+        //    finish before the next snap change.
         setInspectorSheetSnap("mid");
-        await wait(T.SHEET_UP_HOLD);
+        await wait(T.SHEET_PULL + T.SHEET_MID_HOLD);
         if (cancelled) return;
         setInspectorSheetSnap("peek");
-        await wait(T.SHEET_SETTLE);
+        await wait(T.SHEET_PULL + T.SHEET_SETTLE);
         if (cancelled) return;
-        // Hand control of the snap back to the sheet's internal
-        // logic so the rest of the cycle behaves like a real user
-        // session (the gallery-open effect would re-snap to peek
-        // anyway, but releasing the override keeps things tidy).
+        // Hand control back so the gallery-open effect's internal
+        // peek snap takes over normally for the next beat.
         setInspectorSheetSnap(null);
 
         // 6. Open the gallery strip → genie open.

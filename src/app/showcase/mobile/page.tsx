@@ -11,7 +11,15 @@
 // (gated on splashGone going false → true), so the leftover flag
 // has no observable effect on / or any other route.
 if (typeof window !== "undefined") {
-  (window as { __FAST_INTRO__?: boolean }).__FAST_INTRO__ = true;
+  const w = window as {
+    __FAST_INTRO__?: boolean;
+    __FORCE_MOBILE__?: boolean;
+  };
+  w.__FAST_INTRO__ = true;
+  // ViewSwitcher reads this and unconditionally renders the mobile
+  // branch — WebGL Pixi canvas + InspectorSheet — so we don't have
+  // to resize the browser to a phone width to record the mobile UX.
+  w.__FORCE_MOBILE__ = true;
 }
 
 import { useEffect } from "react";
