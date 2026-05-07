@@ -25,14 +25,13 @@ export function GrantView() {
           How to apply
         </h3>
         <p className="text-caption leading-[1.6] text-ink">
-          Email{""}
+          Email{" "}
           <a
             href={mailto}
             className="underline decoration-line underline-offset-4 hover:decoration-ink"
           >
             {GRANT_INFO.applyEmail}
-          </a>
-          {""}
+          </a>{" "}
           with subject line &ldquo;{GRANT_INFO.applySubject}&rdquo;. Please
           include:
         </p>

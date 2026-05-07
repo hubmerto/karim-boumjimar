@@ -96,12 +96,14 @@ function BioSide() {
           </ul>
         </Block>
         <Block label="Recognition">
-          <ul className="space-y-1">
+          <ul className="space-y-1.5 text-ui leading-[1.5]">
             {RECOGNITION.map((r, i) => (
-              <li key={i}>
-                {r.text}
-                <span className="text-mute"> - </span>
-                <time className="text-mute">{r.year}</time>
+              <li
+                key={i}
+                className="grid grid-cols-[64px_1fr] items-baseline gap-x-3"
+              >
+                <time className="text-mute tabular-nums">{r.year}</time>
+                <span className="text-ink">{r.text}</span>
               </li>
             ))}
           </ul>
