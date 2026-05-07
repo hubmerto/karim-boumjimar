@@ -9,8 +9,6 @@ import {
   useState,
 } from "react";
 import { WORKS } from "@/data/works";
-import { workBounds } from "@/lib/canvas-math";
-import { useDispersion } from "@/lib/dispersion";
 import { clearFlipRects, getFlipRect } from "@/lib/flipRects";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
@@ -33,7 +31,6 @@ export function ExpandedGroup() {
   // gallery — used below to scroll the carousel to that image
   // instead of starting at index 0.
   const selectedId = useSelection((s) => s.selectedId);
-  const { baseOffsets, transformRef, containerRef } = useDispersion();
   const [displayKey, setDisplayKey] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("opening");
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -47,19 +44,23 @@ export function ExpandedGroup() {
   // useLayoutEffect skips them (they fade in at their natural gallery
   // position instead of animating from a phantom canvas spot).
   //
-  // For mounted tiles, the rect is derived from canvas math
-  // (workBounds + baseOffset projected through the live transform)
-  // rather than getBoundingClientRect, because the latter returns
-  // the in-progress CSS-transition position and the FLIP would land
-  // at a mid-animation spot.
+  // Capture order:
+  //   1. Pixi handoff for mobile (CanvasPixi writes sprite screen
+  //      rects right before calling expandGroup).
+  //   2. Desktop falls back to the tile button's own
+  //      getBoundingClientRect — that's the EXACT pixel-rounded
+  //      position the browser drew the thumbnail at, so the FLIP
+  //      lands on it without the half-pixel drift you get from
+  //      projecting workBounds + dispersion offsets through the
+  //      transform (each is rounded independently in WorkTile, but
+  //      the canvas-math formula doesn't account for that).
   const captureSourceRects = useCallback(
     (groupKey: string) => {
       const map = new Map<string, DOMRect>();
       // Try the Pixi handoff first — CanvasPixi populates this with
-      // sprite screen rects right before calling expandGroup, so the
-      // mobile FLIP source matches exactly where the user saw each
-      // tile on the bento. After consuming, clear so a stale
-      // snapshot can't leak into a different group's open.
+      // sprite screen rects right before calling expandGroup. After
+      // consuming, clear so a stale snapshot can't leak into a
+      // different group's open.
       let usedFlipHandoff = false;
       for (const w of WORKS) {
         if (`${w.title}|${w.year}` !== groupKey) continue;
@@ -75,31 +76,21 @@ export function ExpandedGroup() {
         return;
       }
 
-      // Desktop path: derive source rects from the DOM canvas's
-      // workBounds + dispersion offsets, projected through the live
-      // transform.
-      const container = containerRef?.current;
-      const t = transformRef?.current;
-      if (!container || !t) {
-        sourceRectsRef.current = map;
-        return;
-      }
-      const cr = container.getBoundingClientRect();
+      // Desktop path: read the tile button's actual rendered rect.
+      // The camera is settled at both open and close (gallery
+      // covers the canvas; user can't pan it), so the bounding
+      // rect reflects the true position the user sees.
       for (const w of WORKS) {
         if (`${w.title}|${w.year}` !== groupKey) continue;
-        const tileEl = document.querySelector(`button[data-work-id="${w.id}"]`);
+        const tileEl = document.querySelector(
+          `button[data-work-id="${w.id}"]`,
+        );
         if (!tileEl) continue;
-        const wb = workBounds(w);
-        const off = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
-        const left = cr.left + (wb.minX + off.x) * t.scale + t.tx;
-        const top = cr.top + (wb.minY + off.y) * t.scale + t.ty;
-        const width = wb.width * t.scale;
-        const height = wb.height * t.scale;
-        map.set(w.id, new DOMRect(left, top, width, height));
+        map.set(w.id, tileEl.getBoundingClientRect());
       }
       sourceRectsRef.current = map;
     },
-    [baseOffsets, transformRef, containerRef],
+    [],
   );
 
   // Sync internal display state with the store. Open: capture canvas-tile
