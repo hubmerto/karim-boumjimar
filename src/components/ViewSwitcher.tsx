@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Canvas } from "@/components/Canvas";
 import { CanvasPixi } from "@/components/CanvasPixi";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
@@ -26,20 +26,32 @@ export function ViewSwitcher() {
   // keeps the DOM canvas because its dispersion / hover / outline
   // affordances are tuned to that implementation.
   //
-  // Lazy-init from matchMedia: we MUST NOT briefly mount Canvas
-  // (DOM) on a mobile client, because even a few hundred ms of
-  // it can crash iOS Safari before useEffect runs.
-  const [mobile, setMobile] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(max-width: 767px)").matches;
-  });
-  useEffect(() => {
+  // We MUST NOT briefly mount Canvas (DOM) on a mobile client —
+  // even a few hundred ms of it can crash iOS Safari before useEffect
+  // runs. We ALSO can't lazy-init from matchMedia in useState because
+  // that produces different initial state on server (false) vs client
+  // (true on a mobile viewport), which surfaces as a hydration
+  // mismatch and forces React to regenerate the tree (visible without
+  // a splash to mask it, as on /showcase/mobile).
+  //
+  // Solution: start with `null` on both server and client (matching
+  // initial render), then resolve the viewport in useLayoutEffect
+  // before paint. The window between hydration and the layout effect
+  // is one render cycle — Canvas is never mounted on a mobile client
+  // because we render `null` until the viewport is known.
+  const [mobile, setMobile] = useState<boolean | null>(null);
+  useLayoutEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
     const update = () => setMobile(mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, []);
+
+  // Render nothing until the viewport is resolved on the client
+  // (one render cycle after hydration). Avoids the hydration
+  // mismatch that would otherwise fire on mobile clients.
+  if (mobile === null) return null;
 
   if (view === "exhibitions") {
     return mobile ? (
