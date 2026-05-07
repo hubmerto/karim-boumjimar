@@ -317,6 +317,23 @@ export function CanvasPixi() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
+  // Watch the body's demo-mode class so the dev-badge can hide
+  // itself when a /showcase/* route mounts <DemoFrame />.
+  // Recordings shouldn't capture the yellow debug chrome.
+  const [demoMode, setDemoMode] = useState(false);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const update = () =>
+      setDemoMode(document.body.classList.contains("demo-mode"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
   // ALL works are loaded as sprites on mobile. The bento OVERVIEW
   // shows only the curated subset (3 per project — "core" tiles);
   // the rest ("extras") sit at their cluster positions with alpha
@@ -1221,10 +1238,13 @@ export function CanvasPixi() {
       ) : null}
       {/* Dev-only badge with the loaded-sprite count. Hidden on
           karimboumjimar.com / hubmerto.com — only shown in dev or on
-          a *.vercel.app preview. */}
-      {process.env.NODE_ENV !== "production" ||
-      (typeof window !== "undefined" &&
-        /vercel\.app$/.test(window.location.hostname)) ? (
+          a *.vercel.app preview. Also hidden on /showcase/* routes
+          (which set body.demo-mode via <DemoFrame />) so demo
+          recordings don't capture the debug chrome. */}
+      {(process.env.NODE_ENV !== "production" ||
+        (typeof window !== "undefined" &&
+          /vercel\.app$/.test(window.location.hostname))) &&
+      !demoMode ? (
         <div
           style={{
             position: "fixed",
