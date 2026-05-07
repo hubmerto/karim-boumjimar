@@ -10,12 +10,9 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Single gesture: select cluster → panel slides in → close →
- * panel slides out. Camera stays put (showProjectPanel skips
- * the nav). End state matches start.
- *
- * Pre-positioned by flying once to the cluster on first cycle,
- * then loops indefinitely with the panel toggling.
+ * Diamond → fly to cluster (panel slides in alongside camera) →
+ * panel toggles out + back in → fly back to diamond. Each cycle
+ * round-trips to the same diamond rest state.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
@@ -26,6 +23,7 @@ export default function ShowcaseSelectPage() {
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const showProjectPanel = useSelection((s) => s.showProjectPanel);
   const closeProject = useSelection((s) => s.closeProject);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -33,34 +31,40 @@ export default function ShowcaseSelectPage() {
   }, [setSplashGone, setView]);
 
   useAutopilot(async ({ wait, isInitial }) => {
-    if (isInitial) {
-      // Pre-position: fly to cluster once. Wait through the
-      // intro reveal first so the camera trajectory plays clean.
-      await wait(6500);
-      navigateToGroup(PROJECT_KEY);
-      await wait(5000);
-      // After the nav, selection is set + panel is in. Close it
-      // so the loop's start state is "cluster, no panel".
-      closeProject();
-      await wait(700);
-    }
+    if (isInitial) await wait(6500); // intro reveal
 
-    // 0.0s — hold spread (no panel).
-    await wait(500);
+    // 1. Diamond at rest.
+    await wait(800);
 
-    // 0.5s — show panel (slides in over ~400 ms).
-    showProjectPanel(PROJECT_KEY);
-    await wait(500);
+    // 2. Fly to cluster (camera tween + panel slides in).
+    navigateToGroup(PROJECT_KEY);
+    await wait(5000);
 
-    // 1.0s — hold with panel.
-    await wait(2500);
-
-    // 3.5s — close panel (slides out).
-    closeProject();
-    await wait(500);
-
-    // 4.0s — hold spread (no panel) until 6.0s.
+    // 3. Hold panel in.
     await wait(2000);
+
+    // 4. Close panel.
+    closeProject();
+    await wait(800);
+
+    // 5. Hold cluster, no panel.
+    await wait(1200);
+
+    // 6. Re-open panel (no camera nav this time — just the slide).
+    showProjectPanel(PROJECT_KEY);
+    await wait(800);
+
+    // 7. Hold panel in.
+    await wait(1500);
+
+    // 8. Close panel one more time before flying back.
+    closeProject();
+    await wait(800);
+
+    // 9. Reset to diamond — camera flies back AND tiles re-pack.
+    //    1.5 s camera + 2.8 s tile re-bento = 4.3 s; wait 5 s.
+    resetToOverview();
+    await wait(5000);
   });
 
   return (

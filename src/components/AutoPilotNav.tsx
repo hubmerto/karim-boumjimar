@@ -4,26 +4,17 @@ import { useEffect } from "react";
 import { useSelection } from "@/lib/store";
 
 /**
- * Headless component that drives the /showcase/navigation route's
- * looping demo. Cycle (uniform 1 s linger per project for a
- * tight ambient pace):
+ * Drives /showcase/navigation. Cycle:
  *
- *   index drawer open, camera at Beauty is the Best Defense
- *     → linger 1 s
- *   index switches to Pandemonium Paradiso → camera flies → 1 s
- *   index switches to Spring Has Arrived   → camera flies → 1 s
- *   index switches back to Beauty          → camera flies
- *     → loop (now back at the cycle's start state)
+ *   diamond + index closed (rest)
+ *   open index
+ *   navigate Beauty → Pandemonium → Spring (camera flies + index
+ *     highlight follows)
+ *   close index
+ *   reset to diamond
+ *   loop
  *
- * Recording tip: capture from one Beauty linger to the next.
- * Total cycle ~18 s. The loop is naturally seamless — start
- * and end both rest on Beauty with the index open and
- * highlighted on the same row, so no white wipe is needed.
- *
- * The Index component highlights whichever row matches the
- * store's `selectedGroupKey`, which `navigateToGroup` sets each
- * time AutoPilotNav calls it. So switching the highlight and
- * flying the camera are the same action.
+ * Each cycle starts and ends at the same diamond rest state.
  */
 
 const PROJECTS = [
@@ -33,35 +24,23 @@ const PROJECTS = [
 ] as const;
 
 const T = {
-  // Brief settle so the index drawer mounts + the canvas decides
-  // it's ready before the first navigateToGroup fires.
-  INITIAL_SETTLE: 800,
-  // Per-project linger after every camera arrival. Was 2-3 s but
-  // requested tighter — 1 s reads as a beat, then the next nav
-  // fires. Same value for the anchor (Beauty) so the cycle has
-  // uniform pacing instead of one project visibly dwelling longer.
-  PROJECT_LINGER: 1000,
-  // Camera fly-in. Matches animateTransform(4500) inside the
-  // navTargetGroupKey effect, plus a small comfort buffer so the
-  // next action doesn't fire while the wrapper transition is
-  // still finishing.
+  INITIAL_INTRO: 6500,
+  DIAMOND_HOLD: 800,
+  INDEX_OPEN_HOLD: 600,
   GROUP_FLY_IN: 5000,
+  PROJECT_LINGER: 1500,
+  INDEX_CLOSE_HOLD: 600,
+  RESET_FLY_BACK: 5000,
 };
 
 export function AutoPilotNav() {
   const setSplashGone = useSelection((s) => s.setSplashGone);
   const setIndexOpen = useSelection((s) => s.setIndexOpen);
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
-    // Splash is not mounted on the showcase route — flip the gate
-    // manually so tiles fade in and the canvas's intro reveal
-    // animation fires.
     setSplashGone(true);
-    // Open the works index drawer up front. It stays open for the
-    // full cycle; navigateToGroup doesn't touch indexOpen, so the
-    // drawer rides through every camera fly-in.
-    setIndexOpen(true);
 
     let cancelled = false;
 
@@ -74,33 +53,39 @@ export function AutoPilotNav() {
     }
 
     async function loop() {
-      // First-run only: get the camera positioned at the cycle's
-      // anchor (Beauty). Subsequent iterations end at Beauty
-      // already so this only runs once.
-      await wait(T.INITIAL_SETTLE);
-      navigateToGroup(PROJECTS[0]);
-      await wait(T.GROUP_FLY_IN);
+      // First-run intro reveal.
+      await wait(T.INITIAL_INTRO);
       if (cancelled) return;
 
       while (!cancelled) {
-        // 1. Anchor linger — index highlights Beauty, camera at
-        //    Beauty's cluster.
-        await wait(T.PROJECT_LINGER);
+        // 1. Diamond, index closed.
+        await wait(T.DIAMOND_HOLD);
         if (cancelled) return;
 
-        // 2. Cycle through the rest of the projects in order.
-        for (let i = 1; i < PROJECTS.length; i++) {
-          navigateToGroup(PROJECTS[i]);
+        // 2. Open index drawer.
+        setIndexOpen(true);
+        await wait(T.INDEX_OPEN_HOLD);
+        if (cancelled) return;
+
+        // 3. Sweep through projects — camera flies to each, index
+        //    highlight follows because Index syncs to selectedGroupKey.
+        for (const key of PROJECTS) {
+          navigateToGroup(key);
           await wait(T.GROUP_FLY_IN);
           if (cancelled) return;
           await wait(T.PROJECT_LINGER);
           if (cancelled) return;
         }
 
-        // 3. Loop back to the anchor — camera flies to Beauty,
-        //    landing in the same state the cycle began with.
-        navigateToGroup(PROJECTS[0]);
-        await wait(T.GROUP_FLY_IN);
+        // 4. Close the index drawer.
+        setIndexOpen(false);
+        await wait(T.INDEX_CLOSE_HOLD);
+        if (cancelled) return;
+
+        // 5. Reset to diamond — camera flies back, tiles re-pack.
+        resetToOverview();
+        await wait(T.RESET_FLY_BACK);
+        if (cancelled) return;
       }
     }
 
@@ -109,7 +94,7 @@ export function AutoPilotNav() {
     return () => {
       cancelled = true;
     };
-  }, [setSplashGone, setIndexOpen, navigateToGroup]);
+  }, [setSplashGone, setIndexOpen, navigateToGroup, resetToOverview]);
 
   return null;
 }

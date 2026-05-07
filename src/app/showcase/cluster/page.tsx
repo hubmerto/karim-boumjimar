@@ -16,18 +16,8 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Tap a cluster centroid → FLIP into the gallery (strip view).
- * Tap close → FLIP back to the cluster grid.
- *
- * The pre-positioned state has the camera at the cluster
- * (selectedGroupKey set, not expanded) — the cycle's start frame
- * shows the cluster grid with the InspectorSheet at peek; the
- * cycle's end frame is identical because expandGroup +
- * collapseGroup don't move the camera or change the cluster
- * selection.
- *
- * `Bodies Under Construction` chosen — its 5 × 4 grid is the
- * most visually distinct cluster shape.
+ * Diamond → tap cluster (camera flies to it) → expand into the
+ * gallery strip → close → fly back to diamond.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
@@ -38,6 +28,7 @@ export default function ShowcaseClusterPage() {
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const expandGroup = useSelection((s) => s.expandGroup);
   const collapseGroup = useSelection((s) => s.collapseGroup);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -45,28 +36,23 @@ export default function ShowcaseClusterPage() {
   }, [setSplashGone, setView]);
 
   useAutopilot(async ({ wait, isInitial }) => {
-    if (isInitial) {
-      await wait(4000);
-      navigateToGroup(PROJECT_KEY);
-      await wait(5000);
-    }
+    if (isInitial) await wait(4000);
 
-    // 0.0s — hold spread / cluster grid view.
-    await wait(500);
+    await wait(800);
 
-    // 0.5s — FLIP into gallery (strip).
+    navigateToGroup(PROJECT_KEY);
+    await wait(5000);
+
     expandGroup(PROJECT_KEY);
-    await wait(1000);
-
-    // 1.5s — hold gallery until 4.5s.
     await wait(3000);
 
-    // 4.5s — FLIP back to grid.
-    collapseGroup();
-    await wait(1000);
+    await wait(3000);
 
-    // 5.5s — hold cluster grid until 10.0s.
-    await wait(4500);
+    collapseGroup();
+    await wait(3000);
+
+    resetToOverview();
+    await wait(5000);
   });
 
   return (

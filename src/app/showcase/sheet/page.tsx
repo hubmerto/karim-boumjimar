@@ -15,20 +15,12 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Drag handle up to extended → hold → scroll content down to end
- * → hold → scroll content up to top → hold → drag handle down to
- * collapsed → loop. Round-trip is clean because:
- *   - sheet starts at peek, ends at peek
- *   - content scroll starts at top, ends at top
- *   - camera is parked at the cluster (no movement during cycle)
+ * Diamond → fly to cluster (sheet slides up to peek) → drag handle
+ * up → scroll content down → scroll back up → drag handle down →
+ * fly back to diamond.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
-
-// Distance-to-end (or close to it) for the content scroll. The
-// real content height varies by project; 1200 px is comfortably
-// past the bottom of even the longest credit list — the easing
-// caps at scrollHeight automatically.
 const SCROLL_TARGET_PX = 1500;
 
 export default function ShowcaseSheetPage() {
@@ -41,6 +33,7 @@ export default function ShowcaseSheetPage() {
   const scrollSheetContentTo = useSelection(
     (s) => s.scrollSheetContentTo,
   );
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -48,44 +41,41 @@ export default function ShowcaseSheetPage() {
   }, [setSplashGone, setView]);
 
   useAutopilot(async ({ wait, isInitial }) => {
-    if (isInitial) {
-      await wait(4000);
-      navigateToGroup(PROJECT_KEY);
-      await wait(5000);
-      setInspectorSheetSnap("peek");
-      await wait(700);
-    }
+    if (isInitial) await wait(4000);
 
-    // 0.0s — hold collapsed.
-    await wait(500);
+    // 1. Diamond at rest.
+    await wait(800);
 
-    // 0.5s — drag handle up to fully extended (1.0s transition).
+    // 2. Fly to cluster.
+    navigateToGroup(PROJECT_KEY);
+    await wait(5000);
+    setInspectorSheetSnap("peek");
+    await wait(700);
+
+    // 3. Drag handle up.
     setInspectorSheetSnap("full");
     await wait(1000);
+    await wait(800);
 
-    // 1.5s — hold extended.
-    await wait(1000);
-
-    // 2.5s — scroll content down to end (2.5s).
+    // 4. Scroll content down to end.
     scrollSheetContentTo(SCROLL_TARGET_PX, 2500);
     await wait(2500);
+    await wait(700);
 
-    // 5.0s — hold at end.
-    await wait(1000);
-
-    // 6.0s — scroll content up to top (2.5s).
+    // 5. Scroll content up to top.
     scrollSheetContentTo(0, 2500);
     await wait(2500);
+    await wait(700);
 
-    // 8.5s — hold at top.
-    await wait(1000);
-
-    // 9.5s — drag handle down to collapsed (1.0s).
+    // 6. Drag handle down.
     setInspectorSheetSnap("peek");
     await wait(1000);
+    await wait(700);
 
-    // 10.5s — hold collapsed until 12.0s.
-    await wait(1500);
+    // 7. Release the snap override + reset to diamond.
+    setInspectorSheetSnap(null);
+    resetToOverview();
+    await wait(5000);
   });
 
   return (

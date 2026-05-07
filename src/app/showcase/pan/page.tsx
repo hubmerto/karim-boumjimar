@@ -9,16 +9,12 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Pan flick → inertia carries → settles → flick back → settles
- * exactly at original centre. Round-trip is exact because we
- * end the cycle by recalling the original camera centre via
- * navigateToGroup (which always lands at the same target — the
- * spread-bbox of the chosen cluster).
+ * Diamond → fly to cluster → flick right (inertia carries) →
+ * flick left (inertia carries back) → fly back to diamond.
  *
- * Pure flick math wouldn't quite round-trip — friction-based
- * inertia integrates to ~0.5 % of input velocity in displacement
- * by 1.5 s, which is a few pixels of drift on the loop seam.
- * The recall snaps to exact match.
+ * The two flicks should ~balance (matched magnitudes), but
+ * residual drift is removed by the resetToOverview at the end —
+ * the camera lands at the diamond bbox regardless.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
@@ -28,6 +24,7 @@ export default function ShowcasePanPage() {
   const setView = useSelection((s) => s.setView);
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const flickPan = useSelection((s) => s.flickPan);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -35,33 +32,34 @@ export default function ShowcasePanPage() {
   }, [setSplashGone, setView]);
 
   useAutopilot(async ({ wait, isInitial }) => {
-    if (isInitial) {
-      await wait(6500);
-      navigateToGroup(PROJECT_KEY);
-      await wait(5000);
-    }
+    if (isInitial) await wait(6500);
 
-    // 0.0s — hold centre.
-    await wait(400);
+    // 1. Diamond at rest.
+    await wait(800);
 
-    // 0.4s — flick right (vx px/ms; visible glide ~1.5s).
+    // 2. Fly to cluster.
+    navigateToGroup(PROJECT_KEY);
+    await wait(5000);
+
+    // 3. Hold cluster (so the flick doesn't immediately follow
+    //    the camera tween's tail end).
+    await wait(600);
+
+    // 4. Flick right + glide.
     flickPan(1.4, 0);
     await wait(2100);
 
-    // 2.5s — hold right extent.
-    await wait(700);
+    await wait(500);
 
-    // 3.2s — flick left.
+    // 5. Flick left + glide.
     flickPan(-1.4, 0);
     await wait(1600);
 
-    // 4.8s — recall the cluster centre to remove residual drift
-    //        so the loop seam is exact. navigateToGroup tweens
-    //        the camera over 4.5 s; we wait the full duration +
-    //        a small buffer so the recall fully lands before the
-    //        cycle wraps. Total cycle ~10 s (vs the spec's 7 s)
-    //        but the recording loops without a visible jump.
-    navigateToGroup(PROJECT_KEY);
+    // 6. Hold settled.
+    await wait(800);
+
+    // 7. Reset to diamond.
+    resetToOverview();
     await wait(5000);
   });
 

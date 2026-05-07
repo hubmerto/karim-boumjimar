@@ -10,10 +10,9 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Tap an image in the cluster grid → FLIP into the strip. Tap
- * close → FLIP back to the tile. Round-trip clean: start and
- * end at the cluster grid view, same selectedId, same camera
- * position.
+ * Diamond → fly to cluster → tap image (FLIP open into strip) →
+ * close (FLIP back to tile) → fly back to diamond. Each cycle
+ * starts and ends at the same diamond rest state.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
@@ -26,6 +25,7 @@ export default function ShowcaseStripDesktopPage() {
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const collapseGroup = useSelection((s) => s.collapseGroup);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -33,30 +33,30 @@ export default function ShowcaseStripDesktopPage() {
   }, [setSplashGone, setView]);
 
   useAutopilot(async ({ wait, isInitial }) => {
-    if (isInitial) {
-      await wait(6500);
-      navigateToGroup(PROJECT_KEY);
-      await wait(5000);
-      // Lock the tile that the FLIP will animate from.
-      selectWork(WORK_ID, PROJECT_KEY);
-    }
+    if (isInitial) await wait(6500);
 
-    // 0.0s — hold gallery (cluster grid view).
-    await wait(500);
+    // 1. Diamond at rest.
+    await wait(800);
 
-    // 0.5s — open strip (FLIP, 0.8s nominal).
+    // 2. Fly to cluster.
+    navigateToGroup(PROJECT_KEY);
+    await wait(5000);
+
+    // 3. Lock the tile that the FLIP will animate from + open.
+    selectWork(WORK_ID, PROJECT_KEY);
     expandGroup(PROJECT_KEY);
-    await wait(800);
+    await wait(3000); // FLIP open (2.4 s + buffer)
 
-    // 1.3s — hold strip until 4.5s.
-    await wait(3200);
+    // 4. Hold strip.
+    await wait(2500);
 
-    // 4.5s — close strip (FLIP back to tile).
+    // 5. Close strip — FLIP back to tile.
     collapseGroup();
-    await wait(800);
+    await wait(3000);
 
-    // 5.3s — hold gallery until 7.0s.
-    await wait(1700);
+    // 6. Reset to diamond.
+    resetToOverview();
+    await wait(5000);
   });
 
   return (

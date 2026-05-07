@@ -16,8 +16,8 @@ import { ViewSwitcher } from "@/components/ViewSwitcher";
 import { useSelection } from "@/lib/store";
 
 /**
- * Same gesture as /showcase/strip-desktop, mobile renderer +
- * InspectorSheet visible.
+ * Same as strip-desktop, mobile renderer + sheet visible. Cycle
+ * round-trips to the diamond.
  */
 
 const PROJECT_KEY = "Bodies Under Construction|2026";
@@ -30,6 +30,7 @@ export default function ShowcaseStripMobilePage() {
   const selectWork = useSelection((s) => s.selectWork);
   const expandGroup = useSelection((s) => s.expandGroup);
   const collapseGroup = useSelection((s) => s.collapseGroup);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -37,20 +38,24 @@ export default function ShowcaseStripMobilePage() {
   }, [setSplashGone, setView]);
 
   useAutopilot(async ({ wait, isInitial }) => {
-    if (isInitial) {
-      await wait(4000);
-      navigateToGroup(PROJECT_KEY);
-      await wait(5000);
-      selectWork(WORK_ID, PROJECT_KEY);
-    }
+    if (isInitial) await wait(4000); // fast intro
 
-    await wait(500);
+    await wait(800);
+
+    navigateToGroup(PROJECT_KEY);
+    await wait(5000);
+
+    selectWork(WORK_ID, PROJECT_KEY);
     expandGroup(PROJECT_KEY);
-    await wait(800);
-    await wait(4000);
+    await wait(3000);
+
+    await wait(2500);
+
     collapseGroup();
-    await wait(800);
-    await wait(2900);
+    await wait(3000);
+
+    resetToOverview();
+    await wait(5000);
   });
 
   return (
