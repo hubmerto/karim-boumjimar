@@ -14,7 +14,7 @@ export type CvEntry = {
 export const CV_BIO = {
   born: "1998",
   nationality: "Moroccan-Spanish",
-  location: "Copenhagen and Berlin",
+  location: "Copenhagen",
   email: "karim@karimboumjimar.com",
   studioEmail: "goat@karimboumjimar.com",
 };
@@ -59,7 +59,7 @@ export const CV_SOLO: CvEntry[] = [
   {
     year: "2025",
     title: "Pandemonium Paradiso",
-    venue: "Overgaden Institute of Contemporary Art",
+    venue: "O—Overgaden, Institute of Contemporary Art",
     city: "Copenhagen",
     country: "DK",
   },
@@ -124,7 +124,7 @@ export const CV_GROUP: CvEntry[] = [
   },
   {
     year: "2025",
-    title: "Will Look Into the Earth",
+    title: "I Will Look Into the Earth",
     venue: "Kunsthalle Helsinki",
     city: "Helsinki",
     country: "FI",
@@ -138,7 +138,14 @@ export const CV_GROUP: CvEntry[] = [
   },
   {
     year: "2025",
-    title: "Spring Exhibition",
+    title: "Afgang (Royal Danish Academy graduate exhibition)",
+    venue: "Kunsthal Charlottenborg",
+    city: "Copenhagen",
+    country: "DK",
+  },
+  {
+    year: "2025",
+    title: "Charlottenborg Spring Exhibition",
     venue: "Kunsthal Charlottenborg",
     city: "Copenhagen",
     country: "DK",
@@ -146,7 +153,7 @@ export const CV_GROUP: CvEntry[] = [
   {
     year: "2025",
     title: "Kultuur",
-    venue: "TINA",
+    venue: "TINA Gallery",
     city: "London",
     country: "UK",
   },
@@ -160,7 +167,7 @@ export const CV_GROUP: CvEntry[] = [
   {
     year: "2021",
     title: "Psychopathia Sexualis",
-    venue: "Overgaden Institute of Contemporary Art",
+    venue: "O—Overgaden, Institute of Contemporary Art",
     city: "Copenhagen",
     country: "DK",
   },

@@ -8,7 +8,7 @@ export function AboutView() {
   return (
     <TextView title="About the practice">
       <h2 className="text-2xl text-ink leading-tight tracking-tight">
-        Bodies, myths, environments - merging.
+        Bodies, myths, environments — merging.
       </h2>
       <div className="mt-8 space-y-5 text-body leading-[1.65] text-pretty break-words text-ink">
         {ABOUT_PARAGRAPHS.map((p, i) => (

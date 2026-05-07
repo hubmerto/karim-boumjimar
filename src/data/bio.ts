@@ -6,14 +6,18 @@ export const BIO_SHORT =
   "Karim Boumjimar (b. 1998, Málaga, Spain) is an artist whose work examines social hierarchies through the entanglement of nature, bodies, and identity. Working across drawing, ceramics, and performance, his practice explores how subjectivity is formed through ecological and cultural systems rather than outside of them.";
 
 /**
- * Artist statement, used by AboutView.
+ * Artist statement, used by AboutView. Compressed from the previous
+ * five-paragraph version: paragraph 2 restated the subhead, paragraph
+ * 3 doubled paragraph 1's framing, and paragraph 5 was a
+ * summary-of-summary. The geography line at the bottom replaces
+ * absent context (the previous version omitted that he's based in
+ * Copenhagen and is Spanish-Moroccan).
  */
 export const ABOUT_PARAGRAPHS = [
-  "Karim Boumjimar (b. 1998, Málaga, Spain) is an artist whose work examines social hierarchies through the entanglement of nature, bodies, and identity. Working across drawing, ceramics, and performance, his practice explores how subjectivity is formed through ecological and cultural systems rather than outside of them.",
-  "His work brings together bodies, myths, and environments in fluid compositions shaped by desire, power, and vulnerability. Figures appear hybrid and unstable—simultaneously human, animal, and mythological—emerging through gestural processes that emphasise transformation over fixity.",
-  "Boumjimar is interested in how identities are produced, classified, and destabilised. His works stage speculative ecologies in which bodies move through states of merging and dissolution, challenging hierarchical and normative structures of representation. Through these shifting configurations, he proposes alternative modes of coexistence between human and non-human forms of life.",
-  "Ceramics functions as a central medium within this language, operating between object, body, and residue. Treated as both contemporary and archaeological, it holds traces of movement and memory while remaining open to transformation.",
-  "Across his practice, Boumjimar develops a visual world in which change is constant and identity remains porous. His works reflect on the instability of categories such as nature, culture, and self, suggesting a continuous process of becoming.",
+  "Karim Boumjimar (b. 1998, Málaga) is a Spanish-Moroccan artist working across drawing, ceramics, and performance. His practice examines social hierarchies through the entanglement of nature, body, and identity, treating subjectivity as something formed through ecological and cultural systems rather than outside of them.",
+  "Figures appear hybrid and unstable — simultaneously human, animal, and mythological — emerging through gestural processes that hold transformation over fixity. Compositions are shaped by desire, power, and vulnerability; bodies merge, dissolve, and recombine, refusing the binary categories that fix them.",
+  "Ceramics operates at the centre of this language, somewhere between object, body, and residue. Treated as both contemporary and archaeological, it holds traces of movement and memory while remaining open to change.",
+  "Boumjimar lives and works in Copenhagen, between Stockholm, Berlin, and Spain.",
 ];
 
 /**
@@ -81,12 +85,17 @@ export type NewsEntry = {
   url?: string;
 };
 
-/** Reverse-chronological. */
+/** Reverse-chronological. The metadata `date` is the news-publication
+ * (or show opening) date; the `text` body collapses duplication by
+ * dropping that date and quoting only the closing day where the show
+ * runs across multiple months. Exhibition-type descriptors ("solo
+ * exhibition" / "group exhibition" / "duo exhibition") are dropped —
+ * the section is "News" and the venue tells the rest of the story. */
 export const NEWS: NewsEntry[] = [
   {
     date: "19 June 2026",
-    text: "Génération Céramique, group exhibition, Fondation d’entreprise Bernardaud, Limoges 19 June 2026 – 30 April 2027",
-    url: "https://www.bernardaud.com/en/us/news/exposition-generation-ceramique?srsltid=AfmBOoqFMtqIjy8nWAkm_MRicOWtx2M54_Hn-ZTf6BoXS-95x8t6LH7Z",
+    text: "Génération Céramique, Fondation d’entreprise Bernardaud, Limoges — through 30 April 2027",
+    url: "https://www.bernardaud.com/en/us/news/exposition-generation-ceramique",
   },
   {
     date: "9 June 2026",
@@ -94,22 +103,22 @@ export const NEWS: NewsEntry[] = [
   },
   {
     date: "10 April 2026",
-    text: "Rites of Affection, solo exhibition, Malva Museum, Lahti 10 April 2026 – 13 September 2026 Film premiere: Traces of Spring",
+    text: "Rites of Affection, Malva Museum, Lahti — through 13 September 2026. Film premiere: Traces of Spring.",
     url: "https://malvamuseo.fi/en/exhibitions/karim-boumjimar-rites-of-affection/",
   },
   {
     date: "28 March 2026",
-    text: "Bodies Under Construction, solo exhibition, Møstings, Frederiksberg Museums 28 March 2026 – 7 June 2026",
-    url: "https://www.contemporaryartlibrary.org/project/karim-boumjimar-at-mostings-frederiksberg-69603?from=%2Fartist%2Fkarim-boumjimar-34542",
+    text: "Bodies Under Construction, Møstings, Frederiksberg Museums — through 7 June 2026",
+    url: "https://frederiksbergmuseerne.dk/en/udstillinger/karim-boumjimar/",
   },
   {
     date: "8 March 2026",
-    text: "I Can Buy Myself Flowers, group exhibition, Kunsthal N 8 March 2026 – 2 August 2026",
+    text: "I Can Buy Myself Flowers, Kunsthal N — through 2 August 2026",
     url: "https://kunsthaln.dk/en/udstilling/i-can-buy-myself-flowers/",
   },
   {
     date: "5 March 2026",
-    text: "Beauty is the Best Defense, group exhibition, Jessica Silverman Gallery, San Francisco 5 March 2026 – 11 April 2026",
+    text: "Beauty is the Best Defense, Jessica Silverman Gallery, San Francisco — through 11 April 2026",
     url: "https://jessicasilvermangallery.com/online-shows/beauty-is-the-best-defense-ovr/",
   },
   {
@@ -119,12 +128,12 @@ export const NEWS: NewsEntry[] = [
   },
   {
     date: "24 January 2026",
-    text: "Body Politics, group exhibition, Kuntsi Museum of Modern Art 24 January 2026 – 4 April 2026",
+    text: "Body Politics, Kuntsi Museum of Modern Art, Vaasa — through 4 April 2026",
     url: "https://vaasa.fi/koe-ja-nae/kulttuuria-vaasassa-ja-seudulla/vaasan-museot/nayttelyt-ja-tapahtumat/miettinen-collection-body-politics/",
   },
   {
     date: "23 January 2026",
-    text: "Birds of Paradise, solo exhibition, Viborg Kunsthal 23 January 2026 – 10 May 2026",
+    text: "Birds of Paradise, Viborg Kunsthal — through 10 May 2026",
     url: "https://artviewer.org/karim-boumjimar-at-viborg-kunsthal/",
   },
   {
@@ -144,32 +153,32 @@ export const NEWS: NewsEntry[] = [
   },
   {
     date: "21 November 2025",
-    text: "Stockholm Cosmologies, group exhibition, Liljevalchs Konsthall, Stockholm 21 November 2025 – 11 January 2026",
+    text: "Stockholm Cosmologies, Liljevalchs Konsthall, Stockholm — through 11 January 2026",
     url: "https://liljevalchs.se/en/kalender/stockholm-cosmologies/",
   },
   {
     date: "14 November 2025",
-    text: "Deep Cuts, solo exhibition, CFHILL, Stockholm 14 November 2025 – 30 December 2025",
+    text: "Deep Cuts, CFHILL, Stockholm — through 30 December 2025",
     url: "https://www.contemporaryartlibrary.org/project/karim-boumjimar-61510",
   },
   {
     date: "1 November 2025",
-    text: "I Will Look Into the Earth, group exhibition, Helsinki Kunsthalle 1 November 2025 – 11 January 2026",
+    text: "I Will Look Into the Earth, Kunsthalle Helsinki — through 11 January 2026",
     url: "https://taidehalli.fi/en/events/i-will-look-into-the-earth/",
   },
   {
     date: "18 October 2025",
-    text: "This Is Just the Beginning, group exhibition, Miettinen Collection, Berlin 18 October 2025 – 31 December 2025",
+    text: "This Is Just the Beginning, Miettinen Collection, Berlin — through 31 December 2025",
     url: "https://miettinen-collection.de/2025/10/26/this-is-just-the-beginning/",
   },
   {
     date: "9 October 2025",
-    text: "Mouths, Vessels, Portals, solo exhibition, Alice Folker Gallery, Copenhagen 9 October 2025 – 28 November 2025",
-    url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/installation_shots/",
+    text: "Mouths, Vessels, Portals, Alice Folker Gallery, Copenhagen — through 28 November 2025",
+    url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/",
   },
   {
     date: "29 August 2025",
-    text: "Pandemonium Paradiso, solo exhibition, Overgaden – Institute of Contemporary Art, Copenhagen 29 August 2025 – 26 October 2025",
+    text: "Pandemonium Paradiso, O—Overgaden, Copenhagen — through 26 October 2025",
     url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
   },
   {
@@ -179,17 +188,17 @@ export const NEWS: NewsEntry[] = [
   },
   {
     date: "20 June 2025",
-    text: "When Form Becomes Attitude, group exhibition, Robert Grunenberg, Berlin 20 June 2025 – 9 August 2025",
+    text: "When Form Becomes Attitude, Robert Grunenberg, Berlin — through 9 August 2025",
     url: "https://robertgrunenberg.com/exhibition/when-form-becomes-attitude/",
   },
   {
     date: "17 May 2025",
-    text: "Drawings from the Hotel, solo exhibition, Pori Art Museum 17 May 2025 – 6 July 2025",
+    text: "Drawings from the Hotel, Pori Art Museum — through 6 July 2025",
     url: "https://www.poriartmuseum.fi/en/events/karim-boumjimar-drawings-from-the-hotel-2/",
   },
   {
     date: "11 April 2025",
-    text: "Symbiosis (ceramic installation), Kunsthal Charlottenborg — awarded the 2025 Blix Prize",
+    text: "Symbiosis received the 2025 Blix Prize, Kunsthal Charlottenborg",
   },
   {
     date: "4 April 2025",
@@ -197,12 +206,12 @@ export const NEWS: NewsEntry[] = [
   },
   {
     date: "6 February 2025",
-    text: "Charlottenborg Spring Exhibition, group exhibition, Kunsthal Charlottenborg 6 February 2025 – 9 March 2025",
+    text: "Charlottenborg Spring Exhibition, Kunsthal Charlottenborg — through 9 March 2025",
     url: "https://artmap.com/kunsthalcharlottenborg/exhibition/charlottenborg-spring-exhibition-2025",
   },
   {
     date: "17 January 2025",
-    text: "Kultuur, duo exhibition, TINA Gallery, London 17 January 2025 – 1 March 2025",
+    text: "Kultuur, TINA Gallery, London — through 1 March 2025",
     url: "https://saliva.live/exhibitions/66c4dd65",
   },
   {
@@ -217,17 +226,17 @@ export const NEWS: NewsEntry[] = [
   },
   {
     date: "28 October 2023",
-    text: "Queer Ecologies: Naturally Subversive Aberrations, group exhibition, Centre d’Art la Panera, Lleida 28 October 2023 – 28 January 2024",
+    text: "Queer Ecologies: Naturally Subversive Aberrations, Centre d’Art la Panera, Lleida — through 28 January 2024",
     url: "https://www.lapanera.cat/en/programming/expositions/ecologies-queer-aberracions-naturalment-subversives",
   },
   {
     date: "4 May 2023",
-    text: "Fear and Fauna, nomadic group exhibition, ARIEL – Feminism in the Aesthetic 4 May 2023 – 18 June 2023",
+    text: "Fear and Fauna, ARIEL – Feminism in the Aesthetic — through 18 June 2023",
     url: "https://arielfeminisms.dk/#upcoming-fear-and-fauna",
   },
   {
-    date: "21 August 2021",
-    text: "Psychopathia Sexualis, group exhibition, Overgaden – Institute of Contemporary Art, Copenhagen 13 August 2021 – 10 October 2021",
+    date: "13 August 2021",
+    text: "Psychopathia Sexualis, O—Overgaden, Copenhagen — through 10 October 2021",
     url: "https://overgaden.org/en/exhibitions/psychopathia-sexualis",
   },
 ];
