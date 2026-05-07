@@ -467,6 +467,47 @@ export function useCanvas(
     startInertia();
   }, [flickPanToken, flickPanVx, flickPanVy, cancelInertia, startInertia]);
 
+  // Programmatic zoom-by-factor. Demos call zoomCameraBy(factor, ms)
+  // to animate the camera's scale by the supplied factor centered
+  // on the viewport. Drives the same clampedZoom path the wheel
+  // handler uses, so the dispersion-tracker + tile transitions
+  // fire on the threshold cross identically to a real pinch.
+  const zoomCameraToken = useSelection((s) => s.zoomCameraToken);
+  const zoomCameraFactor = useSelection((s) => s.zoomCameraFactor);
+  const zoomCameraDurationMs = useSelection(
+    (s) => s.zoomCameraDurationMs,
+  );
+  const lastZoomTokenRef = useRef(zoomCameraToken);
+  useEffect(() => {
+    if (zoomCameraToken === lastZoomTokenRef.current) return;
+    lastZoomTokenRef.current = zoomCameraToken;
+    if (zoomCameraToken === 0) return;
+    const v = viewportRect();
+    const cx = v.x + v.w / 2;
+    const cy = v.y + v.h / 2;
+    const startScale = transformRef.current.scale;
+    const targetScale = startScale * zoomCameraFactor;
+    const startTs = performance.now();
+    let raf: number | null = null;
+    const ease = (t: number) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    function tick(now: number) {
+      if (zoomCameraToken !== lastZoomTokenRef.current) return;
+      const t = Math.min(1, (now - startTs) / zoomCameraDurationMs);
+      const eased = ease(t);
+      const scale = startScale * Math.pow(targetScale / startScale, eased);
+      const factor = scale / transformRef.current.scale;
+      setTransform(
+        clampedZoom(transformRef.current, factor, cx, cy, viewportRect()),
+      );
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf != null) cancelAnimationFrame(raf);
+    };
+  }, [zoomCameraToken, zoomCameraFactor, zoomCameraDurationMs, clampedZoom]);
+
   // Drive dispersion from the current zoom level with hysteresis. The
   // tiles spread out (groups apart) once the camera passes 125% of the
   // bento fit, and re-pack to bento once it drops back to or below

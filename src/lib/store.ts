@@ -72,6 +72,38 @@ type CanvasState = {
   flickPanVx: number;
   flickPanVy: number;
   flickPan: (vx: number, vy: number) => void;
+  /** Counter + zoom params for programmatic pinch-zoom demos.
+   * useCanvas / CanvasPixi animate `transform.scale` by `zoomFactor`
+   * over `zoomDurationMs`, centered on the current viewport — drives
+   * the real dispersion logic, not a CSS transform. */
+  zoomCameraToken: number;
+  zoomCameraFactor: number;
+  zoomCameraDurationMs: number;
+  zoomCameraBy: (factor: number, durationMs: number) => void;
+  /** Selection without camera nav. selectGroup() also fires
+   * navTargetGroupKey which animates the camera to the cluster;
+   * showProjectPanel() sets the same selection state without the
+   * nav, useful for demos where the camera is already pre-positioned
+   * and we just want the right-side panel / mobile sheet to slide in
+   * or out. */
+  showProjectPanel: (key: string) => void;
+  /** Programmatic InspectorSheet drag for /showcase/sheet-snap.
+   * `deltaY` is the live drag delta in CSS px (positive = pulling
+   * down from the current snap). When non-null, the sheet ignores
+   * its internal dragDelta and uses this. Call releaseSheetDrag()
+   * to clear the override and fire the production snap-to-nearest
+   * logic from the override's last value. */
+  inspectorSheetDragDelta: number | null;
+  setInspectorSheetDragDelta: (delta: number | null) => void;
+  releaseSheetDrag: () => void;
+  /** Counter + scroll target for /showcase/sheet content scroll.
+   * Bumps fire an effect inside InspectorSheet that animates the
+   * content area's scrollTop to `scrollTargetTop` over
+   * `scrollDurationMs`. */
+  inspectorSheetScrollToken: number;
+  inspectorSheetScrollTargetTop: number;
+  inspectorSheetScrollDurationMs: number;
+  scrollSheetContentTo: (top: number, durationMs: number) => void;
   /** Programmatic override for the mobile InspectorSheet snap.
    * `null` = sheet uses its internal default behaviour (peek when a
    * group selects, etc.). Any string forces the sheet to that snap
@@ -176,6 +208,34 @@ export const useSelection = create<CanvasState>((set) => ({
       flickPanToken: s.flickPanToken + 1,
       flickPanVx: vx,
       flickPanVy: vy,
+    })),
+  zoomCameraToken: 0,
+  zoomCameraFactor: 1,
+  zoomCameraDurationMs: 0,
+  zoomCameraBy: (factor, durationMs) =>
+    set((s) => ({
+      zoomCameraToken: s.zoomCameraToken + 1,
+      zoomCameraFactor: factor,
+      zoomCameraDurationMs: durationMs,
+    })),
+  showProjectPanel: (key) =>
+    set({
+      selectedGroupKey: key,
+      selectedId: null,
+      toolbarHidden: true,
+    }),
+  inspectorSheetDragDelta: null,
+  setInspectorSheetDragDelta: (delta) =>
+    set({ inspectorSheetDragDelta: delta }),
+  releaseSheetDrag: () => set({ inspectorSheetDragDelta: null }),
+  inspectorSheetScrollToken: 0,
+  inspectorSheetScrollTargetTop: 0,
+  inspectorSheetScrollDurationMs: 0,
+  scrollSheetContentTo: (top, durationMs) =>
+    set((s) => ({
+      inspectorSheetScrollToken: s.inspectorSheetScrollToken + 1,
+      inspectorSheetScrollTargetTop: top,
+      inspectorSheetScrollDurationMs: durationMs,
     })),
   inspectorSheetSnap: null,
   setInspectorSheetSnap: (snap) => set({ inspectorSheetSnap: snap }),

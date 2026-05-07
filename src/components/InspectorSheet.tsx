@@ -84,6 +84,83 @@ export function InspectorSheet() {
     if (externalSnap) setSnap(externalSnap);
   }, [externalSnap]);
 
+  // Programmatic drag override for /showcase/sheet-snap. When
+  // non-null, the sheet renders at its current snap + this delta
+  // (no transition). When the override goes back to null,
+  // we run the same snap-to-nearest logic the real release path
+  // uses, so the sheet snaps to whichever stop is closest.
+  const externalDragDelta = useSelection(
+    (s) => s.inspectorSheetDragDelta,
+  );
+  const lastExternalDragDeltaRef = useRef(externalDragDelta);
+  useEffect(() => {
+    const prev = lastExternalDragDeltaRef.current;
+    lastExternalDragDeltaRef.current = externalDragDelta;
+    if (externalDragDelta == null && prev != null) {
+      // Released — snap to the nearest state from the held delta.
+      const baseOffset = snapToOffsetPx(snap, vh);
+      const targetOffset = baseOffset + prev;
+      const candidates: Snap[] = ["full", "mid", "peek"];
+      let best: Snap = snap;
+      let bestDist = Infinity;
+      for (const c of candidates) {
+        const d = Math.abs(snapToOffsetPx(c, vh) - targetOffset);
+        if (d < bestDist) {
+          bestDist = d;
+          best = c;
+        }
+      }
+      setSnap(best);
+    }
+  }, [externalDragDelta, snap, vh]);
+
+  // Programmatic content scroll for /showcase/sheet. Animates the
+  // sheet's content area scrollTop to a target over a duration.
+  const inspectorSheetScrollToken = useSelection(
+    (s) => s.inspectorSheetScrollToken,
+  );
+  const inspectorSheetScrollTargetTop = useSelection(
+    (s) => s.inspectorSheetScrollTargetTop,
+  );
+  const inspectorSheetScrollDurationMs = useSelection(
+    (s) => s.inspectorSheetScrollDurationMs,
+  );
+  const lastScrollTokenRef = useRef(inspectorSheetScrollToken);
+  useEffect(() => {
+    if (inspectorSheetScrollToken === lastScrollTokenRef.current) return;
+    lastScrollTokenRef.current = inspectorSheetScrollToken;
+    if (inspectorSheetScrollToken === 0) return;
+    const el = sheetRef.current?.querySelector(
+      "[data-inspector-sheet-content]",
+    ) as HTMLElement | null;
+    if (!el) return;
+    const startTop = el.scrollTop;
+    const targetTop = inspectorSheetScrollTargetTop;
+    const startTs = performance.now();
+    const dur = inspectorSheetScrollDurationMs;
+    let raf: number | null = null;
+    const ease = (t: number) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    function tick(now: number) {
+      if (
+        inspectorSheetScrollToken !== lastScrollTokenRef.current ||
+        !el
+      )
+        return;
+      const t = Math.min(1, (now - startTs) / dur);
+      el.scrollTop = startTop + (targetTop - startTop) * ease(t);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf != null) cancelAnimationFrame(raf);
+    };
+  }, [
+    inspectorSheetScrollToken,
+    inspectorSheetScrollTargetTop,
+    inspectorSheetScrollDurationMs,
+  ]);
+
   // Handle drag from the grab region.
   const onGrabPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -128,10 +205,15 @@ export function InspectorSheet() {
   );
 
   const offsetPx = useMemo(() => {
-    return Math.max(0, snapToOffsetPx(snap, vh) + dragDelta);
-  }, [snap, vh, dragDelta]);
+    // External drag (autopilot demo) takes precedence over the
+    // user's real drag — they're never simultaneous in production.
+    const effectiveDelta =
+      externalDragDelta != null ? externalDragDelta : dragDelta;
+    return Math.max(0, snapToOffsetPx(snap, vh) + effectiveDelta);
+  }, [snap, vh, dragDelta, externalDragDelta]);
 
-  const isDragging = isDraggingRef.current;
+  const isDragging =
+    isDraggingRef.current || externalDragDelta != null;
   // Slower than the original 220 ms — the snap reads as a gentle
   // pull instead of a punchy click, which fits the rest of the
   // site's settle-language (camera 1500-4500 ms, gallery FLIP
@@ -193,6 +275,7 @@ export function InspectorSheet() {
           <div className="mx-auto h-1.5 w-12 rounded-full bg-mute/60" />
         </div>
         <div
+          data-inspector-sheet-content
           className="flex-1 space-y-8 overflow-y-auto px-4 pt-3 pb-5"
           style={{ overscrollBehavior: "contain" }}
         >

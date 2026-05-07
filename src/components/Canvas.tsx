@@ -473,6 +473,7 @@ export function Canvas() {
       onClick={onBackgroundClick}
       role="application"
       aria-label="Works canvas - pan and zoom to navigate"
+      data-canvas-container
     >
       <DispersionContext.Provider value={dispCtx}>
         <div

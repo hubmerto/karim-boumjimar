@@ -646,6 +646,66 @@ export function CanvasPixi() {
     };
   }, [navResetOverviewToken, size]);
 
+  // Programmatic zoom-by-factor for the showcase pinch demos. Same
+  // semantics as the desktop useCanvas watcher: animate the camera's
+  // scale by the given factor, centered on the viewport, over the
+  // supplied duration. Drives the same transform animation path the
+  // production touch pinch handler uses, so dispersion + tile
+  // tweens fire on the threshold cross.
+  const zoomCameraToken = useSelection((s) => s.zoomCameraToken);
+  const zoomCameraFactor = useSelection((s) => s.zoomCameraFactor);
+  const zoomCameraDurationMs = useSelection(
+    (s) => s.zoomCameraDurationMs,
+  );
+  const lastZoomTokenRef = useRef(zoomCameraToken);
+  useEffect(() => {
+    if (zoomCameraToken === lastZoomTokenRef.current) return;
+    lastZoomTokenRef.current = zoomCameraToken;
+    if (zoomCameraToken === 0) return;
+    if (!size) return;
+    const cx = size.w / 2;
+    const cy = size.h / 2;
+    const startTransform = transformRef.current;
+    const targetScale = startTransform.scale * zoomCameraFactor;
+    // Anchor the zoom around the viewport centre — same math the
+    // wheel zoom uses (zoomAt). Translate so cx,cy stays under the
+    // same canvas-space point at the new scale.
+    const canvasX = (cx - startTransform.tx) / startTransform.scale;
+    const canvasY = (cy - startTransform.tx) / startTransform.scale;
+    const targetTx = cx - canvasX * targetScale;
+    const targetTy = cy - canvasY * targetScale;
+    const startTs = performance.now();
+    let raf: number | null = null;
+    const ease = (t: number) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    function tick(now: number) {
+      if (zoomCameraToken !== lastZoomTokenRef.current) return;
+      const t = Math.min(1, (now - startTs) / zoomCameraDurationMs);
+      const e = ease(t);
+      const tx = startTransform.tx + (targetTx - startTransform.tx) * e;
+      const ty = startTransform.ty + (targetTy - startTransform.ty) * e;
+      const scale =
+        startTransform.scale +
+        (targetScale - startTransform.scale) * e;
+      transformRef.current = { tx, ty, scale };
+      const c = pixiContainerRef.current;
+      if (c) {
+        c.x = tx;
+        c.y = ty;
+        c.scale.set(scale);
+      }
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setTransform({ tx, ty, scale });
+      }
+    }
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf != null) cancelAnimationFrame(raf);
+    };
+  }, [zoomCameraToken, zoomCameraFactor, zoomCameraDurationMs, size]);
+
   // Progressive texture load. Cores load first (sequential — they
   // need to appear in bento ASAP) then extras load in PARALLEL
   // so the user doesn't sit through them dripping in one by one

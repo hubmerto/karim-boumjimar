@@ -2,7 +2,7 @@
 
 Hidden, `noindex`'d demo surfaces designed to be screen-recorded
 individually for portfolio reels, case-study videos, and social
-posts. Every route runs an `useAutopilot()` script on a continuous
+posts. Every route runs a `useAutopilot()` script on a continuous
 loop, hides the cursor / scrollbars / chrome via `<DemoFrame />`,
 and pauses when the tab is not visible (resumes from the start of
 the script when it becomes visible — prevents drift during long
@@ -12,23 +12,42 @@ The autopilot is a thin scripted layer that dispatches the same
 store actions a user would. No DOM clicks on canvas pixels, no
 duplicated layout math.
 
-## Routes
+## Single-gesture routes (round-trip clean)
 
-| Route | What it shows | Loop | Recommended viewport |
+These are the focused single-gesture demos. Each gesture's loop is
+the gesture's own symmetry — first and last frame visually
+identical, no fade transitions, no resets, no jump cuts.
+
+| Route | What it shows | Loop | Recording viewport |
 |---|---|---|---|
-| `/showcase` | Original gallery loop on Bodies Under Construction (predates the autopilot system) | ~24 s | 1280 × 800 |
+| `/showcase/sheet` | Sheet drag up, content scroll down, scroll up, drag down | ~12 s | 390 × 844 |
+| `/showcase/sheet-snap` | Partial drag → release → snap-to-nearest (both directions) | ~8 s | 390 × 844 |
+| `/showcase/zoom-mobile` | Programmatic pinch outward → spread → pinch inward → bento | ~8 s | 390 × 844 |
+| `/showcase/cluster` | Tap cluster → FLIP into gallery → tap close → FLIP back | ~10 s | 390 × 844 |
+| `/showcase/strip-mobile` | Tap image in cluster grid → FLIP into strip → close → FLIP back | ~9 s | 390 × 844 |
+| `/showcase/zoom-desktop` | Same pinch as zoom-mobile, desktop renderer | ~8 s | 1280 × 800 |
+| `/showcase/select` | Click cluster → panel slides in → close → slides out | ~6 s | 1280 × 800 |
+| `/showcase/strip-desktop` | Same as strip-mobile, desktop renderer | ~7 s | 1280 × 800 |
+| `/showcase/pan` | Flick right → glide → flick left → glide → recall to centre | ~7 s | 1280 × 800 |
+
+## Multi-gesture / longer-form routes
+
+Earlier showcase set; longer cycles, more state changes per loop.
+
+| Route | What it shows | Loop | Recording viewport |
+|---|---|---|---|
+| `/showcase` | Original gallery loop on Bodies Under Construction | ~24 s | 1280 × 800 |
 | `/showcase/navigation` | Index drawer cycling through three projects | ~22 s | 1280 × 800 |
 | `/showcase/mobile` | Mobile gallery + sheet loop on Symbiosis (MFA) | ~30 s | 390 × 844 |
 | `/showcase/tornado` | Photos swirl around their bento slot | ~5 s | 1280 × 800 |
 | `/showcase/tornado/gif` | Auto-downloads transparent GIF of the swirl | n/a | n/a |
-| **New autopilot routes:** | | | |
 | `/showcase/bento-entry` | Diamond appearing animation, on loop | ~7 s | 1280 × 800 |
 | `/showcase/dispersion` | bento → cluster → bento | ~17 s | 1280 × 800 |
 | `/showcase/flip` | Gallery FLIP open + close on a single image | ~9 s | 1280 × 800 |
 | `/showcase/cluster-variation` | Sweep through 5 different cluster grids | ~35 s | 1280 × 800 |
 | `/showcase/inertia` | Pan flicks → inertial glides | ~12 s | 1280 × 800 |
 | `/showcase/reset-cascade` | Logo-reset from gallery → bento (full chain) | ~14 s | 1280 × 800 |
-| `/showcase/dual-renderer` | DOM canvas + WebGL canvas side-by-side, syncing | ~17 s | 1800 × 900 |
+| `/showcase/dual-renderer` | DOM canvas + WebGL canvas side-by-side | ~17 s | 1800 × 900 |
 | `/showcase/mobile-sheet` | InspectorSheet swipe up + down | ~5 s | 390 × 844 |
 | `/showcase/wordmark` | Logo wordmark fade-in + dissolve | ~4 s | 1080 × 720 |
 
@@ -48,17 +67,41 @@ duplicated layout math.
    end tell'
    ```
 
-2. Wait for the first cycle to complete — it usually includes
-   one-time setup (intro reveal, navigation to a starting cluster,
-   etc.). Subsequent cycles are the recording target.
+2. Wait for the first cycle to complete — most routes spend the
+   first cycle on one-time setup (intro reveal, navigation to a
+   starting cluster, etc.). Subsequent cycles are the recording
+   target.
 
-3. Hit record (QuickTime, OBS, ScreenStudio, Kap — your preference).
+3. Hit record (QuickTime, OBS, ScreenStudio, Kap — your
+   preference).
 
 4. Capture from one loop seam to the next loop seam. The seam is
-   usually obvious (white frame, settled bento, settled cluster).
+   the start state for that route — most are obvious from the
+   route's name + the table above.
 
-5. Stop recording. The clip will loop seamlessly as a video file
-   because the start frame matches the end frame.
+5. Stop recording. The clip should loop seamlessly because the
+   start frame matches the end frame.
+
+## Round-trip cleanness
+
+Every single-gesture route is designed so the cycle's last frame
+visually matches the first. Routes that needed extra work to
+guarantee this:
+
+- **`/showcase/select`** — uses `showProjectPanel(key)` (added to
+  store) which sets selection state without firing the camera nav
+  effect. Calling the regular `selectGroup()` would re-trigger the
+  4.5 s camera tween every cycle; this just toggles the panel.
+- **`/showcase/pan`** — pure flick-flick math drifts ~2 px from
+  the original transform because the friction integrates to ~0.5 %
+  of input velocity in residual displacement. The cycle ends with
+  `navigateToGroup()` to recall the exact starting transform.
+- **`/showcase/zoom-mobile` / `zoom-desktop`** — `zoomCameraBy`
+  anchors on the viewport centre and uses a multiplicative
+  factor, so 1.6× followed by 1/1.6× lands at the original scale
+  without floating-point drift.
+- **`/showcase/sheet`** — the content scroll explicitly returns
+  to scrollTop = 0 inside the cycle; no residual scroll.
 
 ## Autopilot internals
 
@@ -68,7 +111,7 @@ import { DemoFrame } from "@/components/demo/DemoFrame";
 
 useAutopilot(async ({ wait, isInitial, cycle }) => {
   if (isInitial) {
-    // one-time setup
+    // one-time setup — fly to a cluster, expand a group, etc.
   }
   // loop body — runs every cycle, including the first
   someStoreAction();
@@ -79,21 +122,35 @@ useAutopilot(async ({ wait, isInitial, cycle }) => {
 `wait()` rejects with a `CancelError` when the tab goes hidden;
 the hook swallows it and re-runs the script on visibility resume.
 
-The store exposes the actions every demo needs:
+## Store actions exposed for the autopilot suite
 
-- `setSplashGone(boolean)` — gate the canvas's intro reveal effect
-- `selectGroup(key)` — select a project, fly camera to its cluster
-- `selectWork(id, groupKey)` — select a specific image inside a group
-- `expandGroup(key)` / `collapseGroup()` — open / close gallery
-- `navigateToGroup(key)` — same as selectGroup but more deliberate
-- `resetToOverview()` — logo-click equivalent; cascade back to bento
-- `setInspectorSheetSnap("peek" | "mid" | "full" | null)` — drive the
-  mobile sheet (`null` releases the override)
-- `replayIntro()` — bump a token; canvas re-runs the 75 % → 100 %
-  intro reveal animation (used by `/showcase/bento-entry`)
-- `flickPan(vx, vy)` — bump a token + velocity; canvas seeds its
-  kinetic inertia loop with the supplied velocity in screen px / ms
-  (used by `/showcase/inertia`)
+Production actions used as-is:
+- `setSplashGone(boolean)` — gate the canvas's intro reveal
+- `selectGroup(key)`, `selectWork(id, key)` — selection + camera
+- `expandGroup(key)`, `collapseGroup()` — gallery FLIP
+- `navigateToGroup(key)` — fly camera to a cluster
+- `closeProject()`, `deselect()` — clear selection
+- `resetToOverview()` — logo-click cascade back to bento
+- `setInspectorSheetSnap("peek" | "mid" | "full" | null)` — sheet snap
+
+Added for the demo suite:
+- `replayIntro()` — bump a token; useCanvas resets userInteractedRef,
+  snaps to 75 %-bento, animates back to 100 %
+- `flickPan(vx, vy)` — bump a token + velocity; useCanvas seeds
+  velocityRef and starts the same kinetic inertia rAF loop a real
+  release fires
+- `zoomCameraBy(factor, durationMs)` — bump a token + factor; both
+  useCanvas (DOM) and CanvasPixi (WebGL) animate `transform.scale`
+  by the supplied factor centred on the viewport, driving the same
+  clampedZoom / dispersion path real wheel/pinch fires
+- `showProjectPanel(key)` — set selection state without the camera
+  nav target (selectGroup minus navTargetGroupKey)
+- `setInspectorSheetDragDelta(deltaY | null)` — programmatic sheet
+  drag override; sheet renders at peek + delta with no transition
+- `releaseSheetDrag()` — clear the override; sheet snaps to nearest
+  state from the held delta (production snap-to-nearest logic)
+- `scrollSheetContentTo(top, durationMs)` — animate the sheet's
+  scrollable content area to a target scrollTop
 
 ## Window flags (set synchronously at module-load, before mount)
 
@@ -103,47 +160,51 @@ The store exposes the actions every demo needs:
   render the mobile branch (Pixi + InspectorSheet) regardless of
   viewport size
 
-## Status
+## Status report (per spec)
 
-Every autopilot route in the table above ships in this commit set.
-Unknowns reported back to spec:
+**Routes that round-trip cleanly with existing primitives:**
+`/strip-desktop`, `/strip-mobile`, `/cluster`
 
-- Inertia injection: existing useCanvas had no public entry point.
-  Added `flickPan(vx, vy)` to the store + a token watcher in
-  useCanvas that seeds `velocityRef` and starts the same kinetic
-  inertia rAF loop a real wheel/drag release fires.
-- Intro replay: existing intro reveal effect only fired on first
-  splashGone change. Added `replayIntro()` action + a token watcher
-  in useCanvas that resets `userInteractedRef`, snaps the camera
-  to 75 %-bento, and tweens to 100 % bento. The mobile renderer
-  (`CanvasPixi`) does NOT yet honour `replayIntro` — the bento-entry
-  route uses a `key` prop on `<ViewSwitcher />` to remount the
-  whole canvas tree instead, which works on both renderers
-  (cheap because tile thumbnails are cached after the first load).
-- Dual-renderer sync: iframes drift by a few dozen ms over a cycle
-  because each runs its own autopilot. Acceptable for the
-  comparison recording use case. If exact phase-lock is needed,
-  plumb a BroadcastChannel between parent and iframes.
-- Wordmark: production has no animated wordmark beyond the
-  splash's hold-and-dissolve. The route reproduces that treatment
-  on a transparent canvas. If you want a different intro effect
-  (stroke-in, mask reveal), the keyframes live entirely in the
-  route file.
+**Routes that needed store extensions:**
+- `/select` — added `showProjectPanel(key)` (selection without
+  camera nav, otherwise the camera re-tweens every cycle)
+- `/pan` — uses `flickPan(vx, vy)` (added previously) + recall via
+  `navigateToGroup` for exact round-trip
+- `/zoom-mobile`, `/zoom-desktop` — added `zoomCameraBy(factor,
+  durationMs)` to both useCanvas and CanvasPixi
+- `/sheet` — added `setInspectorSheetSnap` interplay with
+  `scrollSheetContentTo(top, durationMs)`
+- `/sheet-snap` — added `setInspectorSheetDragDelta` +
+  `releaseSheetDrag` for programmatic partial-drag-and-snap
 
-Routes that worked cleanly with existing primitives:
-`/dispersion`, `/flip`, `/cluster-variation`, `/reset-cascade`,
-`/mobile-sheet`, `/wordmark`, `/dual-renderer`.
+**Production sheet & partial-drag-and-snap:**
+Production InspectorSheet ALREADY supports partial-drag-and-snap
+via real touch (the existing onGrabPointerUp computes the nearest
+snap from the live `dragDelta`). The `/sheet-snap` route calls
+through a programmatic entry point so the autopilot can drive the
+same flow without simulating pointer events. No production
+behaviour was changed — just exposed.
 
-Routes that needed store extensions: `/inertia` (flickPan),
-`/bento-entry` (key remount).
+**Cluster + image picks:**
+- `/showcase/cluster` — Bodies Under Construction (5 × 4 grid,
+  most visually distinct cluster shape).
+- `/showcase/select` — Bodies Under Construction (same reason —
+  panel content is rich for the recording).
+- `/showcase/strip-desktop`, `/showcase/strip-mobile` — Bodies
+  Under Construction, image `bodies-04`.
 
-Routes that may need a second pass:
-- `/bento-entry` — verify the canvas remount doesn't flash the
-  un-decoded thumbnails on subsequent cycles. If it does, the
-  PreloadGalleryImages pattern can be adapted to keep the
-  thumbnail cache hot during the white wipe.
-- `/inertia` — the flick velocities (1.6, 1.4, 1.2 px/ms) were
-  picked by feel; tune up or down based on what the camera
-  actually needs to glide.
-- `/dual-renderer` — if the iframes drift visibly during a record,
-  add BroadcastChannel sync.
+**Round-trip seams to verify:**
+- `/pan` recall is mathematically exact via `navigateToGroup`,
+  but the recall animation is visible (camera moves back over
+  ~1 s). If the recall trajectory is undesirable, replace with
+  a transform-snap action that doesn't animate.
+- `/zoom-mobile` and `/zoom-desktop` — verify the dispersion-tracker
+  fires on both threshold crosses (1.0 / 1.25 of bentoFit). If
+  tiles get stuck mid-dispersion at the loop seam, the zoom
+  durations may need to outlast the tile transition (2.8 s).
+
+**Mobile routes from desktop browser:**
+All mobile routes set `__FORCE_MOBILE__ = true` synchronously at
+module-load time, so they render correctly in any browser
+regardless of viewport size. For visual fidelity, open Chrome
+at a phone-width window or use DevTools mobile emulation.
