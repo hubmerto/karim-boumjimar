@@ -230,6 +230,103 @@ export function useCanvas(
   const dragMovedRef = useRef(false);
   const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ─── Kinetic inertia ──────────────────────────────────────────
+  // After the user stops scrolling / pinching / panning, the camera
+  // keeps gliding for a beat with exponential friction. Captures
+  // velocity from gesture events via EMA, then a rAF loop drains
+  // it. New input cancels in-flight inertia so the user always has
+  // direct control during a gesture.
+  const velocityRef = useRef({
+    vx: 0, // pan velocity, screen px / ms
+    vy: 0,
+    vScale: 0, // log-scale velocity per ms (positive = zoom in)
+    cx: 0, // last gesture center x — used to keep inertia zooming
+    cy: 0, // around the same point the user was pinching/wheeling.
+  });
+  const wheelIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inertiaRafRef = useRef<number | null>(null);
+  // Last-seen wheel timestamp, so we can compute per-event dt for
+  // the EMA. NaN/Infinity-safe: handler clamps dt to [1, 64] ms.
+  const lastWheelTsRef = useRef<number>(0);
+  const lastPinchTsRef = useRef<number>(0);
+  // Ring of recent pointer-move samples for release-velocity. We
+  // average across ~80 ms of samples instead of using just the
+  // last frame, otherwise the release velocity is whatever jitter
+  // the user's last pixel of motion happened to be.
+  const dragSamplesRef = useRef<{ x: number; y: number; t: number }[]>([]);
+
+  // Stop any in-flight inertia rAF loop and pending wheel-idle
+  // timer. Does NOT zero velocity — call sites that need a fresh
+  // gesture (eg. pointerdown, touchstart) reset velocity manually.
+  const cancelInertia = useCallback(() => {
+    if (inertiaRafRef.current != null) {
+      cancelAnimationFrame(inertiaRafRef.current);
+      inertiaRafRef.current = null;
+    }
+    if (wheelIdleTimerRef.current != null) {
+      clearTimeout(wheelIdleTimerRef.current);
+      wheelIdleTimerRef.current = null;
+    }
+  }, []);
+
+  // Begin draining velocityRef via rAF + exponential friction.
+  // No-op if there's already a loop running or if velocity is
+  // below the minimum threshold (no perceptible glide).
+  const startInertia = useCallback(() => {
+    if (inertiaRafRef.current != null) return;
+    const v0 = velocityRef.current;
+    if (
+      Math.abs(v0.vx) < 0.02 &&
+      Math.abs(v0.vy) < 0.02 &&
+      Math.abs(v0.vScale) < 0.0001
+    ) {
+      return;
+    }
+    let lastTs = performance.now();
+    function tick(now: number) {
+      const v = velocityRef.current;
+      // Cap dt so a tab returning from background doesn't catapult
+      // the camera (one giant frame of accumulated dt × velocity).
+      const dt = Math.min(40, now - lastTs);
+      lastTs = now;
+      // Velocity halves every ~200 ms — long enough to read as a
+      // glide, short enough to settle before the user wonders if
+      // something's broken. ~95% gone by 800 ms.
+      const friction = Math.pow(0.5, dt / 200);
+      v.vx *= friction;
+      v.vy *= friction;
+      v.vScale *= friction;
+      let next = transformRef.current;
+      let any = false;
+      if (Math.abs(v.vScale) > 0.00003) {
+        const factor = Math.exp(v.vScale * dt);
+        next = clampedZoom(next, factor, v.cx, v.cy, viewportRect());
+        any = true;
+      }
+      if (Math.abs(v.vx) > 0.015 || Math.abs(v.vy) > 0.015) {
+        next = clampedPan(
+          {
+            tx: next.tx + v.vx * dt,
+            ty: next.ty + v.vy * dt,
+            scale: next.scale,
+          },
+          viewportRect(),
+        );
+        any = true;
+      }
+      if (!any) {
+        v.vx = 0;
+        v.vy = 0;
+        v.vScale = 0;
+        inertiaRafRef.current = null;
+        return;
+      }
+      setTransform(next);
+      inertiaRafRef.current = requestAnimationFrame(tick);
+    }
+    inertiaRafRef.current = requestAnimationFrame(tick);
+  }, [clampedZoom, clampedPan]);
+
   const [animDuration, setAnimDuration] = useState(1800);
   // True while a programmatic camera animation is in flight. The
   // zoom-driven dispersion and gallery effects skip when this is true,
@@ -237,17 +334,26 @@ export function useCanvas(
   // mid-animation (eg. opening the gallery briefly during a nav-to-group
   // before settling below threshold).
   const programmaticAnimRef = useRef(false);
-  const animateTransform = useCallback((next: Transform, duration = 1800) => {
-    if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
-    programmaticAnimRef.current = true;
-    setIsAnimating(true);
-    setAnimDuration(duration);
-    setTransform(next);
-    animateTimerRef.current = setTimeout(() => {
-      setIsAnimating(false);
-      programmaticAnimRef.current = false;
-    }, duration + 80);
-  }, []);
+  const animateTransform = useCallback(
+    (next: Transform, duration = 1800) => {
+      if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+      // A programmatic camera move overrides any user-gesture
+      // inertia — otherwise the glide fights the tween.
+      cancelInertia();
+      velocityRef.current.vx = 0;
+      velocityRef.current.vy = 0;
+      velocityRef.current.vScale = 0;
+      programmaticAnimRef.current = true;
+      setIsAnimating(true);
+      setAnimDuration(duration);
+      setTransform(next);
+      animateTimerRef.current = setTimeout(() => {
+        setIsAnimating(false);
+        programmaticAnimRef.current = false;
+      }, duration + 80);
+    },
+    [cancelInertia],
+  );
 
   // Auto-zoom from 75% to 100% of bento fit, starting THE INSTANT
   // the splash clears and running over INTRO_REVEAL_MS (= 6000).
@@ -337,6 +443,15 @@ export function useCanvas(
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Cancel any in-flight inertia on unmount so the rAF loop and
+  // wheel-idle timer don't outlive the component (would dispatch
+  // setTransform on an unmounted hook).
+  useEffect(() => {
+    return () => {
+      cancelInertia();
+    };
+  }, [cancelInertia]);
+
   // Wheel handler (must be non-passive to call preventDefault).
   useEffect(() => {
     const el = containerRef.current;
@@ -354,7 +469,30 @@ export function useCanvas(
       }
       programmaticAnimRef.current = false;
       setIsAnimating(false);
+      // If a wheel event arrives while inertia is running, the user
+      // is taking back direct control — kill the glide and reset
+      // velocity so direction changes feel instant. Inside the same
+      // active wheel burst (no inertia running), velocity keeps
+      // accumulating via EMA so it survives across events.
+      if (inertiaRafRef.current != null) {
+        cancelAnimationFrame(inertiaRafRef.current);
+        inertiaRafRef.current = null;
+        velocityRef.current.vx = 0;
+        velocityRef.current.vy = 0;
+        velocityRef.current.vScale = 0;
+      }
+      if (wheelIdleTimerRef.current != null) {
+        clearTimeout(wheelIdleTimerRef.current);
+        wheelIdleTimerRef.current = null;
+      }
+      const now = performance.now();
+      const dt = Math.max(
+        1,
+        Math.min(64, now - (lastWheelTsRef.current || now)),
+      );
+      lastWheelTsRef.current = now;
       const t = transformRef.current;
+      const v = velocityRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
       // Sensitivity dialled down further (0.0025 from 0.005) so the camera
       // glides instead of snapping — the previous setting still felt abrupt
@@ -364,29 +502,55 @@ export function useCanvas(
         setTransform(
           clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()),
         );
-        return;
+        // Track zoom velocity in log-scale per ms. EMA with
+        // alpha=0.35 — recent samples weighted heavier but the
+        // tail of older fast samples isn't washed out by the OS
+        // momentum-decay events that arrive last.
+        const sample = (-e.deltaY * 0.0025) / dt;
+        v.vScale = v.vScale * 0.65 + sample * 0.35;
+        v.vx = 0;
+        v.vy = 0;
+        v.cx = e.clientX;
+        v.cy = e.clientY;
+      } else {
+        // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
+        // deltaY; Shift+wheel converts that into horizontal pan (Figma
+        // convention). Pan sensitivity dialled to 35% so panning feels
+        // calmer — 60% was still overshooting on touchpads.
+        const PAN_SENS = 0.35;
+        let dx = e.deltaX * PAN_SENS;
+        let dy = e.deltaY * PAN_SENS;
+        if (e.shiftKey && Math.abs(e.deltaX) < 0.001) {
+          dx = dy;
+          dy = 0;
+        }
+        setTransform(
+          clampedPan(
+            { tx: t.tx - dx, ty: t.ty - dy, scale: t.scale },
+            viewportRect(),
+          ),
+        );
+        // Track pan velocity in screen px / ms. Same EMA shape as
+        // the zoom branch.
+        const sampleVx = -dx / dt;
+        const sampleVy = -dy / dt;
+        v.vx = v.vx * 0.65 + sampleVx * 0.35;
+        v.vy = v.vy * 0.65 + sampleVy * 0.35;
+        v.vScale = 0;
       }
-      // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
-      // deltaY; Shift+wheel converts that into horizontal pan (Figma
-      // convention). Pan sensitivity dialled to 35% so panning feels
-      // calmer — 60% was still overshooting on touchpads.
-      const PAN_SENS = 0.35;
-      let dx = e.deltaX * PAN_SENS;
-      let dy = e.deltaY * PAN_SENS;
-      if (e.shiftKey && Math.abs(e.deltaX) < 0.001) {
-        dx = dy;
-        dy = 0;
-      }
-      setTransform(
-        clampedPan(
-          { tx: t.tx - dx, ty: t.ty - dy, scale: t.scale },
-          viewportRect(),
-        ),
-      );
+      // Schedule inertia for 80 ms after this event. If another
+      // wheel event arrives first, the timer is reset above and
+      // inertia never fires — the user is still actively scrolling.
+      // Once events truly stop, the timer fires and the camera
+      // glides with whatever velocity the EMA captured.
+      wheelIdleTimerRef.current = setTimeout(() => {
+        wheelIdleTimerRef.current = null;
+        startInertia();
+      }, 80);
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [clampedZoom, clampedPan]);
+  }, [clampedZoom, clampedPan, startInertia]);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -412,12 +576,23 @@ export function useCanvas(
       }
       programmaticAnimRef.current = false;
       setIsAnimating(false);
+      // Pointer-down is a fresh gesture: kill any glide and zero
+      // velocity so the user starts from rest.
+      cancelInertia();
+      velocityRef.current.vx = 0;
+      velocityRef.current.vy = 0;
+      velocityRef.current.vScale = 0;
       e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
       dragOriginRef.current = { x: e.clientX, y: e.clientY };
       dragMovedRef.current = false;
+      // Seed the sample ring so the FIRST move event has something
+      // to compute a delta against.
+      dragSamplesRef.current = [
+        { x: e.clientX, y: e.clientY, t: performance.now() },
+      ];
     },
-    [spaceHeld],
+    [spaceHeld, cancelInertia],
   );
 
   const onPointerMove = useCallback(
@@ -439,6 +614,15 @@ export function useCanvas(
           viewportRect(),
         ),
       );
+      // Record the sample for release-velocity. Trim to the most
+      // recent ~80 ms — older samples are slower-moving fragments
+      // of the gesture that would dilute the post-release glide
+      // into the wrong direction.
+      const samples = dragSamplesRef.current;
+      const now = performance.now();
+      samples.push({ x: e.clientX, y: e.clientY, t: now });
+      const cutoff = now - 80;
+      while (samples.length > 2 && samples[0].t < cutoff) samples.shift();
     },
     [isDragging, clampedPan],
   );
@@ -449,8 +633,23 @@ export function useCanvas(
       e.currentTarget.releasePointerCapture(e.pointerId);
       setIsDragging(false);
       dragOriginRef.current = null;
+      // Kick off inertia using the velocity captured over the last
+      // 80 ms of pointer-move samples. Sign matches drag direction
+      // (drag moves the canvas *with* the pointer, 1:1), so no
+      // negation needed here — opposite of the wheel pan branch.
+      const samples = dragSamplesRef.current;
+      if (samples.length >= 2) {
+        const first = samples[0];
+        const last = samples[samples.length - 1];
+        const dt = Math.max(1, last.t - first.t);
+        velocityRef.current.vx = (last.x - first.x) / dt;
+        velocityRef.current.vy = (last.y - first.y) / dt;
+        velocityRef.current.vScale = 0;
+        startInertia();
+      }
+      dragSamplesRef.current = [];
     },
-    [isDragging],
+    [isDragging, startInertia],
   );
 
   // Pinch zoom (touch). Tracks two-finger distance and scales accordingly.
@@ -477,12 +676,19 @@ export function useCanvas(
         }
         programmaticAnimRef.current = false;
         setIsAnimating(false);
+        // Fresh pinch — clear any glide and zero velocity so the
+        // gesture starts from rest.
+        cancelInertia();
+        velocityRef.current.vx = 0;
+        velocityRef.current.vy = 0;
+        velocityRef.current.vScale = 0;
         pinchStartDistance = distance(e.touches[0], e.touches[1]);
         pinchStartScale = transformRef.current.scale;
         pinchCenter = {
           x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
           y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
         };
+        lastPinchTsRef.current = performance.now();
       }
     }
     function onTouchMove(e: TouchEvent) {
@@ -499,9 +705,29 @@ export function useCanvas(
           clampedZoom(t, factor, pinchCenter.x, pinchCenter.y, viewportRect()),
         );
       }
+      // Track scale velocity so a quick pinch-and-release glides
+      // a touch further. Sample is log(factor) per ms (matches the
+      // wheel branch's units), EMA with the same alpha=0.35.
+      const now = performance.now();
+      const dt = Math.max(1, Math.min(64, now - lastPinchTsRef.current));
+      lastPinchTsRef.current = now;
+      const sample = factor === 1 ? 0 : Math.log(factor) / dt;
+      const vel = velocityRef.current;
+      vel.vScale = vel.vScale * 0.65 + sample * 0.35;
+      vel.cx = pinchCenter.x;
+      vel.cy = pinchCenter.y;
+      vel.vx = 0;
+      vel.vy = 0;
     }
-    function onTouchEnd() {
-      pinchCenter = null;
+    function onTouchEnd(e: TouchEvent) {
+      // When the second finger lifts, kick off inertia from the
+      // velocity captured during the pinch. With less than 2
+      // touches there's no live pinch to track anymore, so the
+      // gesture is over.
+      if (e.touches.length < 2 && pinchCenter) {
+        pinchCenter = null;
+        startInertia();
+      }
     }
 
     el.addEventListener("touchstart", onTouchStart, { passive: false });
@@ -512,7 +738,7 @@ export function useCanvas(
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [clampedZoom]);
+  }, [clampedZoom, cancelInertia, startInertia]);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {
