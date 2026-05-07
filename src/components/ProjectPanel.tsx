@@ -3,7 +3,11 @@
 import { useMemo } from "react";
 import { MEDIUM_LABEL } from "@/components/InspectorContent";
 import { WORKS } from "@/data/works";
-import { descriptionFor } from "@/data/descriptions";
+import {
+  descriptionFor,
+  type CreditEntry,
+  type CreditValue,
+} from "@/data/descriptions";
 import { useSelection } from "@/lib/store";
 
 type ProjectContentProps = {
@@ -168,13 +172,51 @@ export function ProjectContent({
                 {credit.label}
               </div>
               <div className="text-ui leading-[1.55] text-ink">
-                {credit.value}
+                <CreditValueRender credit={credit} />
               </div>
             </div>
           ))}
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** Renders a credit's value: a single name, a single linked name,
+ * or a comma-separated list of (each-optionally-linked) names.
+ * Each anchor gets a trailing ↗ glyph matching the rest of the
+ * site's external-link convention. The "one link per person"
+ * rule lives in descriptions.ts (only the first occurrence of any
+ * name carries a url). */
+function CreditValueRender({ credit }: { credit: CreditEntry }) {
+  if (credit.parts && credit.parts.length > 0) {
+    return (
+      <>
+        {credit.parts.map((part, i) => (
+          <span key={i}>
+            {i > 0 ? ", " : null}
+            <CreditName part={part} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  if (!credit.value) return null;
+  return <CreditName part={{ name: credit.value, url: credit.url }} />;
+}
+
+function CreditName({ part }: { part: CreditValue }) {
+  if (!part.url) return <>{part.name}</>;
+  return (
+    <a
+      href={part.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-mute"
+    >
+      {part.name}
+      <span aria-hidden> ↗</span>
+    </a>
   );
 }
 
