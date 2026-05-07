@@ -146,13 +146,12 @@ export function ProjectContent({
             .split(/\n\n+/)
             .filter(Boolean)
             .map((para, i) => (
-              // text-balance keeps the right edge ragged but
-              // distributes line lengths evenly across the
-              // paragraph instead of leaving short orphans. The
-              // browser limits the balance algorithm to ~10 lines
-              // per block, which is why we render paragraphs as
-              // their own <p> tags rather than one long body div.
-              <p key={i} className="text-balance">
+              // text-pretty: flush-left, ragged-right. Lines fill
+              // up to the next overflow, last line falls
+              // naturally short. The "pretty" part prevents
+              // single-word orphans on the last line, otherwise
+              // it's the natural newspaper-column look.
+              <p key={i} className="text-pretty">
                 {para}
               </p>
             ))}
