@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@/components/Canvas";
 import { CanvasPixi } from "@/components/CanvasPixi";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
@@ -10,6 +10,11 @@ import { BioView } from "@/components/views/BioView";
 import { GrantView } from "@/components/views/GrantView";
 import { NewsView } from "@/components/views/NewsView";
 import { useSelection } from "@/lib/store";
+
+// Must outlive ExpandedGroup's TRANSITION_MS (1500) + close timeout
+// (40) + a comfort buffer so the FLIP-close finishes before the
+// shell unmounts the gallery underneath it.
+const MOBILE_GALLERY_UNMOUNT_DELAY_MS = 1700;
 
 export function ViewSwitcher() {
   const view = useSelection((s) => s.view);
@@ -62,15 +67,51 @@ export function ViewSwitcher() {
   return null;
 }
 
-/** Mobile-only positioning shell for ExpandedGroup. Mounted only
- * when the store says a group is expanded so it doesn't sit on
- * top of the canvas with pointer-events traps when idle. The
- * shell sits below the TopBar (top-12) and gives ExpandedGroup
- * (which uses absolute inset-0) a positioning context. Explicit
- * touchAction lets the strip's native horizontal scroll through. */
+/** Mobile-only positioning shell for ExpandedGroup. The shell sits
+ * below the TopBar (top-12) and gives ExpandedGroup (which uses
+ * absolute inset-0) a positioning context. Explicit touchAction
+ * lets the strip's native horizontal scroll through.
+ *
+ * Mounting is gated on `expandedGroupKey` so the wrapper isn't
+ * sitting over the canvas with `touchAction: pan-x` when idle —
+ * that would block native pinch / pan on the Pixi canvas behind
+ * it. But unmounting has to LAG the close: ExpandedGroup runs a
+ * 1.5 s FLIP-close animation in its `phase: "closing"` state and
+ * relies on staying mounted until that finishes. Tearing it down
+ * the moment the store flips would skip the animation entirely
+ * (and used to cause the gallery to just disappear into a white
+ * frame on mobile). */
 function MobileExpandedGroupShell() {
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
-  if (!expandedGroupKey) return null;
+  const [mounted, setMounted] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (expandedGroupKey) {
+      // Open: mount immediately, cancel any pending unmount from a
+      // recent close.
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      setMounted(true);
+      return;
+    }
+    // Close: only schedule unmount if currently mounted.
+    if (!mounted) return;
+    closeTimerRef.current = window.setTimeout(() => {
+      setMounted(false);
+      closeTimerRef.current = null;
+    }, MOBILE_GALLERY_UNMOUNT_DELAY_MS);
+    return () => {
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
+  }, [expandedGroupKey, mounted]);
+
+  if (!mounted) return null;
   return (
     <div
       className="fixed inset-0 top-12 z-20"

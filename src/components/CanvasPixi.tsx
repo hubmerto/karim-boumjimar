@@ -12,6 +12,7 @@ import {
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -979,6 +980,43 @@ export function CanvasPixi() {
     },
     [selectWork, expandGroup, sprites],
   );
+
+  // Mirror of the open-time handoff but for the gallery CLOSE. The
+  // open path writes flip rects synchronously inside onSpriteUp; the
+  // close has no such hook because collapseGroup can fire from many
+  // places (the gallery's × button, Esc, pinch-out gestures, etc.).
+  // Watching the expandedGroupKey transition catches all of them.
+  // useLayoutEffect runs synchronously in the commit phase, before
+  // ExpandedGroup's regular useEffect that captures source rects, so
+  // the rects are sitting in flipRects.ts ready to be consumed.
+  //
+  // We project the SELECTED group's sprites' cluster positions
+  // through the current transform — that's where the user sees
+  // them in group view, which is the only state from which the
+  // gallery can be open. clusterX/Y is what TileLayer's useTick is
+  // lerping to in that state, so by the time the gallery has been
+  // open long enough for the user to close it, sprites are exactly
+  // there.
+  const prevExpandedRef = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    const prev = prevExpandedRef.current;
+    prevExpandedRef.current = expandedGroupKey;
+    if (!prev || expandedGroupKey) return;
+    const wrapper = containerRef.current;
+    const tNow = transformRef.current;
+    if (!wrapper || !tNow) return;
+    const cr = wrapper.getBoundingClientRect();
+    const map = new Map<string, DOMRect>();
+    for (const s of sprites) {
+      if (s.projectKey !== prev) continue;
+      const left = cr.left + s.clusterX * tNow.scale + tNow.tx;
+      const top = cr.top + s.clusterY * tNow.scale + tNow.ty;
+      const width = s.w * tNow.scale;
+      const height = s.h * tNow.scale;
+      map.set(s.workId, new DOMRect(left, top, width, height));
+    }
+    setFlipRects(map);
+  }, [expandedGroupKey, sprites]);
 
   const wrapperStyle: CSSProperties = {
     position: "fixed",
