@@ -17,15 +17,41 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // Diamond layouts. Column counts taper symmetrically from a tall middle
 // column out toward shorter edges, producing a rhombus silhouette.
 //
-// Desktop sums to 123 (every WORKS entry). Mobile sums to ~39 because
-// only 3 representative tiles per project are rendered on phones (the
-// gallery view fetches the full project on tap). Change these together
-// if the per-cluster cap or the number of projects changes, otherwise
-// the bento leaves tiles at position (0, 0).
+// These arrays are the DESIGN INTENT — the shape we want. The runtime
+// uses `balanceColCounts` to absorb any drift between the hardcoded
+// sum and the actual displayWorks length: if a photo is added or
+// removed from works.ts, the difference is added to (or subtracted
+// from) the middle column so no tile ever ends up stranded at (0, 0).
+// You can therefore add/remove photos freely without having to keep
+// these arrays in lockstep — the diamond just gets a slightly taller
+// or shorter middle column.
+//
+// Sums at last design pass: desktop = 122 (every WORKS entry), mobile
+// = 39 (3 representative tiles per project × 13 projects). The
+// gallery view fetches the full project on tap regardless of which
+// thumbs the canvas curated, so users always see every image.
 export const BENTO_COL_COUNTS_DESKTOP = [
   3, 4, 5, 6, 7, 8, 10, 12, 12, 12, 10, 8, 7, 6, 5, 4, 3,
 ];
 export const BENTO_COL_COUNTS_MOBILE = [3, 5, 7, 9, 7, 5, 3];
+
+/** Adjusts a hardcoded column-count array so its sum equals
+ * `target`. The diff is absorbed by the middle column, which keeps
+ * the diamond's overall shape recognisable while remaining tolerant
+ * to additions / removals. Middle cap is 1 (a 0 col would silently
+ * eat a tile). */
+function balanceColCounts(
+  target: number,
+  base: readonly number[],
+): number[] {
+  const adjusted = [...base];
+  const sum = base.reduce((a, b) => a + b, 0);
+  const diff = target - sum;
+  if (diff === 0) return adjusted;
+  const middle = Math.floor(adjusted.length / 2);
+  adjusted[middle] = Math.max(1, adjusted[middle] + diff);
+  return adjusted;
+}
 
 // On mobile, render at most this many tiles per project on the canvas.
 // The gallery view tap-target still fetches the full project, so users
@@ -132,12 +158,16 @@ export function Canvas() {
       (a, b) => seedSort(a.id) - seedSort(b.id),
     );
     // Per-column masonry: tile counts come from the chosen distribution
-    // (desktop = 7-col mound; mobile = 4-col elongated). Each column is
+    // (desktop = 17-col mound; mobile = 7-col diamond). Each column is
     // centred vertically so middle columns extend further up + down.
     const tileBounds = ordered.map((w) => workBounds(w));
     const maxTileW = tileBounds.reduce((m, b) => Math.max(m, b.width), 0);
     const colSpacing = maxTileW + BENTO_COL_GAP;
-    const cols = colCounts.length;
+    // Auto-balance the column counts to the actual number of works on
+    // screen, so adding/removing photos never strands tiles at (0, 0)
+    // (sum < count) or crashes by reading past the array (sum > count).
+    const balancedCounts = balanceColCounts(ordered.length, colCounts);
+    const cols = balancedCounts.length;
     const colCenters = Array.from(
       { length: cols },
       (_, i) => (i - (cols - 1) / 2) * colSpacing,
@@ -148,7 +178,13 @@ export function Canvas() {
     };
     const map = new Map<string, { x: number; y: number }>();
     let cursor = 0;
-    colCounts.forEach((count, col) => {
+    balancedCounts.forEach((requestedCount, col) => {
+      // Defensive cap: even after balancing, never read past `ordered`.
+      // A misconfigured base array (e.g. a future edit that forgets to
+      // update the diamond) just truncates here instead of crashing.
+      const remaining = ordered.length - cursor;
+      const count = Math.min(Math.max(0, requestedCount), remaining);
+      if (count === 0) return;
       // Sum heights for this column so we can centre the stack.
       let stackH = 0;
       for (let j = 0; j < count; j++) stackH += tileBounds[cursor + j].height;
