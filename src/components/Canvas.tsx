@@ -43,11 +43,24 @@ export function Canvas() {
   const deselect = useSelection((s) => s.deselect);
   const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
+  const indexOpen = useSelection((s) => s.indexOpen);
   const condensed = !!(selectedId || selectedGroupKey);
   // Single merged ProjectPanel (420 px) covers both the work fields
   // and the project description. Canvas right edge must clear it
   // when anything is selected so tiles aren't hidden behind it.
   const rightClass = condensed ? "md:right-[420px]" : "md:right-0";
+  // Left edge: matches whatever's covering the canvas on the left.
+  // When the Works Index drawer is open it reserves 420 px on the
+  // left, so the canvas wrapper has to start at 420 too — otherwise
+  // fitBboxTransform's tx (computed for a viewport at x=420) ends up
+  // applied to a wrapper that begins at x=24, and the cluster lands
+  // 396 px to the left of where it should be (visible behind the
+  // drawer). Index has top priority because it covers the toolbar.
+  const leftClass = indexOpen
+    ? "md:left-[420px]"
+    : condensed
+      ? "md:left-[24px]"
+      : "md:left-[200px]";
   // Pick a column-count distribution based on viewport. Default to
   // desktop on the server (and on the client first render) so SSR and
   // CSR strings match; useEffect below switches to mobile after mount.
@@ -295,9 +308,7 @@ export function Canvas() {
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 top-12 overflow-hidden bg-canvas transition-[left,right] duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
-        condensed ? "md:left-[24px]" : "md:left-[200px]"
-      } ${rightClass}`}
+      className={`fixed inset-0 top-12 overflow-hidden bg-canvas transition-[left,right] duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${leftClass} ${rightClass}`}
       style={{
         cursor,
         touchAction: "none",

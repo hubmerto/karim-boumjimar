@@ -174,10 +174,12 @@ export function Index({
                     : "text-ink hover:bg-line"
                 }`}
               >
-                <span className="truncate">
-                  {e.title}
+                <span className="min-w-0">
+                  <span className="block truncate text-ink">{e.title}</span>
                   {e.venue ? (
-                    <span className="text-mute"> · {e.venue}</span>
+                    <span className="block truncate text-xs text-mute">
+                      {e.venue}
+                    </span>
                   ) : null}
                 </span>
                 <time className="italic text-xs text-mute">{e.year}</time>

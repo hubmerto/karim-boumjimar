@@ -154,6 +154,26 @@ function bentoLayout(works: typeof WORKS) {
   return map;
 }
 
+/** Hand-tuned column counts for projects where the adaptive ramp
+ * (see projectClusterLayout below) doesn't produce the shape we
+ * want. Keys match `${title}|${year}` from works.ts.
+ *
+ *   - "Deep Cuts" — 3 photos in a vertical strip (1 col × 3 rows)
+ *     instead of a wide 1-row strip. The desktop arrangement is
+ *     supposed to be the inverse (3 cols × 1 row); desktop uses the
+ *     bento layout from works.ts positions, not this map.
+ *   - "Bodies Under Construction" — 20 photos in 5 × 4 instead of
+ *     the adaptive 4 × 5. Wider reads better against the phone's
+ *     portrait viewport.
+ *   - "Pandemonium Paradiso" — 14 photos in 5 cols (3 rows + last
+ *     partial) instead of 4 cols.
+ */
+const PROJECT_CLUSTER_COLS: Record<string, number> = {
+  "Deep Cuts|2025": 1,
+  "Bodies Under Construction|2026": 5,
+  "Pandemonium Paradiso|2025": 5,
+};
+
 /** For each project, lay out its FULL photo set (cores + extras)
  * in a tight 4-column grid centred at the project's cores'
  * centroid in the bento. When the user enters group view, every
@@ -222,21 +242,24 @@ function projectClusterLayout(
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    // Column count: prefer 3 and 4 columns over 2 so clusters read
-    // square-ish on a portrait phone instead of tall narrow strips.
-    // Tiny projects (≤3 photos) lay out in a single row so they
-    // don't drift toward "vertical list" territory.
+    // Column count: per-project explicit overrides win when they
+    // exist; otherwise an adaptive ramp keeps clusters square-ish on
+    // a portrait phone instead of becoming tall narrow strips.
     //   1 photo    -> 1 column   (single tile, no choice)
     //   2 photos   -> 2 columns  (single row of two)
     //   3 photos   -> 3 columns  (single row of three)
     //   4-9        -> 3 columns
     //   10+        -> 4 columns
+    const projectKey = ordered[0]
+      ? `${ordered[0].title}|${ordered[0].year}`
+      : "";
     const COLS =
-      ordered.length <= 3
+      PROJECT_CLUSTER_COLS[projectKey] ??
+      (ordered.length <= 3
         ? Math.max(1, ordered.length)
         : ordered.length <= 9
           ? 3
-          : 4;
+          : 4);
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
