@@ -50,6 +50,7 @@ export function Index({
 }) {
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
+  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const [sort, setSort] = useState<Sort>("chronological");
   const [activeIdx, setActiveIdx] = useState(0);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -73,6 +74,18 @@ export function Index({
   useEffect(() => {
     if (open) setActiveIdx(0);
   }, [open, sort]);
+
+  // Sync the highlighted row to the currently-selected group. Lets
+  // external navigation (eg. /showcase/navigation auto-pilot, or a
+  // user clicking a tile that pins a group) pull the highlight
+  // along with it. Local hover / arrow-key updates still win the
+  // moment they fire, since this effect only re-runs when the
+  // GROUP key itself changes — not on every activeIdx tweak.
+  useEffect(() => {
+    if (!open || !selectedGroupKey) return;
+    const idx = entries.findIndex((e) => e.groupKey === selectedGroupKey);
+    if (idx >= 0) setActiveIdx(idx);
+  }, [open, selectedGroupKey, entries]);
 
   // Keyboard nav.
   useEffect(() => {
