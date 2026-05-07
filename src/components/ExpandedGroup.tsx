@@ -176,23 +176,52 @@ export function ExpandedGroup() {
   }, [phase, displayKey]);
 
   // FLIP close: animate each item back to its canvas-tile rect, then unmount.
+  //
+  // Mirrors the OPEN dance exactly — both transitions need a clean
+  // "before" frame followed by a "from→to" rAF frame, otherwise the
+  // browser collapses the two style mutations into a single paint
+  // and the photos teleport instead of gliding. The previous code
+  // tried to set transition + transform in one synchronous block,
+  // which Chromium and Safari both can (and do) optimize down to a
+  // hard cut.
   useLayoutEffect(() => {
     if (phase !== "closing") return;
     const items = itemRefs.current;
+    // Step 1: pin every img at its current (natural gallery) position
+    // with the transition disabled. Reading getBoundingClientRect
+    // RIGHT AFTER this gives a stable starting rect for the FLIP.
+    type Flip = { target: HTMLElement; transform: string };
+    const flips: Flip[] = [];
     items.forEach((el, id) => {
       const src = sourceRectsRef.current.get(id);
       if (!src) return;
-      const target = el.querySelector("img") ?? el;
+      const target = (el.querySelector("img") ?? el) as HTMLElement;
+      target.style.transition = "none";
+      target.style.transformOrigin = "top left";
+      target.style.transform = "";
       const dst = target.getBoundingClientRect();
       if (dst.width === 0 || dst.height === 0) return;
       const dx = src.left - dst.left;
       const dy = src.top - dst.top;
       const s = Math.min(src.width / dst.width, src.height / dst.height);
-      target.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
-      target.style.transformOrigin = "top left";
-      target.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+      flips.push({
+        target,
+        transform: `translate(${dx}px, ${dy}px) scale(${s})`,
+      });
     });
-    const t = setTimeout(() => setDisplayKey(null), TRANSITION_MS + 40);
+    // Force the no-transition snap to commit before we enable the
+    // transition (matching the OPEN path).
+    if (wrapperRef.current) void wrapperRef.current.offsetHeight;
+    // Step 2: enable transition + apply the FLIP-target transform on
+    // the next paint frame. Browser interpolates from "" (natural
+    // gallery slot) to the canvas-tile rect — the genie effect.
+    requestAnimationFrame(() => {
+      flips.forEach(({ target, transform }) => {
+        target.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
+        target.style.transform = transform;
+      });
+    });
+    const t = setTimeout(() => setDisplayKey(null), TRANSITION_MS + 80);
     return () => clearTimeout(t);
   }, [phase]);
 
