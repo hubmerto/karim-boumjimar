@@ -9,6 +9,10 @@ export type CvEntry = {
   city?: string;
   country?: string;
   note?: string;
+  /** External page (institution / press article / programme page).
+   * When present, BioView renders the entry as a link with an ↗ glyph
+   * matching the News page convention. */
+  url?: string;
 };
 
 export const CV_BIO = {
@@ -41,6 +45,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "Malva Museum",
     city: "Lahti",
     country: "FI",
+    url: "https://malvamuseo.fi/en/exhibitions/karim-boumjimar-rites-of-affection/",
   },
   {
     year: "2026",
@@ -48,6 +53,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "Møstings, The Frederiksberg Museums",
     city: "Copenhagen",
     country: "DK",
+    url: "https://frederiksbergmuseerne.dk/en/udstillinger/karim-boumjimar/",
   },
   {
     year: "2026",
@@ -55,6 +61,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "Viborg Kunsthal",
     city: "Viborg",
     country: "DK",
+    url: "https://artviewer.org/karim-boumjimar-at-viborg-kunsthal/",
   },
   {
     year: "2025",
@@ -62,6 +69,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "O—Overgaden, Institute of Contemporary Art",
     city: "Copenhagen",
     country: "DK",
+    url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
   },
   {
     year: "2025",
@@ -69,6 +77,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "CFHILL",
     city: "Stockholm",
     country: "SE",
+    url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
   },
   {
     year: "2025",
@@ -76,6 +85,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "Pori Art Museum",
     city: "Pori",
     country: "FI",
+    url: "https://www.poriartmuseum.fi/en/events/karim-boumjimar-drawings-from-the-hotel-2/",
   },
   {
     year: "2025",
@@ -83,6 +93,7 @@ export const CV_SOLO: CvEntry[] = [
     venue: "Alice Folker Gallery",
     city: "Copenhagen",
     country: "DK",
+    url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/",
   },
 ];
 
@@ -93,6 +104,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Fondation d'entreprise Bernardaud",
     city: "Limoges",
     country: "FR",
+    url: "https://www.bernardaud.com/en/us/news/exposition-generation-ceramique",
   },
   {
     year: "2026",
@@ -100,6 +112,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Jessica Silverman Gallery",
     city: "San Francisco",
     country: "US",
+    url: "https://jessicasilvermangallery.com/online-shows/beauty-is-the-best-defense-ovr/",
   },
   {
     year: "2026",
@@ -107,6 +120,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Kuntsi Museum of Modern Art",
     city: "Vaasa",
     country: "FI",
+    url: "https://vaasa.fi/koe-ja-nae/kulttuuria-vaasassa-ja-seudulla/vaasan-museot/nayttelyt-ja-tapahtumat/miettinen-collection-body-politics/",
   },
   {
     year: "2026",
@@ -114,6 +128,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Kunsthal N",
     city: "Copenhagen",
     country: "DK",
+    url: "https://kunsthaln.dk/en/udstilling/i-can-buy-myself-flowers/",
   },
   {
     year: "2025",
@@ -121,6 +136,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Liljevalchs Konsthall",
     city: "Stockholm",
     country: "SE",
+    url: "https://liljevalchs.se/en/kalender/stockholm-cosmologies/",
   },
   {
     year: "2025",
@@ -128,6 +144,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Kunsthalle Helsinki",
     city: "Helsinki",
     country: "FI",
+    url: "https://taidehalli.fi/en/events/i-will-look-into-the-earth/",
   },
   {
     year: "2025",
@@ -135,6 +152,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Miettinen Collection",
     city: "Berlin",
     country: "DE",
+    url: "https://miettinen-collection.de/2025/10/26/this-is-just-the-beginning/",
   },
   {
     year: "2025",
@@ -142,6 +160,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Kunsthal Charlottenborg",
     city: "Copenhagen",
     country: "DK",
+    url: "https://afgangskataloget.dk/artist/karim-boumjimar/",
   },
   {
     year: "2025",
@@ -149,6 +168,15 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Kunsthal Charlottenborg",
     city: "Copenhagen",
     country: "DK",
+    url: "https://artmap.com/kunsthalcharlottenborg/exhibition/charlottenborg-spring-exhibition-2025",
+  },
+  {
+    year: "2025",
+    title: "When Form Becomes Attitude",
+    venue: "Robert Grunenberg",
+    city: "Berlin",
+    country: "DE",
+    url: "https://robertgrunenberg.com/exhibition/when-form-becomes-attitude/",
   },
   {
     year: "2025",
@@ -156,6 +184,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "TINA Gallery",
     city: "London",
     country: "UK",
+    url: "https://saliva.live/exhibitions/66c4dd65",
   },
   {
     year: "2023",
@@ -163,6 +192,15 @@ export const CV_GROUP: CvEntry[] = [
     venue: "Centre d'Art La Panera",
     city: "Lleida",
     country: "ES",
+    url: "https://www.lapanera.cat/en/programming/expositions/ecologies-queer-aberracions-naturalment-subversives",
+  },
+  {
+    year: "2023",
+    title: "Fear and Fauna",
+    venue: "ARIEL – Feminism in the Aesthetic",
+    note: "nomadic",
+    country: "DK",
+    url: "https://arielfeminisms.dk/#upcoming-fear-and-fauna",
   },
   {
     year: "2021",
@@ -170,6 +208,7 @@ export const CV_GROUP: CvEntry[] = [
     venue: "O—Overgaden, Institute of Contemporary Art",
     city: "Copenhagen",
     country: "DK",
+    url: "https://overgaden.org/en/exhibitions/psychopathia-sexualis",
   },
   {
     year: "2021",
@@ -221,11 +260,17 @@ export const CV_GRANTS: CvEntry[] = [
   {
     year: "2025",
     title: "Ulrica Hydman Vallien Foundation Talent Scholarship",
+    url: "https://www.ulricahydmanvalliensstiftelse.se/the-scholarships/",
   },
   {
     year: "2025",
     title:
       "Symbiosis sculptural work received the Blix Prize at Kunsthal Charlottenborg",
+  },
+  {
+    year: "2025",
+    title: "Named one of Frieze’s Ten Artists to Watch",
+    url: "https://www.frieze.com/article/ten-artists-watch-2025",
   },
   { year: "2025", title: "Danish Arts Foundation Working Grant" },
   { year: "2022", title: "Danish Arts Foundation Working Grant" },
@@ -243,16 +288,67 @@ export const CV_COLLECTIONS = [
 export const CV_PRESS: CvEntry[] = [
   {
     year: "2026",
-    title: "Kultur Information - Birds of Paradise review by Kirsten Kytner",
+    title: "Munchies Art Club — Bodies Under Construction",
+    url: "https://www.munchiesart.club/karim-boumjimar-bodies-construction-mostings/",
   },
-  { year: "2026", title: "Politiken - Interview" },
-  { year: "2025", title: "Frieze - Ten Artists to Watch in 2025" },
-  { year: "2025", title: "Cultbytes - Feature by Jalane Note" },
-  { year: "2025", title: "ELLE Denmark - Interview by Ditlev Fejerskov" },
+  {
+    year: "2026",
+    title: "Art Viewer — Bodies Under Construction at Frederiksberg",
+    url: "https://artviewer.org/karim-boumjimar-at-frederiksberg-museum/",
+  },
+  {
+    year: "2026",
+    title: "Art Viewer — Birds of Paradise at Viborg Kunsthal",
+    url: "https://artviewer.org/karim-boumjimar-at-viborg-kunsthal/",
+  },
+  {
+    year: "2026",
+    title: "Politiken — Interview",
+    url: "https://politiken.dk/ibyen/art10617381/%C2%BBDer-er-ikke-s%C3%A5-meget-jeg-f%C3%B8ler-jeg-g%C3%A5r-glip-af.-Jo-m%C3%A5ske-lige-et-par-n%C3%A6tter-mere-p%C3%A5-Berghain%C2%AB",
+  },
   {
     year: "2025",
-    title: "Kunstkritikk - Dionysus at Berghain by Louise Steiwer",
+    title: "Cultbytes — Insistence on Mutability is Defiant",
+    url: "https://cultbytes.com/in-stockholm-karim-boumjimars-insistence-on-mutability-is-defiant/",
   },
-  { year: "2025", title: "Dagens Industri Weekend - Feature" },
-  { year: "2024", title: "Politiken - Feature" },
+  {
+    year: "2025",
+    title: "Dagens Industri Weekend — Feature",
+    url: "https://www.di.se/nyheter/mestadels-formogna-som-koper-mina-verk/",
+  },
+  {
+    year: "2025",
+    title: "Art Viewer — Pandemonium Paradiso at O—Overgaden",
+    url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
+  },
+  {
+    year: "2025",
+    title: "Ceramics Now — weekly news roundup",
+    url: "https://www.ceramicsnow.org/news/the-weeks-news-in-the-ceramic-art-world-october-22-2025/",
+  },
+  {
+    year: "2025",
+    title: "ELLE Danmark — Interview",
+    url: "https://elle.dk/agenda/karriere/billedkunstner-karim-boumjimar-at-springe-ud-som-kunstner-var-i-virkeligheden-svaerere-end-at-springe-ud-som-queer/",
+  },
+  {
+    year: "2025",
+    title: "Frieze — Ten Artists to Watch in 2025",
+    url: "https://www.frieze.com/article/ten-artists-watch-2025",
+  },
+  {
+    year: "2024",
+    title: "Politiken — Feature",
+    url: "https://politiken.dk/kultur/design/art10131168/%C2%BBHun-stod-og-peb-s%C3%A5-jeg-hev-hende-op-i-sengen.-Det-skulle-jeg-nok-ikke-have-gjort%C2%AB",
+  },
+  {
+    year: "2023",
+    title: "Arts Help — Queer Ecologies",
+    url: "https://www.artshelp.com/queer-ecologies-by-karim-boumjimar-chaotic-drawings-for-queer-rights/",
+  },
+  {
+    year: "2016",
+    title: "Dazed Digital — early @beigetype coverage",
+    url: "https://www.dazeddigital.com/artsandculture/article/31032/1/teen-artist-removes-his-nipples-and-sells-them-as-art",
+  },
 ];

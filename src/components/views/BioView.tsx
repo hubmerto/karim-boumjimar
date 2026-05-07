@@ -183,22 +183,47 @@ function CvBlock({ label, entries }: { label: string; entries: CvEntry[] }) {
             className="grid grid-cols-[64px_1fr] items-baseline gap-x-3"
           >
             <span className="text-mute tabular-nums">{e.year}</span>
-            <span>
-              <span className="text-ink">{e.title}</span>
-              {e.venue ? <span className="text-ink">, {e.venue}</span> : null}
-              {e.city ? (
-                <span className="text-mute">
-                  , {e.city}
-                  {e.country ? `, ${e.country}` : ""}
-                </span>
-              ) : null}
-              {e.note ? (
-                <span className="italic text-mute"> ({e.note})</span>
-              ) : null}
-            </span>
+            <CvEntryBody entry={e} />
           </li>
         ))}
       </ul>
     </div>
   );
+}
+
+/** Renders the title/venue/city/country/note line for a CV entry. If
+ * the entry has a `url`, the whole line wraps in an external link
+ * with a trailing ↗ glyph (matching the News page convention). */
+function CvEntryBody({ entry: e }: { entry: CvEntry }) {
+  const inner = (
+    <>
+      <span className="text-ink">{e.title}</span>
+      {e.venue ? <span className="text-ink">, {e.venue}</span> : null}
+      {e.city ? (
+        <span className="text-mute">
+          , {e.city}
+          {e.country ? `, ${e.country}` : ""}
+        </span>
+      ) : null}
+      {e.note ? <span className="italic text-mute"> ({e.note})</span> : null}
+      {e.url ? (
+        <span aria-hidden className="ml-1 text-xs text-mute">
+          ↗
+        </span>
+      ) : null}
+    </>
+  );
+  if (e.url) {
+    return (
+      <a
+        href={e.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:[&_.text-ink]:text-mute"
+      >
+        {inner}
+      </a>
+    );
+  }
+  return <span>{inner}</span>;
 }
