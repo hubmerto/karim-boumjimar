@@ -10,10 +10,10 @@ type Snap = "peek" | "mid" | "full";
 
 // At peek state we want to see the grab handle plus the first
 // section's "Work / About + arrow" header poking out, so the user
-// gets a tactile hint that the sheet can be dragged up. 64 px lands
-// just below that bar — more than the previous 56 px so the arrow
-// doesn't get cropped on small phones.
-const PEEK_PX = 64;
+// gets a tactile hint that the sheet can be dragged up. 72 px
+// accounts for the thicker drag handle (30 px hit area) plus the
+// section header bar peeking through.
+const PEEK_PX = 72;
 const TOP_RESERVE_PX = 64; // always leave 64px for the top bar + breathing room
 
 /** Effective sheet height in CSS px given current viewport height. */
@@ -168,16 +168,19 @@ export function InspectorSheet() {
       <div className="flex h-full flex-col border-t border-line bg-canvas shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">
         {/* Drag handle. Just the grab line — the section header bars
             below carry the label + ↑/↓ toggle, so a dedicated title
-            bar here would be a duplicate. */}
+            bar here would be a duplicate. The wrapper carries
+            generous vertical padding so the touch target (~30 px)
+            is much larger than the visible pill, which made the
+            handle hard to grab on phones. */}
         <div
-          className="cursor-grab touch-none select-none active:cursor-grabbing"
+          className="cursor-grab touch-none select-none py-3 active:cursor-grabbing"
           onPointerDown={onGrabPointerDown}
           onPointerMove={onGrabPointerMove}
           onPointerUp={onGrabPointerUp}
           onPointerCancel={onGrabPointerUp}
           aria-label="Drag to resize"
         >
-          <div className="mx-auto my-2 h-1 w-10 rounded-full bg-line" />
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-mute/60" />
         </div>
         <div
           className="flex-1 space-y-8 overflow-y-auto px-4 pt-3 pb-5"
