@@ -7,9 +7,13 @@ import { DefaultView, SelectedView } from "@/components/InspectorContent";
 import { ProjectContent } from "@/components/ProjectPanel";
 
 type Snap = "peek" | "mid" | "full";
-type Mode = "default" | "index";
 
-const PEEK_PX = 56; // height visible at"peek" snap (just header)
+// At peek state we want to see the grab handle plus the first
+// section's "Work / About + arrow" header poking out, so the user
+// gets a tactile hint that the sheet can be dragged up. 64 px lands
+// just below that bar — more than the previous 56 px so the arrow
+// doesn't get cropped on small phones.
+const PEEK_PX = 64;
 const TOP_RESERVE_PX = 64; // always leave 64px for the top bar + breathing room
 
 /** Effective sheet height in CSS px given current viewport height. */
@@ -35,7 +39,6 @@ export function InspectorSheet() {
     : null;
 
   const [snap, setSnap] = useState<Snap>("peek");
-  const [mode, setMode] = useState<Mode>("default");
   const [dragDelta, setDragDelta] = useState(0);
   const [vh, setVh] = useState(0);
 
@@ -63,7 +66,6 @@ export function InspectorSheet() {
   // (mid -> full snap states still work via the drag gesture).
   useEffect(() => {
     if (selected && !expandedGroupKey) {
-      setMode("default");
       setSnap("peek");
     }
   }, [selected, expandedGroupKey]);
@@ -73,7 +75,6 @@ export function InspectorSheet() {
   // had so the group view returns to a sensible state.
   useEffect(() => {
     if (expandedGroupKey) {
-      setMode("default");
       setSnap("peek");
     }
   }, [expandedGroupKey]);
@@ -130,6 +131,19 @@ export function InspectorSheet() {
     ? "none"
     : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)";
 
+  // Toggle handler shared by every section header arrow (Work,
+  // About). Tapping flips between peek and mid; from full it goes
+  // to peek (one tap closes regardless of how high it was pulled).
+  const toggleSnap = useCallback(() => {
+    setSnap((s) => (s === "peek" ? "mid" : "peek"));
+  }, []);
+
+  const isOpen = snap !== "peek";
+  const sheetToggle = useMemo(
+    () => ({ isOpen, onToggle: toggleSnap }),
+    [isOpen, toggleSnap],
+  );
+
   // Only meaningful on the exhibitions canvas; other views show their own full content.
   // Must come AFTER all hooks to satisfy the rules of hooks.
   if (view !== "exhibitions") return null;
@@ -152,6 +166,9 @@ export function InspectorSheet() {
       aria-label="Inspector"
     >
       <div className="flex h-full flex-col border-t border-line bg-canvas shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">
+        {/* Drag handle. Just the grab line — the section header bars
+            below carry the label + ↑/↓ toggle, so a dedicated title
+            bar here would be a duplicate. */}
         <div
           className="cursor-grab touch-none select-none active:cursor-grabbing"
           onPointerDown={onGrabPointerDown}
@@ -161,116 +178,22 @@ export function InspectorSheet() {
           aria-label="Drag to resize"
         >
           <div className="mx-auto my-2 h-1 w-10 rounded-full bg-line" />
-          <div className="flex h-10 items-center justify-between border-b border-line px-4">
-            <button
-              type="button"
-              onClick={() => {
-                if (mode === "index") setMode("default");
-                else setSnap((s) => (s === "peek" ? "mid" : "peek"));
-              }}
-              className="flex items-center gap-2 text-ui text-ink"
-              aria-label={
-                snap === "peek" ? "Open inspector" : "Close inspector"
-              }
-            >
-              {mode === "index" ? (
-                "← back"
-              ) : (
-                <>
-                  <span aria-hidden className="text-mute">
-                    {snap === "peek" ? "↑" : "↓"}
-                  </span>
-                  <span>{selected ? "Work" : "About"}</span>
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (mode === "index") {
-                  setMode("default");
-                } else {
-                  setMode("index");
-                  setSnap("full");
-                }
-              }}
-              className="italic text-meta uppercase tracking-[0.1em] text-mute hover:text-ink"
-            >
-              {mode === "index" ? "Close" : "Index"}
-            </button>
-          </div>
         </div>
         <div
-          className="flex-1 space-y-8 overflow-y-auto px-4 py-5"
+          className="flex-1 space-y-8 overflow-y-auto px-4 pt-3 pb-5"
           style={{ overscrollBehavior: "contain" }}
         >
-          {mode === "index" ? (
-            <SheetIndex onPick={() => setMode("default")} />
-          ) : (
-            <>
-              {selected ? <SelectedView work={selected} /> : null}
-              {selectedGroupKey ? (
-                <div className="border-t border-line pt-6">
-                  <ProjectContent />
-                </div>
-              ) : null}
-              {!selected && !selectedGroupKey ? <DefaultView /> : null}
-            </>
-          )}
+          {selected ? (
+            <SelectedView work={selected} sheetToggle={sheetToggle} />
+          ) : null}
+          {selectedGroupKey ? (
+            <div className={selected ? "border-t border-line pt-6" : ""}>
+              <ProjectContent sheetToggle={sheetToggle} />
+            </div>
+          ) : null}
+          {!selected && !selectedGroupKey ? <DefaultView /> : null}
         </div>
       </div>
     </div>
-  );
-}
-
-function SheetIndex({ onPick }: { onPick: () => void }) {
-  const navigateTo = useSelection((s) => s.navigateTo);
-  const entries = useMemo(() => {
-    const seen = new Map<
-      string,
-      { id: string; title: string; year: number | string; venue?: string }
-    >();
-    for (const w of WORKS) {
-      const key = `${w.title}|${w.year}`;
-      if (!seen.has(key)) {
-        seen.set(key, {
-          id: w.id,
-          title: w.title,
-          year: w.year,
-          venue: w.venue,
-        });
-      }
-    }
-    return Array.from(seen.values()).sort((a, b) => {
-      const ay =
-        typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
-      const by =
-        typeof b.year === "number" ? b.year : parseInt(String(b.year), 10) || 0;
-      return by - ay;
-    });
-  }, []);
-
-  return (
-    <ul className="-mx-4">
-      {entries.map((e) => (
-        <li key={`${e.title}-${e.year}`}>
-          <button
-            type="button"
-            onClick={() => {
-              navigateTo(e.id);
-              onPick();
-            }}
-            className="grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-caption text-ink active:bg-line"
-          >
-            <span className="truncate">
-              {e.title}
-              {e.venue ? <span className="text-mute"> · {e.venue}</span> : null}
-            </span>
-            <time className="italic text-xs text-mute">{e.year}</time>
-          </button>
-        </li>
-      ))}
-    </ul>
   );
 }

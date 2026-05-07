@@ -60,7 +60,17 @@ export function DefaultView() {
   );
 }
 
-export function SelectedView({ work }: { work: Work }) {
+type SelectedViewProps = {
+  work: Work;
+  /**
+   * When provided, the section header arrow mirrors the sheet snap
+   * state (↓ open / ↑ peek) and tapping it toggles the sheet
+   * instead of closing the work. Used by the mobile InspectorSheet.
+   */
+  sheetToggle?: { isOpen: boolean; onToggle: () => void };
+};
+
+export function SelectedView({ work, sheetToggle }: SelectedViewProps) {
   const closeInspector = useSelection((s) => s.closeInspector);
   const rows: { label: string; value: string | undefined }[] = [
     { label: "TITLE", value: work.title },
@@ -82,14 +92,27 @@ export function SelectedView({ work }: { work: Work }) {
         <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
           Work
         </span>
-        <button
-          type="button"
-          onClick={closeInspector}
-          aria-label="Close inspector"
-          className="text-base leading-none text-mute hover:text-ink"
-        >
-          →
-        </button>
+        {sheetToggle ? (
+          <button
+            type="button"
+            onClick={sheetToggle.onToggle}
+            aria-label={
+              sheetToggle.isOpen ? "Close inspector" : "Open inspector"
+            }
+            className="text-base leading-none text-mute hover:text-ink"
+          >
+            {sheetToggle.isOpen ? "↓" : "↑"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={closeInspector}
+            aria-label="Close inspector"
+            className="text-base leading-none text-mute hover:text-ink"
+          >
+            →
+          </button>
+        )}
       </div>
       <dl className="space-y-3">
         {rows.map((row) => (

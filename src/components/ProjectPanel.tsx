@@ -38,9 +38,22 @@ function useProjectData(): ProjectData | null {
   }, [activeKey]);
 }
 
+type ProjectContentProps = {
+  showClose?: boolean;
+  /**
+   * When provided, renders an arrow that mirrors the sheet snap
+   * state (↓ open / ↑ peek) and tapping toggles the sheet. Used
+   * by the mobile InspectorSheet. Takes precedence over showClose.
+   */
+  sheetToggle?: { isOpen: boolean; onToggle: () => void };
+};
+
 /** Reusable body of the project description, used by the desktop side
  * panel and the mobile bottom sheet. */
-export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
+export function ProjectContent({
+  showClose = false,
+  sheetToggle,
+}: ProjectContentProps) {
   const data = useProjectData();
   const closeProject = useSelection((s) => s.closeProject);
   if (!data) return null;
@@ -50,7 +63,20 @@ export function ProjectContent({ showClose = false }: { showClose?: boolean }) {
         <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
           About
         </span>
-        {showClose ? (
+        {sheetToggle ? (
+          <button
+            type="button"
+            onClick={sheetToggle.onToggle}
+            aria-label={
+              sheetToggle.isOpen
+                ? "Close project description"
+                : "Open project description"
+            }
+            className="text-base leading-none text-mute hover:text-ink"
+          >
+            {sheetToggle.isOpen ? "↓" : "↑"}
+          </button>
+        ) : showClose ? (
           <button
             type="button"
             onClick={closeProject}
