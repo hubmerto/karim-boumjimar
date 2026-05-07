@@ -206,7 +206,7 @@ function CvEntryBody({ entry: e }: { entry: CvEntry }) {
     >
       {e.title}
       <span aria-hidden className="ml-1 text-xs text-mute">
-        ↗
+        {"↗︎"}
       </span>
     </a>
   ) : (
@@ -238,7 +238,7 @@ function CvEntryBody({ entry: e }: { entry: CvEntry }) {
               >
                 {p.label}
                 <span aria-hidden className="ml-1 text-xs text-mute">
-                  ↗
+                  {"↗︎"}
                 </span>
               </a>
             </span>

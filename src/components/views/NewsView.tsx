@@ -37,7 +37,7 @@ function NewsBody({ entry: e }: { entry: NewsEntry }) {
     >
       {e.title}
       <span aria-hidden className="ml-1 text-xs text-mute">
-        ↗
+        {"↗︎"}
       </span>
     </a>
   ) : (
@@ -63,7 +63,7 @@ function NewsBody({ entry: e }: { entry: NewsEntry }) {
               >
                 {p.label}
                 <span aria-hidden className="ml-1 text-xs text-mute">
-                  ↗
+                  {"↗︎"}
                 </span>
               </a>
             </span>

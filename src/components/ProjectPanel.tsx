@@ -212,7 +212,10 @@ function CreditName({ part }: { part: CreditValue }) {
       className="hover:text-mute"
     >
       {part.name}
-      <span aria-hidden> ↗</span>
+      {/* ︎ (Variation Selector-15) forces text presentation —
+          without it iOS Safari auto-renders ↗ as a colour emoji
+          because U+2197 is emoji_presentation_default in Unicode. */}
+      <span aria-hidden>{" ↗︎"}</span>
     </a>
   );
 }
