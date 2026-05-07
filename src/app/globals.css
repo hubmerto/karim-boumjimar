@@ -67,6 +67,19 @@ button {
   cursor: pointer;
 }
 
+/* Hide the native cursor on fine-pointer devices — CustomCursor.tsx
+   draws its own black ball that tracks the mouse. Touch / coarse-
+   pointer devices keep their native behaviour (they don't show a
+   cursor anyway). !important wins over Tailwind's cursor-pointer
+   on buttons + the canvas's dynamic cursor: grab styles. */
+@media (pointer: fine) {
+  html,
+  body,
+  body * {
+    cursor: none !important;
+  }
+}
+
 
 a {
   color: inherit;

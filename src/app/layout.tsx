@@ -3,6 +3,7 @@ import { Libre_Baskerville } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ContentGuard } from "@/components/ContentGuard";
+import { CustomCursor } from "@/components/CustomCursor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
@@ -88,6 +89,10 @@ export default function RootLayout({
     <html lang="en" className={libre.variable}>
       <body>
         <ErrorBoundary>{children}</ErrorBoundary>
+        {/* Black-ball cursor — tracks the mouse on fine-pointer
+            devices, grows on interactive elements. Hidden on
+            touch via the component's own pointer:fine guard. */}
+        <CustomCursor />
         {/* Block right-click "save image" on img + canvas elements.
             Soft deterrent only — not a real DRM. */}
         <ContentGuard />
