@@ -6,38 +6,39 @@ import { useSelection } from "@/lib/store";
 /**
  * Drives /showcase/navigation. Cycle:
  *
- *   diamond + index closed (rest)
- *   open index
- *   navigate Beauty → Pandemonium → Spring (camera flies + index
- *     highlight follows)
- *   close index
- *   reset to diamond
- *   loop
+ *   anchor at Pandemonium Paradiso (index open, highlight on
+ *     Pandemonium, camera at the cluster)
+ *   index switches to Beauty is the Best Defense → camera flies
+ *   index switches to Queer Ecologies → camera flies
+ *   index switches back to Pandemonium → camera flies
+ *   loop (now back at the cycle's start state)
  *
- * Each cycle starts and ends at the same diamond rest state.
+ * Pandemonium is the anchor: every cycle starts and ends at the
+ * same Pandemonium-cluster + index-open state. No reset to the
+ * diamond — the navigation demo's natural rest is "at a project
+ * with the index open", not the overview.
  */
 
-const PROJECTS = [
+const ANCHOR = "Pandemonium Paradiso|2025";
+const VISITS = [
   "Beauty is the Best Defense|2026",
-  "Pandemonium Paradiso|2025",
-  "Spring Has Arrived|2023",
+  "Queer Ecologies|2023",
 ] as const;
 
 const T = {
   INITIAL_INTRO: 6500,
-  DIAMOND_HOLD: 800,
-  INDEX_OPEN_HOLD: 600,
+  // Setup-only: open the index drawer + fly to the anchor before
+  // the loop body starts.
+  INITIAL_SETTLE: 800,
   GROUP_FLY_IN: 5000,
+  // Hold each visited project for a beat after the camera arrives.
   PROJECT_LINGER: 1500,
-  INDEX_CLOSE_HOLD: 600,
-  RESET_FLY_BACK: 5000,
 };
 
 export function AutoPilotNav() {
   const setSplashGone = useSelection((s) => s.setSplashGone);
   const setIndexOpen = useSelection((s) => s.setIndexOpen);
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
-  const resetToOverview = useSelection((s) => s.resetToOverview);
 
   useEffect(() => {
     setSplashGone(true);
@@ -53,23 +54,26 @@ export function AutoPilotNav() {
     }
 
     async function loop() {
-      // First-run intro reveal.
+      // First-run setup: intro reveal, open the index, and fly to
+      // the anchor cluster. The anchor matches the loop seam, so
+      // subsequent cycles never touch the diamond — they just
+      // sweep through the rotation.
       await wait(T.INITIAL_INTRO);
+      if (cancelled) return;
+      setIndexOpen(true);
+      await wait(T.INITIAL_SETTLE);
+      navigateToGroup(ANCHOR);
+      await wait(T.GROUP_FLY_IN);
       if (cancelled) return;
 
       while (!cancelled) {
-        // 1. Diamond, index closed.
-        await wait(T.DIAMOND_HOLD);
+        // 1. Hold the anchor (Pandemonium).
+        await wait(T.PROJECT_LINGER);
         if (cancelled) return;
 
-        // 2. Open index drawer.
-        setIndexOpen(true);
-        await wait(T.INDEX_OPEN_HOLD);
-        if (cancelled) return;
-
-        // 3. Sweep through projects — camera flies to each, index
-        //    highlight follows because Index syncs to selectedGroupKey.
-        for (const key of PROJECTS) {
+        // 2. Visit each project in the rotation. Index highlight
+        //    follows because Index syncs to selectedGroupKey.
+        for (const key of VISITS) {
           navigateToGroup(key);
           await wait(T.GROUP_FLY_IN);
           if (cancelled) return;
@@ -77,15 +81,10 @@ export function AutoPilotNav() {
           if (cancelled) return;
         }
 
-        // 4. Close the index drawer.
-        setIndexOpen(false);
-        await wait(T.INDEX_CLOSE_HOLD);
-        if (cancelled) return;
-
-        // 5. Reset to diamond — camera flies back, tiles re-pack.
-        resetToOverview();
-        await wait(T.RESET_FLY_BACK);
-        if (cancelled) return;
+        // 3. Loop back to the anchor — camera lands on Pandemonium
+        //    in the same state the cycle began with.
+        navigateToGroup(ANCHOR);
+        await wait(T.GROUP_FLY_IN);
       }
     }
 
@@ -94,7 +93,7 @@ export function AutoPilotNav() {
     return () => {
       cancelled = true;
     };
-  }, [setSplashGone, setIndexOpen, navigateToGroup, resetToOverview]);
+  }, [setSplashGone, setIndexOpen, navigateToGroup]);
 
   return null;
 }
