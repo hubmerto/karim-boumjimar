@@ -22,6 +22,24 @@ export function CustomCursor() {
   const ref = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
   const [visible, setVisible] = useState(false);
+  // Skip rendering when a /showcase/* demo route has marked the
+  // body with .demo-mode (set by <DemoFrame />). Recordings should
+  // be free of UI affordances; the production cursor would otherwise
+  // sit centred over the canvas the moment the user moves their
+  // mouse.
+  const [demoMode, setDemoMode] = useState(false);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const update = () =>
+      setDemoMode(document.body.classList.contains("demo-mode"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     // Don't initialize on touch-only devices.
@@ -64,6 +82,8 @@ export function CustomCursor() {
       document.removeEventListener("mouseleave", leave);
     };
   }, []);
+
+  if (demoMode) return null;
 
   return (
     <div

@@ -56,6 +56,22 @@ type CanvasState = {
    * to the bento overview (top-bar logo click). Canvas hooks watch
    * this and animate the camera back to the fit-all bento target. */
   navResetOverviewToken: number;
+  /** Counter bumped to retrigger the canvas's intro reveal animation
+   * (75 % → 100 % bento with the staggered tile fade-in). The /showcase
+   * /bento-entry demo bumps this to loop the entry. Canvas hooks
+   * reset their userInteraction gate + re-run the reveal effect when
+   * this changes. */
+  introReplayToken: number;
+  replayIntro: () => void;
+  /** Counter + last-injected pan velocity for /showcase/inertia.
+   * useCanvas reads `flickPanVx` / `flickPanVy` whenever
+   * `flickPanToken` bumps and seeds its kinetic inertia loop with
+   * those values. px / ms in screen space; positive vx = pan canvas
+   * right, positive vy = pan canvas down. */
+  flickPanToken: number;
+  flickPanVx: number;
+  flickPanVy: number;
+  flickPan: (vx: number, vy: number) => void;
   /** Programmatic override for the mobile InspectorSheet snap.
    * `null` = sheet uses its internal default behaviour (peek when a
    * group selects, etc.). Any string forces the sheet to that snap
@@ -149,6 +165,18 @@ export const useSelection = create<CanvasState>((set) => ({
       toolbarHidden: true,
     }),
   navResetOverviewToken: 0,
+  introReplayToken: 0,
+  replayIntro: () =>
+    set((s) => ({ introReplayToken: s.introReplayToken + 1 })),
+  flickPanToken: 0,
+  flickPanVx: 0,
+  flickPanVy: 0,
+  flickPan: (vx, vy) =>
+    set((s) => ({
+      flickPanToken: s.flickPanToken + 1,
+      flickPanVx: vx,
+      flickPanVy: vy,
+    })),
   inspectorSheetSnap: null,
   setInspectorSheetSnap: (snap) => set({ inspectorSheetSnap: snap }),
   resetToOverview: () =>

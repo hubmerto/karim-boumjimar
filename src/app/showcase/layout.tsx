@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 
-// Hidden recording surface for screen-capturing the site's
-// animations. Excluded from search indexing so it doesn't pollute
-// SEO results — there's no public link to it from the main site
-// nav, the URL is intended to be shared by hand only.
+// Apply noindex to every /showcase/* route at the layout level so
+// individual route layouts don't have to repeat it. Per-route
+// layouts can still set their own title; this one only contributes
+// the robots field.
 export const metadata: Metadata = {
-  title: "Showcase — Karim Boumjimar",
   robots: { index: false, follow: false },
 };
 

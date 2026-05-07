@@ -406,6 +406,67 @@ export function useCanvas(
     );
   }, [navResetOverviewToken, bentoBbox, animateTransform]);
 
+  // Replay-intro token. Demo routes (notably /showcase/bento-entry)
+  // bump the token via store.replayIntro() to loop the diamond
+  // appearing animation. Snaps the camera back to the 75 %-bento
+  // start position, clears the user-interaction gate, and
+  // animates back to 100 % bento — same trajectory as the regular
+  // first-paint intro.
+  const introReplayToken = useSelection((s) => s.introReplayToken);
+  const lastIntroReplayTokenRef = useRef(introReplayToken);
+  useEffect(() => {
+    if (introReplayToken === lastIntroReplayTokenRef.current) return;
+    lastIntroReplayTokenRef.current = introReplayToken;
+    if (!bentoBbox) return;
+    const v = viewportRect();
+    const fit = fitBboxTransform(bentoBbox, v).scale;
+    const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+    const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+    // Snap to 75 %-bento with no transition so the replay starts
+    // from the same place the natural intro does. The follow-up
+    // animateTransform handles the visible reveal.
+    setTransform({
+      tx: v.w / 2 - cx * fit * 0.75,
+      ty: v.h / 2 - cy * fit * 0.75,
+      scale: fit * 0.75,
+    });
+    // Clear the user-interaction gate so the dispersion-tracker
+    // and dispersion don't behave as if mid-session.
+    userInteractedRef.current = false;
+    // Tween to settled bento on the next frame.
+    requestAnimationFrame(() => {
+      animateTransform(
+        {
+          tx: v.w / 2 - cx * fit,
+          ty: v.h / 2 - cy * fit,
+          scale: fit,
+        },
+        4000,
+      );
+    });
+  }, [introReplayToken, bentoBbox, animateTransform]);
+
+  // Flick-pan injection. /showcase/inertia bumps flickPanToken
+  // with desired (vx, vy) in screen px / ms. We seed velocityRef
+  // with those values and kick off the same kinetic-inertia rAF
+  // loop a real wheel / drag release would trigger, so the demo
+  // exercises the production glide path rather than a one-off
+  // replica.
+  const flickPanToken = useSelection((s) => s.flickPanToken);
+  const flickPanVx = useSelection((s) => s.flickPanVx);
+  const flickPanVy = useSelection((s) => s.flickPanVy);
+  const lastFlickTokenRef = useRef(flickPanToken);
+  useEffect(() => {
+    if (flickPanToken === lastFlickTokenRef.current) return;
+    lastFlickTokenRef.current = flickPanToken;
+    if (flickPanToken === 0) return;
+    cancelInertia();
+    velocityRef.current.vx = flickPanVx;
+    velocityRef.current.vy = flickPanVy;
+    velocityRef.current.vScale = 0;
+    startInertia();
+  }, [flickPanToken, flickPanVx, flickPanVy, cancelInertia, startInertia]);
+
   // Drive dispersion from the current zoom level with hysteresis. The
   // tiles spread out (groups apart) once the camera passes 125% of the
   // bento fit, and re-pack to bento once it drops back to or below
