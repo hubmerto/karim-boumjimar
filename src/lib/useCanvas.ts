@@ -356,10 +356,11 @@ export function useCanvas(
       setIsAnimating(false);
       const t = transformRef.current;
       // Mac trackpad pinch sets ctrlKey; explicit Cmd/Ctrl+wheel also zooms.
-      // Sensitivity is dialled down (0.005 from 0.01) so the camera moves
-      // calmly; users had complained the zoom was twitchy.
+      // Sensitivity dialled down further (0.0025 from 0.005) so the camera
+      // glides instead of snapping — the previous setting still felt abrupt
+      // on Mac trackpads where deltaY arrives in larger increments.
       if (e.ctrlKey || e.metaKey) {
-        const factor = Math.exp(-e.deltaY * 0.005);
+        const factor = Math.exp(-e.deltaY * 0.0025);
         setTransform(
           clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()),
         );
@@ -367,8 +368,9 @@ export function useCanvas(
       }
       // Trackpads emit deltaX + deltaY natively. Wheel mice only emit
       // deltaY; Shift+wheel converts that into horizontal pan (Figma
-      // convention). Pan sensitivity dialled to 60% for the same reason.
-      const PAN_SENS = 0.6;
+      // convention). Pan sensitivity dialled to 35% so panning feels
+      // calmer — 60% was still overshooting on touchpads.
+      const PAN_SENS = 0.35;
       let dx = e.deltaX * PAN_SENS;
       let dy = e.deltaY * PAN_SENS;
       if (e.shiftKey && Math.abs(e.deltaX) < 0.001) {
