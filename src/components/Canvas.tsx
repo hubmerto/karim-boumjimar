@@ -53,6 +53,28 @@ function balanceColCounts(
   return adjusted;
 }
 
+/** Per-project explicit column counts for the desktop cluster grid
+ * (shown when a project is in group view). Keys match
+ * `${title}|${year}` from works.ts. Adaptive ramp covers anything
+ * not in this map: ≤3 photos = `count` cols, 4-9 = 3, 10+ = 4.
+ *
+ *   - Bodies Under Construction (20 photos) → 5 × 4
+ *   - Pandemonium Paradiso (14)              → 5 × 3 (last partial)
+ *   - Stockholm Cosmologies (7)              → 4 × 2 (4 + 3)
+ *
+ * Deep Cuts deliberately stays on the adaptive default of 3 cols
+ * here (= 3 photos in 1 row). The mobile version flips to 1 col
+ * for a vertical strip; the artist's spec was "3 cols on desktop,
+ * inverted on mobile". */
+const PROJECT_CLUSTER_COLS_DESKTOP: Record<string, number> = {
+  "Bodies Under Construction|2026": 5,
+  "Pandemonium Paradiso|2025": 5,
+  "Stockholm Cosmologies|2025": 4,
+};
+
+const CLUSTER_COL_GAP = 80;
+const CLUSTER_ROW_GAP = 80;
+
 // On mobile, render at most this many tiles per project on the canvas.
 // The gallery view tap-target still fetches the full project, so users
 // see every image -- we just keep the canvas memory footprint sane.
@@ -208,13 +230,76 @@ export function Canvas() {
     return map;
   }, [colCounts, displayWorks]);
 
-  // On mobile, after the spread, lay groups out in a 2-column vertical
-  // stack so the canvas reads tall instead of wide. Per-tile offset =
-  // (mobile group slot centre - original group centre). Empty on
-  // desktop (=> tiles end at their true canvas positions).
+  // baseOffsets: where each tile lands when the bento is fully
+  // spread (group view zoom level).
+  //
+  // Desktop: tiles within a project flow into a clean grid centred
+  // at the project's natural centroid. Group view then zooms into
+  // that grid — same per-project cluster shape as mobile (in
+  // CanvasPixi.tsx), just sourced from each tile's natural
+  // position rather than the curated bento slot. Column counts
+  // come from PROJECT_CLUSTER_COLS_DESKTOP, otherwise an adaptive
+  // ramp keeps clusters square-ish.
+  //
+  // Mobile fallback (this Canvas component is desktop-only at
+  // runtime — ViewSwitcher mounts CanvasPixi for mobile — but the
+  // mobile branch is kept for the rare case Canvas does render at
+  // a phone width): a 2-col group stack so the canvas reads tall.
   const baseOffsets = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();
-    if (colCounts !== BENTO_COL_COUNTS_MOBILE) return map;
+    if (colCounts !== BENTO_COL_COUNTS_MOBILE) {
+      // Desktop: per-project cluster grid.
+      for (const g of groups) {
+        const ordered = g.works;
+        if (ordered.length === 0) continue;
+        const COLS =
+          PROJECT_CLUSTER_COLS_DESKTOP[g.key] ??
+          (ordered.length <= 3
+            ? Math.max(1, ordered.length)
+            : ordered.length <= 9
+              ? 3
+              : 4);
+        // Cluster anchor: centroid of the group's natural canvas
+        // positions, so the cluster stays roughly where the group
+        // already lives in the bento (camera doesn't have to fly
+        // far when you tap into group view).
+        let cx = 0;
+        let cy = 0;
+        for (const w of ordered) {
+          const wb = workBounds(w);
+          cx += (wb.minX + wb.maxX) / 2;
+          cy += (wb.minY + wb.maxY) / 2;
+        }
+        cx /= ordered.length;
+        cy /= ordered.length;
+        // Cell size: largest tile in the group, so wider tiles
+        // never overflow into adjacent slots.
+        let cellW = 0;
+        let cellH = 0;
+        for (const w of ordered) {
+          const wb = workBounds(w);
+          if (wb.width > cellW) cellW = wb.width;
+          if (wb.height > cellH) cellH = wb.height;
+        }
+        const stride = cellW + CLUSTER_COL_GAP;
+        const rowH = cellH + CLUSTER_ROW_GAP;
+        const totalRows = Math.ceil(ordered.length / COLS);
+        const gridH = totalRows * cellH + (totalRows - 1) * CLUSTER_ROW_GAP;
+        const yStart = cy - gridH / 2 + cellH / 2;
+        ordered.forEach((w, i) => {
+          const wb = workBounds(w);
+          const col = i % COLS;
+          const row = Math.floor(i / COLS);
+          const slotCx = cx + (col - (COLS - 1) / 2) * stride;
+          const slotCy = yStart + row * rowH;
+          const tileCx = wb.minX + wb.width / 2;
+          const tileCy = wb.minY + wb.height / 2;
+          map.set(w.id, { x: slotCx - tileCx, y: slotCy - tileCy });
+        });
+      }
+      return map;
+    }
+    // Mobile fallback (Canvas-on-phone): 2-col group stack.
     const sortedGroups = [...groups].sort((a, b) => {
       const ay =
         typeof a.year === "number" ? a.year : parseInt(String(a.year), 10) || 0;
