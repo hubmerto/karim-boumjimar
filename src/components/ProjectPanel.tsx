@@ -135,9 +135,16 @@ export function ProjectContent({
           <div className="italic text-meta uppercase tracking-[0.1em] text-mute">
             Credits
           </div>
-          <div className="mt-2 space-y-1 text-ui leading-[1.55] text-ink">
-            {description.credits.map((line, i) => (
-              <div key={i}>{line}</div>
+          <div className="mt-4 space-y-4">
+            {description.credits.map((credit, i) => (
+              <div key={i}>
+                <div className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
+                  {credit.label}
+                </div>
+                <div className="text-ui leading-[1.55] text-ink">
+                  {credit.value}
+                </div>
+              </div>
             ))}
           </div>
         </div>
