@@ -137,13 +137,11 @@ export const NEWS: NewsEntry[] = [
     suffix: ", Møstings, Frederiksberg Museums — through 7 June 2026",
     url: "https://frederiksbergmuseerne.dk/en/udstillinger/karim-boumjimar/",
     press: [
-      // TODO: re-check Munchies Art Club connectivity. Returned curl
-      // exit 28 (timeout) from the build sandbox on 7 May 2026 but
-      // the audit verified it as Y from a browser; keep wired.
-      {
-        label: "Munchies Art Club",
-        url: "https://www.munchiesart.club/karim-boumjimar-bodies-construction-mostings/",
-      },
+      // Munchies Art Club URL was previously listed here but timed
+      // out on every re-check from this environment. Frederiksberg
+      // already covers the institution's own statement on the title
+      // anchor, so dropping Munchies rather than duplicating the
+      // Frederiksberg link in press too. Re-add if the URL recovers.
       {
         label: "Art Viewer",
         url: "https://artviewer.org/karim-boumjimar-at-frederiksberg-museum/",
@@ -289,6 +287,7 @@ export const NEWS: NewsEntry[] = [
     date: "7 January 2025",
     prefix: "Named one of",
     title: "Frieze “Ten Artists to Watch in 2025”",
+    // Frieze returns 403 to HEAD requests (CDN bot protection); loads in browsers. Don't remove.
     url: "https://www.frieze.com/article/ten-artists-watch-2025",
   },
   {

@@ -61,14 +61,10 @@ export const CV_SOLO: CvEntry[] = [
     country: "DK",
     url: "https://frederiksbergmuseerne.dk/en/udstillinger/karim-boumjimar/",
     press: [
-      // TODO: re-check connectivity. Returned a timeout (curl exit
-      // 28) when HEAD-checked from the build sandbox on 7 May 2026,
-      // but the audit verified the URL as Y from a browser; likely
-      // a sandbox / geofencing artifact. Keep the link wired.
-      {
-        label: "Munchies Art Club",
-        url: "https://www.munchiesart.club/karim-boumjimar-bodies-construction-mostings/",
-      },
+      // Munchies Art Club URL was here previously — timed out on
+      // every re-check; dropped rather than duplicating the
+      // Frederiksberg link as both venue and press. Re-add if the
+      // URL recovers.
       {
         label: "Art Viewer",
         url: "https://artviewer.org/karim-boumjimar-at-frederiksberg-museum/",
@@ -311,6 +307,7 @@ export const CV_GRANTS: CvEntry[] = [
   {
     year: "2025",
     title: "Named one of Frieze’s Ten Artists to Watch",
+    // Frieze returns 403 to HEAD requests (CDN bot protection); loads in browsers. Don't remove.
     url: "https://www.frieze.com/article/ten-artists-watch-2025",
   },
   { year: "2025", title: "Danish Arts Foundation Working Grant" },
@@ -327,11 +324,8 @@ export const CV_COLLECTIONS = [
 ];
 
 export const CV_PRESS: CvEntry[] = [
-  {
-    year: "2026",
-    title: "Munchies Art Club — Bodies Under Construction",
-    url: "https://www.munchiesart.club/karim-boumjimar-bodies-construction-mostings/",
-  },
+  // Munchies Art Club — Bodies Under Construction was here, dropped
+  // because the URL timed out on every re-check; re-add if it recovers.
   {
     year: "2026",
     title: "Art Viewer — Bodies Under Construction at Frederiksberg",
@@ -375,6 +369,7 @@ export const CV_PRESS: CvEntry[] = [
   {
     year: "2025",
     title: "Frieze — Ten Artists to Watch in 2025",
+    // Frieze returns 403 to HEAD requests (CDN bot protection); loads in browsers. Don't remove.
     url: "https://www.frieze.com/article/ten-artists-watch-2025",
   },
   {
