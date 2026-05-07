@@ -271,9 +271,13 @@ export function useCanvas(
   // 50% gap is hysteresis so the layout doesn't flicker near a threshold.
   // When we re-pack to bento we're visually back at the overview, so
   // any pinned project context (Inspector + ProjectPanel) is no longer
-  // relevant — drop it. Skip if the gallery is open: that flow has
-  // its own close path and we don't want a stray scale change while
-  // ExpandedGroup is mounted to nuke the selection underneath it.
+  // relevant — drop it AND reveal the LeftToolbar (showToolbar clears
+  // toolbarHidden + the selection in one go). Returning to overview is
+  // a clear "I'm done with this project" signal, so the site nav
+  // should be there waiting. Skip if the gallery is open: that flow
+  // has its own close path and we don't want a stray scale change
+  // while ExpandedGroup is mounted to nuke the selection underneath
+  // it.
   useEffect(() => {
     if (!bentoFit) return;
     if (transform.scale > bentoFit * 1.25 && dispersion === 0) {
@@ -282,7 +286,7 @@ export function useCanvas(
       setDispersion(0);
       const s = useSelection.getState();
       if (!s.expandedGroupKey && (s.selectedId || s.selectedGroupKey)) {
-        s.deselect();
+        s.showToolbar();
       }
     }
   }, [transform.scale, bentoFit, dispersion]);
