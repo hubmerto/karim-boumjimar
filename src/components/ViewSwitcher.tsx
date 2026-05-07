@@ -11,10 +11,13 @@ import { GrantView } from "@/components/views/GrantView";
 import { NewsView } from "@/components/views/NewsView";
 import { useSelection } from "@/lib/store";
 
-// Must outlive ExpandedGroup's TRANSITION_MS (1500) + close timeout
-// (40) + a comfort buffer so the FLIP-close finishes before the
-// shell unmounts the gallery underneath it.
-const MOBILE_GALLERY_UNMOUNT_DELAY_MS = 1700;
+// Must outlive ExpandedGroup's TRANSITION_MS (2400) + close timeout
+// (80) + a comfort buffer so the FLIP-close finishes before the
+// shell unmounts the gallery underneath it. Bumped from 1700 to
+// 2600 when TRANSITION_MS was raised — at the old value the mobile
+// shell tore down ~1 s before the genie effect finished, causing
+// photos to vanish into white frames mid-animation.
+const MOBILE_GALLERY_UNMOUNT_DELAY_MS = 2600;
 
 export function ViewSwitcher() {
   const view = useSelection((s) => s.view);
