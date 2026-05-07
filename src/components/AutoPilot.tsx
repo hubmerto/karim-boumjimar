@@ -25,7 +25,7 @@ import { useSelection } from "@/lib/store";
  * already at its 100 % rest scale.
  */
 
-const PROJECT_KEY = "Birds of Paradise|2026";
+const PROJECT_KEY = "Bodies Under Construction|2026";
 
 // Each timing buffers a small comfort margin past the underlying
 // animation duration so the next action doesn't trip mid-tween.
@@ -42,6 +42,7 @@ const T = {
   GALLERY_SCROLL: 3000, // requested: 3 s scroll-to-end
   GALLERY_CLOSE: 3000, // FLIP close = 2400 + buffer
   RESET_FLY_BACK: 2000, // reset animateTransform = 1500 + buffer
+  FINAL_DIAMOND_HOLD: 3000, // requested: linger on the diamond at the end
 };
 
 export function AutoPilot() {
@@ -155,12 +156,20 @@ export function AutoPilot() {
         await wait(T.RESET_FLY_BACK);
         if (cancelled) return;
 
-        // 9. Fade the white in to cover everything → loop reset.
+        // 9. Linger on the final diamond — gives the recording a
+        // beat to "land" on the bento shape before the white wipe
+        // takes it. Without this, the white starts fading in the
+        // moment the camera arrives and the diamond never quite
+        // settles for the viewer.
+        await wait(T.FINAL_DIAMOND_HOLD);
+        if (cancelled) return;
+
+        // 10. Fade the white in to cover everything → loop reset.
         setWhiteOpacity(1);
         await wait(T.WHITE_FADE);
         if (cancelled) return;
 
-        // 10. Hold full white briefly so a recording loop has a
+        // 11. Hold full white briefly so a recording loop has a
         // crisp bookend frame to wrap on.
         await wait(T.WHITE_HOLD);
       }
