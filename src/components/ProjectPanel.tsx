@@ -141,8 +141,21 @@ export function ProjectContent({
         ))}
       </dl>
       {description ? (
-        <div className="space-y-3 whitespace-pre-line border-t border-line pt-4 text-ui leading-[1.6] text-pretty break-words text-ink">
-          {description.body}
+        <div className="space-y-3 border-t border-line pt-4 text-ui leading-[1.6] break-words text-ink">
+          {description.body
+            .split(/\n\n+/)
+            .filter(Boolean)
+            .map((para, i) => (
+              // text-balance keeps the right edge ragged but
+              // distributes line lengths evenly across the
+              // paragraph instead of leaving short orphans. The
+              // browser limits the balance algorithm to ~10 lines
+              // per block, which is why we render paragraphs as
+              // their own <p> tags rather than one long body div.
+              <p key={i} className="text-balance">
+                {para}
+              </p>
+            ))}
         </div>
       ) : null}
       {credits.length > 0 ? (
