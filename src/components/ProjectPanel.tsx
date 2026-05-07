@@ -149,7 +149,7 @@ export function ProjectPanel() {
   if (!selectedGroupKey && !selectedId) return null;
   return (
     <aside
-      className="h-full w-[360px] overflow-y-auto border-l border-line bg-canvas"
+      className="h-full w-[420px] overflow-y-auto border-l border-line bg-canvas"
       aria-label="Project description"
     >
       <div className="p-6">

@@ -22,11 +22,11 @@ export function GroupViewControls() {
   if (!selectedGroupKey || expandedGroupKey) return null;
 
   // Sit just inside the canvas viewport's right edge so the buttons
-  // never fall behind the merged ProjectPanel (360 px) on desktop.
+  // never fall behind the merged ProjectPanel (420 px) on desktop.
   // Mobile has no side panel — the buttons hug the viewport edge.
   return (
     <div
-      className="fixed top-16 right-4 z-30 flex items-center gap-1 md:right-[376px]"
+      className="fixed top-16 right-4 z-30 flex items-center gap-1 md:right-[436px]"
       role="toolbar"
       aria-label="Group view controls"
     >

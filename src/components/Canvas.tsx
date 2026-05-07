@@ -44,10 +44,10 @@ export function Canvas() {
   const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const condensed = !!(selectedId || selectedGroupKey);
-  // Single merged ProjectPanel (360 px) covers both the work fields
+  // Single merged ProjectPanel (420 px) covers both the work fields
   // and the project description. Canvas right edge must clear it
   // when anything is selected so tiles aren't hidden behind it.
-  const rightClass = condensed ? "md:right-[360px]" : "md:right-0";
+  const rightClass = condensed ? "md:right-[420px]" : "md:right-0";
   // Pick a column-count distribution based on viewport. Default to
   // desktop on the server (and on the client first render) so SSR and
   // CSR strings match; useEffect below switches to mobile after mount.

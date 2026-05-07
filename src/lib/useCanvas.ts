@@ -28,7 +28,7 @@ export const LEFT_TOOLBAR_W_FULL = 200;
 export const LEFT_TOOLBAR_W_CONDENSED = 24;
 // Single merged ProjectPanel covers both the work fields and the
 // project description. The previous Inspector aside is gone.
-const PROJECT_PANEL_W = 360;
+const PROJECT_PANEL_W = 420;
 const SHEET_TOP_RESERVE = 64; // matches InspectorSheet TOP_RESERVE_PX
 const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
 
