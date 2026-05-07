@@ -46,6 +46,14 @@ type CanvasState = {
   navigateTo: (id: string) => void;
   /** Trigger a canvas fit-to-group, spotlighting that exhibition. */
   navigateToGroup: (key: string) => void;
+  /** Counter bumped each time the user explicitly asks to return
+   * to the bento overview (top-bar logo click). Canvas hooks watch
+   * this and animate the camera back to the fit-all bento target. */
+  navResetOverviewToken: number;
+  /** Reset to the home/overview state — clears selection, view,
+   * toolbarHidden, and bumps navResetOverviewToken so the camera
+   * animates back to the bento. */
+  resetToOverview: () => void;
   clearNav: () => void;
 };
 
@@ -128,5 +136,17 @@ export const useSelection = create<CanvasState>((set) => ({
       view: "exhibitions",
       toolbarHidden: true,
     }),
+  navResetOverviewToken: 0,
+  resetToOverview: () =>
+    set((s) => ({
+      view: "exhibitions",
+      selectedId: null,
+      selectedGroupKey: null,
+      expandedGroupKey: null,
+      navTargetWorkId: null,
+      navTargetGroupKey: null,
+      toolbarHidden: false,
+      navResetOverviewToken: s.navResetOverviewToken + 1,
+    })),
   clearNav: () => set({ navTargetWorkId: null, navTargetGroupKey: null }),
 }));

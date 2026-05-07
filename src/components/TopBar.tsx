@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { ARTIST_NAME } from "@/data/bio";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useSelection } from "@/lib/store";
@@ -8,15 +9,24 @@ import { asset } from "@/lib/paths";
 
 export function TopBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const setView = useSelection((s) => s.setView);
+  const resetToOverview = useSelection((s) => s.resetToOverview);
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 flex h-12 items-center justify-between border-b border-line bg-canvas px-4">
       <button
         type="button"
-        onClick={() => setView("exhibitions")}
+        onClick={() => {
+          // From a text route (/bio, /about, /grant, /news) we need
+          // to actually navigate home; the store reset alone won't
+          // change the URL. From "/" we just bump the camera-reset
+          // token and clear selection.
+          resetToOverview();
+          if (pathname !== "/") router.push("/");
+        }}
         className="flex h-full items-center text-ink hover:opacity-60"
-        aria-label={`${ARTIST_NAME}, reset to exhibitions`}
+        aria-label={`${ARTIST_NAME}, back to overview`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

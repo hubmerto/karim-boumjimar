@@ -547,6 +547,62 @@ export function CanvasPixi() {
     };
   }, [navTargetGroupKey, size, displayWorks, clusterMap, clearNav]);
 
+  // Top-bar logo click → animate camera back to the bento overview.
+  // Uses the bento bbox + fit-scale that the intro effect stashed
+  // into refs, so we don't have to re-derive layout. Skips the
+  // first render: token starts at 0 and we don't want to fire on
+  // mount (the intro animation handles that).
+  const navResetOverviewToken = useSelection(
+    (s) => s.navResetOverviewToken,
+  );
+  const lastResetTokenRef = useRef(navResetOverviewToken);
+  useEffect(() => {
+    if (navResetOverviewToken === lastResetTokenRef.current) return;
+    lastResetTokenRef.current = navResetOverviewToken;
+    if (!size) return;
+    const bbox = bentoBboxRef.current;
+    const fitScale = bentoFitScaleRef.current;
+    if (!bbox || fitScale <= 0) return;
+    const cx = (bbox.minX + bbox.maxX) / 2;
+    const cy = (bbox.minY + bbox.maxY) / 2;
+    const target: Transform = {
+      tx: size.w / 2 - cx * fitScale,
+      ty: size.h / 2 - cy * fitScale,
+      scale: fitScale,
+    };
+    const start = transformRef.current;
+    const t0 = performance.now();
+    const DURATION = 1500;
+    if (animRafRef.current != null) cancelAnimationFrame(animRafRef.current);
+    function tick(now: number) {
+      const t = Math.min(1, (now - t0) / DURATION);
+      const e = 1 - Math.pow(1 - t, 3);
+      const tx = start.tx + (target.tx - start.tx) * e;
+      const ty = start.ty + (target.ty - start.ty) * e;
+      const scale = start.scale + (target.scale - start.scale) * e;
+      transformRef.current = { tx, ty, scale };
+      const c = pixiContainerRef.current;
+      if (c) {
+        c.x = tx;
+        c.y = ty;
+        c.scale.set(scale);
+      }
+      if (t < 1) {
+        animRafRef.current = requestAnimationFrame(tick);
+      } else {
+        animRafRef.current = null;
+        setTransform({ tx, ty, scale });
+      }
+    }
+    animRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animRafRef.current != null) {
+        cancelAnimationFrame(animRafRef.current);
+        animRafRef.current = null;
+      }
+    };
+  }, [navResetOverviewToken, size]);
+
   // Progressive texture load. Cores load first (sequential — they
   // need to appear in bento ASAP) then extras load in PARALLEL
   // so the user doesn't sit through them dripping in one by one

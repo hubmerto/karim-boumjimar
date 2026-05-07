@@ -264,6 +264,33 @@ export function useCanvas(
     );
   }, [bentoBbox, splashGone, animateTransform]);
 
+  // Top-bar logo click → animate the camera back to the bento fit.
+  // The store action also clears selection / toolbarHidden / view,
+  // so all we have to do here is run the camera tween. Skip the
+  // first render: the token starts at 0 and we don't want to
+  // animate on mount (the intro reveal handles that).
+  const navResetOverviewToken = useSelection(
+    (s) => s.navResetOverviewToken,
+  );
+  const lastResetTokenRef = useRef(navResetOverviewToken);
+  useEffect(() => {
+    if (navResetOverviewToken === lastResetTokenRef.current) return;
+    lastResetTokenRef.current = navResetOverviewToken;
+    if (!bentoBbox) return;
+    const v = viewportRect();
+    const fit = fitBboxTransform(bentoBbox, v).scale;
+    const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
+    const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
+    animateTransform(
+      {
+        tx: v.w / 2 - cx * fit,
+        ty: v.h / 2 - cy * fit,
+        scale: fit,
+      },
+      1500,
+    );
+  }, [navResetOverviewToken, bentoBbox, animateTransform]);
+
   // Drive dispersion from the current zoom level with hysteresis. The
   // tiles spread out (groups apart) once the camera passes 125% of the
   // bento fit, and re-pack to bento once it drops back below 75%. The
