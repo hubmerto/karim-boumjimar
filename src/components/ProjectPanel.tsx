@@ -108,11 +108,14 @@ export function ProjectContent({
       </div>
       <dl className="space-y-3">
         {rows.map((row) => (
-          <div key={row.label} className="grid grid-cols-[76px_1fr] gap-x-3">
+          <div
+            key={row.label}
+            className="flex items-baseline justify-between gap-x-6"
+          >
             <dt className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
               {row.label}
             </dt>
-            <dd className="text-ui leading-[1.55] text-ink break-words">
+            <dd className="text-ui leading-[1.55] text-ink break-words text-right">
               {row.label === "YEAR" || row.label === "DATE" ? (
                 <time>{row.value}</time>
               ) : (
