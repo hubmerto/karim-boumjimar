@@ -167,11 +167,17 @@ function bentoLayout(works: typeof WORKS) {
  *     portrait viewport.
  *   - "Pandemonium Paradiso" — 14 photos in 5 cols (3 rows + last
  *     partial) instead of 4 cols.
+ *   - "Stockholm Cosmologies" — 7 photos in 4 cols (2 rows: 4 + 3)
+ *     instead of the adaptive 3 cols (= 3 rows). The artist
+ *     originally requested 4 × 4 with one photo removed; keeping
+ *     all 7 and using 4 cols gives the closest match without
+ *     touching the dataset.
  */
 const PROJECT_CLUSTER_COLS: Record<string, number> = {
   "Deep Cuts|2025": 1,
   "Bodies Under Construction|2026": 5,
   "Pandemonium Paradiso|2025": 5,
+  "Stockholm Cosmologies|2025": 4,
 };
 
 /** For each project, lay out its FULL photo set (cores + extras)
