@@ -159,22 +159,17 @@ export function ProjectContent({
         </div>
       ) : null}
       {credits.length > 0 ? (
-        <div className="border-t border-line pt-4">
-          <div className="italic text-meta uppercase tracking-[0.1em] text-mute">
-            Credits
-          </div>
-          <div className="mt-4 space-y-4">
-            {credits.map((credit, i) => (
-              <div key={i}>
-                <div className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
-                  {credit.label}
-                </div>
-                <div className="text-ui leading-[1.55] text-ink">
-                  {credit.value}
-                </div>
+        <div className="space-y-4 border-t border-line pt-4">
+          {credits.map((credit, i) => (
+            <div key={i}>
+              <div className="italic text-meta uppercase tracking-[0.1em] text-mute leading-[1.55]">
+                {credit.label}
               </div>
-            ))}
-          </div>
+              <div className="text-ui leading-[1.55] text-ink">
+                {credit.value}
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
     </div>
