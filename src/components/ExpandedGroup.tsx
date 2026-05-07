@@ -14,6 +14,7 @@ import { useDispersion } from "@/lib/dispersion";
 import { clearFlipRects, getFlipRect } from "@/lib/flipRects";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
+import { thumbSrc } from "@/lib/thumbs";
 
 const TRANSITION_MS = 1500;
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
@@ -308,28 +309,90 @@ export function ExpandedGroup() {
               className="flex h-full flex-shrink-0 items-center"
               style={{ willChange: "transform" }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={asset(img.src)}
+              <ProgressiveImage
+                fullSrc={asset(img.src)}
+                thumbSrc={asset(thumbSrc(img.src))}
                 alt={img.alt}
                 width={img.width}
                 height={img.height}
-                draggable={false}
-                // h-[88%] (not max-h) so all items render at the same height
-                // regardless of native dimensions. The width/height attrs
-                // are critical for the FLIP-open animation: without them
-                // the <img> has w=0 until it's downloaded, the parent div
-                // measures 0 width via getBoundingClientRect, and the FLIP
-                // useLayoutEffect skips that tile (the dst.width === 0
-                // guard). Result: gallery jumps in instead of FLIP-ing the
-                // first time the user visits, then works on subsequent
-                // opens because the image is now in cache.
-                className="block h-[88%] w-auto select-none"
               />
             </div>
           );
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * Renders the canvas thumbnail first (already cached because the
+ * bento drew it) and swaps to the full-resolution image once it
+ * has finished loading. Two reasons we do this:
+ *
+ * 1. The user never sees a white frame waiting for ~3500 px bytes
+ *    to arrive — the thumbnail fills the slot the moment the
+ *    gallery mounts.
+ * 2. The thumbnail has known intrinsic dimensions, so the parent
+ *    div has a non-zero bounding rect on the very first render.
+ *    The FLIP useLayoutEffect needs that rect; otherwise it skips
+ *    the tile and the photo "jumps" into position instead of
+ *    animating from its bento spot.
+ *
+ * The width / height attrs come from the full-res image so the
+ * computed aspect ratio is identical for both srcs and the swap
+ * doesn't reflow the layout.
+ */
+function ProgressiveImage({
+  fullSrc,
+  thumbSrc,
+  alt,
+  width,
+  height,
+}: {
+  fullSrc: string;
+  thumbSrc: string;
+  alt: string;
+  width?: number;
+  height?: number;
+}) {
+  const [src, setSrc] = useState(thumbSrc);
+
+  // Reset to the thumb whenever the work changes (e.g. user
+  // jumps from one group's gallery directly to another). Without
+  // this the new tile would briefly render the previous work's
+  // full-res while its own thumb / full-res are still loading.
+  useEffect(() => {
+    setSrc(thumbSrc);
+  }, [thumbSrc]);
+
+  // Kick off the full-res load off-DOM. Once it's in cache, swap
+  // the visible <img>'s src — the browser will paint the high-res
+  // version on the next frame without any flicker because the
+  // dimensions are identical.
+  useEffect(() => {
+    let cancelled = false;
+    const loader = new Image();
+    loader.decoding = "async";
+    loader.onload = () => {
+      if (!cancelled) setSrc(fullSrc);
+    };
+    loader.src = fullSrc;
+    return () => {
+      cancelled = true;
+    };
+  }, [fullSrc]);
+
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      draggable={false}
+      // h-[88%] (not max-h) so all items render at the same height
+      // regardless of native dimensions.
+      className="block h-[88%] w-auto select-none"
+    />
   );
 }

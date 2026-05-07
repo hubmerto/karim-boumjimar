@@ -6,6 +6,7 @@ import { GroupViewControls } from "@/components/GroupViewControls";
 import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
 import { LeftToolbar } from "@/components/LeftToolbar";
+import { PreloadGalleryImages } from "@/components/PreloadGalleryImages";
 import { Splash } from "@/components/Splash";
 import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
@@ -45,6 +46,10 @@ export default function Home() {
       <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
       <Splash />
       <CrashOverlay />
+      {/* Side-effect: warms the gallery image cache as soon as a
+          group is pinned, so the FLIP open is smooth instead of
+          waiting on a network fetch. */}
+      <PreloadGalleryImages />
     </>
   );
 }
