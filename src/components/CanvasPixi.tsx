@@ -222,21 +222,21 @@ function projectClusterLayout(
       ...groupWorks.filter((w) => coreIds.has(w.id)),
       ...groupWorks.filter((w) => !coreIds.has(w.id)),
     ];
-    // Column count: ramp up with project size so small projects
-    // get a single tall column and large projects get a denser
-    // grid.
-    //   ≤3 photos  -> 1 column (vertical list, tall single tiles)
-    //   4-9 photos -> 2 columns
-    //   10-12      -> 3 columns
-    //   13+        -> 4 columns
+    // Column count: prefer 3 and 4 columns over 2 so clusters read
+    // square-ish on a portrait phone instead of tall narrow strips.
+    // Tiny projects (≤3 photos) lay out in a single row so they
+    // don't drift toward "vertical list" territory.
+    //   1 photo    -> 1 column   (single tile, no choice)
+    //   2 photos   -> 2 columns  (single row of two)
+    //   3 photos   -> 3 columns  (single row of three)
+    //   4-9        -> 3 columns
+    //   10+        -> 4 columns
     const COLS =
       ordered.length <= 3
-        ? 1
+        ? Math.max(1, ordered.length)
         : ordered.length <= 9
-          ? 2
-          : ordered.length <= 12
-            ? 3
-            : 4;
+          ? 3
+          : 4;
     const GAP = 24;
     const stride = cellW + GAP;
     const rowH = cellH + GAP;
