@@ -142,7 +142,7 @@ export function Index({
         aria-label="Works index"
         className="fixed top-16 md:top-12 bottom-0 left-0 z-40 flex w-[420px] max-w-[90vw] flex-col border-r border-line bg-canvas"
       >
-        <div className="flex items-center justify-between border-b border-line px-4 py-4">
+        <div className="flex items-center justify-between px-4 py-4">
           <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
             Index · {entries.length}
           </span>
