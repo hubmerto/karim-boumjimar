@@ -35,7 +35,7 @@ export function LegalPage({
           with its own internal vertical scroll — same pattern as
           BioView / AboutView / NewsView. Without it the article was
           clipped at viewport bottom and couldn't scroll. */}
-      <main className="fixed inset-0 top-12 z-0 overflow-y-auto bg-canvas text-ink">
+      <main className="fixed inset-0 top-16 z-0 overflow-y-auto bg-canvas text-ink md:top-12">
         <article className="mx-auto max-w-[640px] px-4 pt-12 pb-24 text-caption leading-relaxed text-pretty break-words text-ink">
           <h1 className="mb-10 italic text-meta uppercase tracking-[0.1em] text-mute">
             {title}

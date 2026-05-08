@@ -79,7 +79,7 @@ export function MobileMenu({
 
   return (
     <div
-      className="fixed inset-0 top-12 z-40 flex flex-col bg-canvas md:hidden"
+      className="fixed inset-0 top-16 z-40 flex flex-col bg-canvas md:hidden"
       role="dialog"
       aria-label={mode === "index" ? "Works index" : "Sections"}
     >

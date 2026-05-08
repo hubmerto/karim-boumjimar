@@ -13,7 +13,7 @@ type Snap = "peek" | "mid" | "full";
 // accounts for the thicker drag handle (30 px hit area) plus the
 // section header bar peeking through.
 const PEEK_PX = 72;
-const TOP_RESERVE_PX = 64; // always leave 64px for the top bar + breathing room
+const TOP_RESERVE_PX = 80; // 64 px mobile TopBar + 16 px breathing room
 
 /** Effective sheet height in CSS px given current viewport height. */
 function sheetHeightPx(vh: number) {

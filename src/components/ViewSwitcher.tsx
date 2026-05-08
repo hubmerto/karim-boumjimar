@@ -144,7 +144,7 @@ function MobileExpandedGroupShell() {
   if (!mounted) return null;
   return (
     <div
-      className="fixed inset-0 top-12 z-20"
+      className="fixed inset-0 top-16 z-20"
       style={{ touchAction: "pan-x" }}
     >
       <ExpandedGroup />

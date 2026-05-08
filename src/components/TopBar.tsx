@@ -14,7 +14,7 @@ export function TopBar() {
   const pathname = usePathname();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 flex h-12 items-center justify-between border-b border-line bg-canvas px-4">
+    <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-line bg-canvas px-4 md:h-12">
       <button
         type="button"
         onClick={() => {

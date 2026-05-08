@@ -31,7 +31,7 @@ import { asset } from "@/lib/paths";
  */
 export function BioView() {
   return (
-    <main className="fixed inset-0 top-12 right-0 z-0 overflow-y-auto bg-canvas md:left-[200px]">
+    <main className="fixed inset-0 top-16 right-0 z-0 overflow-y-auto bg-canvas md:top-12 md:left-[200px]">
       <div className="max-w-[1280px] px-6 py-10 md:px-10 md:py-14">
         <h1 className="italic text-meta uppercase tracking-[0.1em] text-mute mb-6">
           Bio

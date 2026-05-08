@@ -34,7 +34,7 @@ const PROJECT_PANEL_W = 420;
 // left chrome in viewport math so groups still center within the
 // FREE canvas area, not behind the drawer.
 const INDEX_DRAWER_W = 420;
-const SHEET_TOP_RESERVE = 64; // matches InspectorSheet TOP_RESERVE_PX
+const SHEET_TOP_RESERVE = 80; // matches InspectorSheet TOP_RESERVE_PX
 const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
 
 function leftWidth() {

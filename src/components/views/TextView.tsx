@@ -13,7 +13,7 @@ export function TextView({
   children: React.ReactNode;
 }) {
   return (
-    <main className="fixed inset-0 top-12 right-0 z-0 overflow-y-auto bg-canvas md:left-[200px]">
+    <main className="fixed inset-0 top-16 right-0 z-0 overflow-y-auto bg-canvas md:top-12 md:left-[200px]">
       <div className="max-w-[680px] px-6 py-12 md:px-10 md:py-14">
         <h1 className="italic text-meta uppercase tracking-[0.1em] text-mute mb-4">
           {title}
