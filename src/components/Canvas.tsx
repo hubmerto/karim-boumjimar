@@ -648,7 +648,20 @@ export function Canvas() {
               : "none",
             willChange: "transform",
             backfaceVisibility: "hidden",
-            contain: "layout paint",
+            // Do NOT add `contain: layout paint` here. The wrapper is
+            // `position: absolute; left:0; top:0` with no explicit
+            // width / height — `contain: layout` would prevent the box
+            // from expanding to its absolutely-positioned children
+            // (which sit at canvas-space coords like -5000,-3000), so
+            // the wrapper resolves to 0 × 0. `contain: paint` then
+            // clips every tile to that 0 × 0 box: tiles still LAYOUT
+            // (`getBoundingClientRect` returns positions) but never
+            // PAINT, and `loading="lazy"` images never enter the
+            // viewport from the IntersectionObserver's perspective so
+            // they're never fetched. Result: blank canvas. The other
+            // compositor hints (`willChange`, `backfaceVisibility`,
+            // `transformOrigin`) already give the GPU enough info to
+            // promote this layer; we don't need containment.
           }}
         >
           {groups.map((g) => {
