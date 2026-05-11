@@ -507,10 +507,14 @@ export function Canvas() {
   // tiles popping in past the edge during a fling.
   const VIRT_BUFFER_RATIO = 0.25;
 
-  // visibleWorkIds: set of tile ids whose effective bbox intersects
-  // the buffered viewport. Returns null on the first render (before
-  // the ResizeObserver has reported a size) so all tiles render once
-  // and we trim down on the next pass.
+  // nextVisibleWorkIds: the RAW set of tile ids whose effective bbox
+  // intersects the buffered viewport, recomputed on every transform
+  // commit. NOT consumed directly by the renderer — instead, the
+  // debounced `visibleWorkIds` below applies it after 250 ms of idle.
+  //
+  // Returns null on the first render (before the ResizeObserver has
+  // reported a size) so all tiles render once and we trim down on the
+  // next pass.
   //
   // Recomputes only when `transform` changes — and `transform` is now
   // commit-on-idle (per Step 2), so this filter does NOT run 60 times
@@ -522,7 +526,7 @@ export function Canvas() {
   // shouldn't mount on phones) and structurally — ViewSwitcher mounts
   // CanvasPixi for mobile, which is a separate WebGL renderer with
   // its own per-frame culling.
-  const visibleWorkIds = useMemo<Set<string> | null>(() => {
+  const nextVisibleWorkIds = useMemo<Set<string> | null>(() => {
     if (isMobileLayout) return null;
     if (containerSize.w === 0 || containerSize.h === 0) return null;
     const { tx, ty, scale } = transform;
@@ -575,6 +579,54 @@ export function Canvas() {
     displayWorks,
     isMobileLayout,
   ]);
+
+  // visibleWorkIds: the DEBOUNCED visibility set that the renderer
+  // actually consumes. Holds its previous value during continuous
+  // gestures (rapid wheel-zoom can trigger a commit every ~150 ms;
+  // applying the filter on each would mount/unmount tiles in flight
+  // and stall the gesture) and only flips to the new value after
+  // 250 ms of idle.
+  //
+  // Bypasses the debounce in two cases — the user feels both as
+  // "immediate apply, no UI lag":
+  //
+  //   1. First application: `appliedRef.current === null` means we've
+  //      never trimmed yet. On the very first commit (intro animation
+  //      settle, hard reload, etc.) snap to the filtered set now so
+  //      the bento doesn't show all 133 tiles for an extra 250 ms.
+  //
+  //   2. Programmatic-camera commit: `isAnimating` is true exactly
+  //      while a camera tween (fitAll, navigate-to-project, zoom-to-work)
+  //      is in flight. useCanvas commits the destination transform at
+  //      the START of the tween — so this branch fires the filter
+  //      against the target state right away, and as the camera
+  //      visually slides toward that target, the tile set is already
+  //      correct underneath it. Skip the debounce here too, otherwise
+  //      a fitAll keystroke shows a stale tile set for 250 ms after
+  //      the camera has already landed.
+  const appliedRef = useRef<Set<string> | null>(null);
+  const [visibleWorkIds, setVisibleWorkIds] = useState<Set<string> | null>(
+    null,
+  );
+  useEffect(() => {
+    if (nextVisibleWorkIds === null) {
+      if (appliedRef.current !== null) {
+        appliedRef.current = null;
+        setVisibleWorkIds(null);
+      }
+      return;
+    }
+    if (appliedRef.current === null || isAnimating) {
+      appliedRef.current = nextVisibleWorkIds;
+      setVisibleWorkIds(nextVisibleWorkIds);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      appliedRef.current = nextVisibleWorkIds;
+      setVisibleWorkIds(nextVisibleWorkIds);
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [nextVisibleWorkIds, isAnimating]);
 
   // Mirror the live transform in a ref so the gallery FLIP can read the
   // settled values without re-rendering ExpandedGroup on every pan/zoom.
