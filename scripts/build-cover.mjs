@@ -29,8 +29,10 @@ const jiti = createJiti(import.meta.url, {
 const { WORKS } = await jiti.import(resolve(root, "src/data/works.ts"));
 
 // Same constants Canvas.tsx uses.
+// Mirrors BENTO_COL_COUNTS_DESKTOP in src/components/Canvas.tsx —
+// keep in sync when projects are added or removed.
 const BENTO_COL_COUNTS = [
-  3, 4, 5, 6, 7, 8, 10, 12, 12, 12, 10, 8, 7, 6, 5, 4, 3,
+  3, 4, 5, 7, 8, 9, 11, 13, 13, 13, 11, 9, 8, 7, 5, 4, 3,
 ];
 const BENTO_COL_GAP = 80;
 const BENTO_ROW_GAP = 130;

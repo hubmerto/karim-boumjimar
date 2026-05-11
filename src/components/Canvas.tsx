@@ -30,10 +30,17 @@ import { ExpandedGroup } from "@/components/ExpandedGroup";
 // = 39 (3 representative tiles per project × 13 projects). The
 // gallery view fetches the full project on tap regardless of which
 // thumbs the canvas curated, so users always see every image.
+// Diamond column counts. Sums must match the live work count or the
+// runtime balancer dumps the difference into the middle column,
+// turning the diamond into a stalk. Re-tune this when you add or
+// remove projects:
+//   - desktop: sum to WORKS.length
+//   - mobile:  sum to (number of projects) * MOBILE_TILES_PER_PROJECT
+// Current: 133 works (sum 133), 14 projects × 3 = 42 mobile tiles.
 export const BENTO_COL_COUNTS_DESKTOP = [
-  3, 4, 5, 6, 7, 8, 10, 12, 12, 12, 10, 8, 7, 6, 5, 4, 3,
+  3, 4, 5, 7, 8, 9, 11, 13, 13, 13, 11, 9, 8, 7, 5, 4, 3,
 ];
-export const BENTO_COL_COUNTS_MOBILE = [3, 5, 7, 9, 7, 5, 3];
+export const BENTO_COL_COUNTS_MOBILE = [3, 5, 8, 10, 8, 5, 3];
 
 /** Adjusts a hardcoded column-count array so its sum equals
  * `target`. The diff is absorbed by the middle column, which keeps
