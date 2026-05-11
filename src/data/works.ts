@@ -2774,4 +2774,208 @@ export const WORKS: Work[] = [
     },
     width: 394,
   },
+  // Club Are — solo performance, 1 Feb 2025, photographer Michele
+  // Baron. Cluster anchored at (7500, 3500) — the empty corner to
+  // the right of Queer Ecologies in row 3. 4-col grid × 3 rows
+  // (last row partial) using the same gridSlot math as
+  // build-works-v2.mjs (tile 420, MAX_ASPECT 1.55), with small
+  // per-tile jitter so the cluster doesn't read as a perfect grid.
+  {
+    id: "clubare-01",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-01.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 6744, y: 2750 },
+    width: 420,
+  },
+  {
+    id: "clubare-02",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-02.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 7237, y: 2773 },
+    width: 420,
+  },
+  {
+    id: "clubare-03",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-03.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 7774, y: 2755 },
+    width: 420,
+  },
+  {
+    id: "clubare-04",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-04.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 8258, y: 2767 },
+    width: 420,
+  },
+  {
+    id: "clubare-05",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-05.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 6737, y: 3487 },
+    width: 420,
+  },
+  {
+    id: "clubare-06",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-06.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 7228, y: 3507 },
+    width: 420,
+  },
+  {
+    id: "clubare-07",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-07.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 7765, y: 3512 },
+    width: 420,
+  },
+  {
+    id: "clubare-08",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-08.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 8265, y: 3484 },
+    width: 420,
+  },
+  {
+    id: "clubare-09",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-09.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 6746, y: 4246 },
+    width: 420,
+  },
+  {
+    id: "clubare-10",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-10.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 7233, y: 4234 },
+    width: 420,
+  },
+  {
+    id: "clubare-11",
+    title: "Club Are",
+    year: 2025,
+    medium: "performance",
+    date: "1 February 2025",
+    photoCredit: "Michele Baron",
+    images: [
+      {
+        src: "/images/works/clubare-11.webp",
+        alt: "Club Are, performance still",
+        width: 800,
+        height: 530,
+      },
+    ],
+    position: { x: 7763, y: 4257 },
+    width: 420,
+  },
 ];
