@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { WORKS } from "@/data/works";
 import { useCanvas } from "@/lib/useCanvas";
 import {
@@ -436,6 +443,139 @@ export function Canvas() {
     dispersion,
   } = useCanvas(displayWorks, bentoBbox, spreadBbox, baseOffsets, wrapperRef);
 
+  // ── Tile virtualization (desktop only) ─────────────────────────────
+  //
+  // Two end positions per tile: bento (dispersion=0, packed mound) and
+  // spread (dispersion=1, per-project cluster). The dispersion state
+  // is binary with hysteresis (see useCanvas) — by the time React
+  // re-renders Canvas with a new transform, dispersion is already at
+  // its final 0/1 value and the WorkTile's inline `transform: translate(dx,dy)`
+  // has been set to the matching endpoint. CSS interpolates the visual
+  // motion over 2.8 s, but the React-side position is the endpoint.
+  //
+  // Filter strategy:
+  // - Settled (dispersion stable for >3 s): use the offset map matching
+  //   the current dispersion. Tile is at its endpoint, no in-flight
+  //   motion to worry about. Tight virtualization (1-4 tiles at max zoom).
+  // - In transition (dispersion just flipped, CSS animation in flight):
+  //   use the UNION of both endpoint bboxes. Otherwise we'd unmount
+  //   tiles mid-flight that are still physically on screen heading toward
+  //   an off-screen spread position — visible pop. The union keeps them
+  //   mounted until the animation lands, then the next idle commit
+  //   trims them.
+  //
+  // 3 s is a small margin past the 2.8 s WorkTile transition duration.
+
+  // Track the canvas container's on-screen size so we can convert it
+  // into a viewport rect in canvas coordinates. The container's width
+  // changes when the project panel slides in / the toolbar collapses,
+  // so a ResizeObserver is required (a one-shot useEffect would miss
+  // those layout shifts).
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const apply = () => {
+      const r = el.getBoundingClientRect();
+      setContainerSize((prev) =>
+        prev.w === r.width && prev.h === r.height
+          ? prev
+          : { w: r.width, h: r.height },
+      );
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [containerRef]);
+
+  // dispersionSettled: false for 3 s after a dispersion change, then
+  // true. While false, virtualization uses the union of bento + spread
+  // bboxes to avoid unmounting in-flight tiles.
+  const [dispersionSettled, setDispersionSettled] = useState(true);
+  useEffect(() => {
+    setDispersionSettled(false);
+    const t = window.setTimeout(() => setDispersionSettled(true), 3000);
+    return () => window.clearTimeout(t);
+  }, [dispersion]);
+
+  // Buffer (per side) around the visible viewport, expressed as a
+  // fraction of the viewport's canvas-space size. 0.25 means the
+  // buffered window is 1.5× viewport in each dimension. Generous
+  // enough that a typical inertia glide settles inside the buffer
+  // before commit-on-idle re-runs this filter, so the user never sees
+  // tiles popping in past the edge during a fling.
+  const VIRT_BUFFER_RATIO = 0.25;
+
+  // visibleWorkIds: set of tile ids whose effective bbox intersects
+  // the buffered viewport. Returns null on the first render (before
+  // the ResizeObserver has reported a size) so all tiles render once
+  // and we trim down on the next pass.
+  //
+  // Recomputes only when `transform` changes — and `transform` is now
+  // commit-on-idle (per Step 2), so this filter does NOT run 60 times
+  // per second during pan/zoom. The wrapper translates via direct DOM
+  // mutation; mounted tiles ride along until the gesture settles, then
+  // we trim.
+  //
+  // Mobile is excluded both via `isMobileLayout` (defensive — Canvas
+  // shouldn't mount on phones) and structurally — ViewSwitcher mounts
+  // CanvasPixi for mobile, which is a separate WebGL renderer with
+  // its own per-frame culling.
+  const visibleWorkIds = useMemo<Set<string> | null>(() => {
+    if (isMobileLayout) return null;
+    if (containerSize.w === 0 || containerSize.h === 0) return null;
+    const { tx, ty, scale } = transform;
+    if (scale <= 0) return null;
+    // Container-local screen viewport → canvas coords. The wrapper's
+    // CSS transform is `translate3d(tx, ty, 0) scale(scale)` relative
+    // to the container, so a canvas point (cx, cy) renders at
+    // (tx + cx*scale, ty + cy*scale) in container-local space.
+    const canvasL = (0 - tx) / scale;
+    const canvasT = (0 - ty) / scale;
+    const canvasR = (containerSize.w - tx) / scale;
+    const canvasB = (containerSize.h - ty) / scale;
+    const bufX = (canvasR - canvasL) * VIRT_BUFFER_RATIO;
+    const bufY = (canvasB - canvasT) * VIRT_BUFFER_RATIO;
+    const vMinX = canvasL - bufX;
+    const vMinY = canvasT - bufY;
+    const vMaxX = canvasR + bufX;
+    const vMaxY = canvasB + bufY;
+    const ids = new Set<string>();
+    const settledMap = dispersion === 0 ? tileOffsets : baseOffsets;
+    for (const w of displayWorks) {
+      const wb = workBounds(w);
+      let minX: number, minY: number, maxX: number, maxY: number;
+      if (dispersionSettled) {
+        const off = settledMap.get(w.id) ?? { x: 0, y: 0 };
+        minX = wb.minX + off.x;
+        minY = wb.minY + off.y;
+        maxX = wb.maxX + off.x;
+        maxY = wb.maxY + off.y;
+      } else {
+        const o1 = tileOffsets.get(w.id) ?? { x: 0, y: 0 };
+        const o2 = baseOffsets.get(w.id) ?? { x: 0, y: 0 };
+        minX = Math.min(wb.minX + o1.x, wb.minX + o2.x);
+        minY = Math.min(wb.minY + o1.y, wb.minY + o2.y);
+        maxX = Math.max(wb.maxX + o1.x, wb.maxX + o2.x);
+        maxY = Math.max(wb.maxY + o1.y, wb.maxY + o2.y);
+      }
+      if (maxX < vMinX || minX > vMaxX) continue;
+      if (maxY < vMinY || minY > vMaxY) continue;
+      ids.add(w.id);
+    }
+    return ids;
+  }, [
+    transform,
+    containerSize,
+    dispersion,
+    dispersionSettled,
+    tileOffsets,
+    baseOffsets,
+    displayWorks,
+    isMobileLayout,
+  ]);
+
   // Mirror the live transform in a ref so the gallery FLIP can read the
   // settled values without re-rendering ExpandedGroup on every pan/zoom.
   const transformRef = useRef<Transform>(transform);
@@ -536,9 +676,11 @@ export function Canvas() {
               />
             );
           })}
-          {displayWorks.map((w) => (
-            <WorkTile key={w.id} work={w} />
-          ))}
+          {displayWorks.map((w) =>
+            visibleWorkIds && !visibleWorkIds.has(w.id) ? null : (
+              <WorkTile key={w.id} work={w} />
+            ),
+          )}
         </div>
         <ExpandedGroup />
       </DispersionContext.Provider>
