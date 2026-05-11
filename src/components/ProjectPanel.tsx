@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MEDIUM_LABEL } from "@/components/InspectorContent";
 import { WORKS } from "@/data/works";
-import {
-  descriptionFor,
-  type CreditEntry,
-  type CreditValue,
+import type {
+  CreditEntry,
+  CreditValue,
+  Description,
 } from "@/data/descriptions";
 import { useSelection } from "@/lib/store";
 
@@ -57,11 +57,28 @@ export function ProjectContent({
     return null;
   }, [selectedId, selectedGroupKey]);
 
-  const description = useMemo(() => {
-    if (!selectedGroupKey) return null;
+  // Long-form descriptions live in src/data/descriptions.ts (~44 KB
+  // minified) — only needed once the user opens a project's panel.
+  // Dynamic-import on demand so the initial bundle doesn't ship the
+  // body of every project's text to every visitor. The browser
+  // caches the module after the first load; subsequent panel opens
+  // resolve instantly without a network round-trip.
+  const [description, setDescription] = useState<Description | null>(null);
+  useEffect(() => {
+    if (!selectedGroupKey) {
+      setDescription(null);
+      return;
+    }
+    let cancelled = false;
     const [title, yearRaw] = selectedGroupKey.split("|");
     const year = Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : yearRaw;
-    return descriptionFor(title, year) ?? null;
+    import("@/data/descriptions").then((m) => {
+      if (cancelled) return;
+      setDescription(m.descriptionFor(title, year) ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedGroupKey]);
 
   if (!work) return null;
@@ -159,6 +176,21 @@ export function ProjectContent({
                 {para}
               </p>
             ))}
+        </div>
+      ) : selectedGroupKey ? (
+        // Description is still loading (dynamic-import in flight).
+        // Show a tiny pulse skeleton so the panel doesn't snap into
+        // the long-form body mid-read. Usually only visible for one
+        // frame on the very first project open per session — the
+        // browser caches the descriptions module after that.
+        <div
+          aria-hidden
+          className="space-y-2 border-t border-line pt-4 animate-pulse"
+        >
+          <div className="h-3 w-5/6 rounded bg-line/70" />
+          <div className="h-3 w-full rounded bg-line/70" />
+          <div className="h-3 w-11/12 rounded bg-line/70" />
+          <div className="h-3 w-4/5 rounded bg-line/70" />
         </div>
       ) : null}
       {credits.length > 0 ? (

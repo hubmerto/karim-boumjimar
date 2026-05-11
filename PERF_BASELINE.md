@@ -207,3 +207,63 @@ reconciliation work is gone; remaining work is pure DOM style
 mutation + GPU compositing. Inertia glide reads as silk.
 
 Mobile: unchanged (Pixi already implemented the pattern).
+
+---
+
+## Step 3 — dynamic-import project descriptions
+
+`src/data/descriptions.ts` is ~44 KB of long-form text (14 projects'
+body copy + credits). Previously imported synchronously from
+`ProjectPanel.tsx` even though the panel isn't visible until the
+user opens a project. Replaced the static `descriptionFor()` call
+with a dynamic `import("@/data/descriptions")` inside a `useEffect`
+keyed on `selectedGroupKey`. Cached by the browser after first load
+(subsequent panel opens resolve from module cache). Pulse skeleton
+shown for the one frame between selection and module resolution.
+
+### Home page (`/`) — initial JS
+
+| | bytes | Δ vs step 2 |
+|---|---|---|
+| Total uncompressed | **205,756** | **−39,173** |
+| Estimated gzipped (~30%) | **~68,585** | −13,058 |
+| Chunks loaded | 6 | unchanged |
+
+### Home page (`/`) chunks, descending
+
+| size (B) | chunk |
+|---:|---|
+| 54,689 | `16ws~37fk52cp.js` |
+| 47,200 | `0ois3nuzegddj.js` |
+| 43,039 | `0j4eldy9v.8.l.js` |
+| 35,050 | `08k08vqd78n76.js` (contains `descriptionFor` name reference only — body text moved to async chunk) |
+| 13,115 | `04tlu9fpazp9..js` |
+| 12,663 | `136qsen~~5cug.js` |
+
+### Descriptions chunk verification
+
+| size (B) | chunk | has body? |
+|---:|---|---|
+| 39,975 | `0ft1_7l~0quos.js` | yes — async-only |
+
+Verified: searching for known body text ("system of elevated wooden
+frameworks", "Glory on Earth", "MFA") returns hits only in
+`0ft1_7l~0quos.js`, never in any home-page chunk. The descriptions
+module is fully code-split.
+
+### Functional verification (Chrome DevTools MCP)
+
+Loaded `/` at 1280×800, opened the Index drawer, clicked the
+"Birds of Paradise" option. Project panel rendered with TITLE /
+YEAR / MEDIUM / MATERIALS / VENUE / CITY / DATE fields, four full
+paragraphs of body copy, and the "Photography — Jacob Friis-Holm
+Nielsen" credit with link intact. Dynamic import → setDescription
+→ DOM render path works.
+
+### Notes
+
+- 44 KB of text was shipping to every visitor before they ever
+  opened a project. ~40 KB now loads on-demand on the first panel
+  open; subsequent opens resolve from the browser module cache.
+- Total savings vs baseline (Step 0 → Step 3): **657 KB → 206 KB**,
+  a **−69%** initial JS payload reduction (uncompressed).
