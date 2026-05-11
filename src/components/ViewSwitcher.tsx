@@ -1,8 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Canvas } from "@/components/Canvas";
-import { CanvasPixi } from "@/components/CanvasPixi";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 import { ProjectPanel } from "@/components/ProjectPanel";
 import { AboutView } from "@/components/views/AboutView";
@@ -10,6 +10,21 @@ import { BioView } from "@/components/views/BioView";
 import { GrantView } from "@/components/views/GrantView";
 import { NewsView } from "@/components/views/NewsView";
 import { useSelection } from "@/lib/store";
+
+// CanvasPixi pulls in @pixi/react + pixi.js (~175 KB minified).
+// Desktop never executes this branch — gating the import keeps
+// the Pixi chunk out of the desktop initial bundle. The mobile
+// branch hits the dynamic import on first paint.
+//   - ssr: false because Pixi is browser-only (canvas / WebGL)
+//   - loading: () => null so there's no flicker placeholder; the
+//     mobile renderer is going to mount in <16ms anyway.
+const CanvasPixi = dynamic(
+  () =>
+    import("@/components/CanvasPixi").then((m) => ({
+      default: m.CanvasPixi,
+    })),
+  { ssr: false, loading: () => null },
+);
 
 // Must outlive ExpandedGroup's TRANSITION_MS (2400) + close timeout
 // (80) + a comfort buffer so the FLIP-close finishes before the
