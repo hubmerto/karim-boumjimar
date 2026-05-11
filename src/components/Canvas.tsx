@@ -17,7 +17,7 @@ import {
 } from "@/lib/canvas-math";
 import { DispersionContext } from "@/lib/dispersion";
 import { useSelection } from "@/lib/store";
-import { WorkTile } from "@/components/WorkTile";
+import { WorkTile, markIntroPlayed } from "@/components/WorkTile";
 import { GroupOutline } from "@/components/GroupOutline";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 
@@ -599,6 +599,26 @@ export function Canvas() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [deselect]);
+
+  // Flip the module-level "intro reveal complete" flag after the
+  // worst-case per-tile fade window has elapsed since the splash
+  // cleared. After this fires, any WorkTile mount (e.g., a tile that
+  // virtualization re-mounts when the user pans it back into the
+  // buffered viewport) skips the staggered fade-in and renders straight
+  // into its final state. Without this, a tile fading off-screen
+  // during the intro and then re-mounting later would replay the whole
+  // page-load reveal — visible flashing as the user explores.
+  //
+  // Timing: INTRO_REVEAL_MS (6000) is the camera reveal duration in
+  // useCanvas; the per-tile fade adds up to delay(4500) + duration(1500)
+  // = 6000 from splashGone going true. 6500 ms gives a 500 ms safety
+  // margin past the slowest tile's settle.
+  const splashGone = useSelection((s) => s.splashGone);
+  useEffect(() => {
+    if (!splashGone) return;
+    const t = window.setTimeout(() => markIntroPlayed(), 6500);
+    return () => window.clearTimeout(t);
+  }, [splashGone]);
 
   const onBackgroundClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
