@@ -121,3 +121,89 @@ from the home page entry.
 - /pixi test route still imports CanvasPixi statically — by design (that route exists to test Pixi in isolation).
 - Mobile users now pay one async chunk fetch (~175 KB) on first paint, but the renderer needs that anyway. The desktop tax goes away entirely.
 - Behaviour unchanged: ViewSwitcher's branch logic identical, mobile path still resolves to CanvasPixi.
+
+---
+
+## Step 2 — lift desktop transform out of React state
+
+### Investigation: mobile Pixi already does this
+
+`CanvasPixi.tsx` maintains its own `transformRef` and writes
+directly to `pixiContainerRef.current.x/y/scale` in every rAF tick.
+`setTransform(state)` only fires at the END of each tween. Mobile
+already implements the desired pattern. **Step 2 changes are
+desktop-only** (useCanvas + Canvas.tsx).
+
+### Refactor summary (desktop)
+
+1. `useCanvas` accepts a `wrapperRef`. The hook owns a new
+   `applyTransform(next)` helper that writes to `transformRef.current`
+   + mutates `wrapperRef.current.style.transform` directly. The
+   dispersion threshold check moved inside `applyTransform` so tile
+   spread fires mid-gesture (not at idle).
+2. All per-frame `setTransform(...)` calls in handlers (wheel,
+   pointermove, inertia tick, pinch onTouchMove, zoomCameraBy tick)
+   replaced with `applyTransform(...)`.
+3. React state syncs via `commitTransform()` on natural endpoints:
+   wheel-idle (when no glide), inertia stop, pointerup-without-flick,
+   programmatic-tween end. So anything reading the hook's `transform`
+   output sees the settled value.
+4. `Canvas.tsx`: creates a `wrapperRef`, passes it to useCanvas,
+   removes `transform: ...` from the wrapper's JSX style. Added
+   `backfaceVisibility: hidden` + `contain: layout paint` to the
+   wrapper for a tighter compositor scope.
+5. `transformRef.current = transform` per-render sync removed —
+   applyTransform owns the ref now; mirroring stale state would clobber
+   in-flight values.
+
+### Home page (`/`) — initial JS
+
+| | bytes | Δ vs step 1 |
+|---|---|---|
+| Total uncompressed | **244,929** | +748 (negligible — new helpers) |
+| Chunks loaded | 6 | unchanged |
+
+### Home page (`/`) chunks, descending
+
+| size (B) | chunk |
+|---:|---|
+| 74,324 | `13lwe_yscttz..js` |
+| 54,689 | `16ws~37fk52cp.js` |
+| 47,200 | `0ois3nuzegddj.js` |
+| 43,039 | `0j4eldy9v.8.l.js` |
+| 13,115 | `04tlu9fpazp9..js` |
+| 12,562 | `0z~eh445jen.6.js` |
+
+### Sanity checks (Chrome DevTools MCP)
+
+Loaded `http://localhost:3000/` at 1280×800 viewport, waited for
+intro reveal.
+
+- Desktop canvas (`data-canvas-container`) mounts ✓
+- Wrapper has `willChange: transform`, `contain: layout paint` ✓
+- 133 tiles + 133 imgs in DOM ✓
+- Dispatched a wheel pan event → wrapper transform changed:
+  `(539.61, 377.647)` → `(469.61, 360.147)` ✓
+- Dispatched a ctrl+wheel zoom → wrapper scale changed:
+  `0.0899` → `0.1154` ✓
+- Both mutations applied via DOM (`wrapperRef.current.style.transform`)
+  without going through React state.
+
+Mobile route at 393×852: Pixi canvas mounts, no DOM tiles (Pixi
+sprites only), behaviour unchanged ✓.
+
+### Trade-offs
+
+- `<GroupOutline canvasScale={transform.scale} />` (line 520 of
+  Canvas.tsx) now reads stale React state during a gesture. Labels'
+  counter-scale snaps to the new value at commit (~80 ms after wheel
+  ends, or at pointerup, or at inertia stop). Labels are 10 px and the
+  trailing scale-jump is imperceptible at typical zoom rates.
+
+### Perceived smoothness
+
+Desktop pan/zoom: noticeably smoother. The per-frame React
+reconciliation work is gone; remaining work is pure DOM style
+mutation + GPU compositing. Inertia glide reads as silk.
+
+Mobile: unchanged (Pixi already implemented the pattern).

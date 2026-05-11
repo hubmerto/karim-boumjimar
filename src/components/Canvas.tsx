@@ -415,6 +415,14 @@ export function Canvas() {
     return { minX, minY, maxX, maxY };
   }, [baseOffsets, displayWorks]);
 
+  // The inner wrapper that carries the camera transform. Pan/zoom
+  // mutates `wrapperRef.current.style.transform` directly each frame
+  // so React doesn't re-render Canvas (and reconcile its 133-tile
+  // JSX tree) at 60 Hz. Pass the ref into useCanvas; the wrapper
+  // div's JSX must NOT include `transform` in its style or React
+  // will overwrite our DOM mutations on its next render.
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
   const {
     containerRef,
     transform,
@@ -426,7 +434,7 @@ export function Canvas() {
     isAnimating,
     animDuration,
     dispersion,
-  } = useCanvas(displayWorks, bentoBbox, spreadBbox, baseOffsets);
+  } = useCanvas(displayWorks, bentoBbox, spreadBbox, baseOffsets, wrapperRef);
 
   // Mirror the live transform in a ref so the gallery FLIP can read the
   // settled values without re-rendering ExpandedGroup on every pan/zoom.
@@ -484,16 +492,23 @@ export function Canvas() {
     >
       <DispersionContext.Provider value={dispCtx}>
         <div
+          ref={wrapperRef}
           className="absolute left-0 top-0"
           style={{
             transformOrigin: "0 0",
-            transform: `translate3d(${transform.tx}px, ${transform.ty}px, 0) scale(${transform.scale})`,
-            // Slow + soft easing for nav animations. Duration varies:
-            // 5000ms for the auto-zoom 200→100%, 1100ms otherwise.
+            // NOTE: `transform` is INTENTIONALLY omitted here.
+            // useCanvas mutates `wrapperRef.current.style.transform`
+            // directly on every wheel / pointer / inertia tick so
+            // React doesn't have to reconcile the 133-tile subtree
+            // 60 times per second during pan/zoom. If you put
+            // `transform` back in this style block, React will
+            // overwrite the DOM mutation on its next render.
             transition: isAnimating
               ? `transform ${animDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`
               : "none",
             willChange: "transform",
+            backfaceVisibility: "hidden",
+            contain: "layout paint",
           }}
         >
           {groups.map((g) => {

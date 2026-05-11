@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type RefObject,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -103,18 +104,34 @@ export function useCanvas(
    * when navigating, otherwise nav-to-group lands on empty space where
    * the bbox sits in canvas coords but no tile is rendered. */
   destOffsets?: Map<string, { x: number; y: number }>,
+  /** The inner wrapper div that carries the camera transform. Pan +
+   * zoom mutate `wrapperRef.current.style.transform` directly each
+   * frame so React doesn't re-render Canvas (and its 133-tile JSX
+   * tree) at 60 Hz. The component MUST omit `transform` from this
+   * div's JSX style so React doesn't overwrite our DOM mutations
+   * on its next render. */
+  wrapperRef?: RefObject<HTMLDivElement | null>,
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Identical initial state on server and client to keep hydration deterministic.
   // The 75% framing is applied via useLayoutEffect below, runs synchronously after
   // mount, before paint, so users never see the un-framed state.
+  //
+  // NOTE: this React state is now a "committed" snapshot, not the live
+  // camera position. Per-frame pan/zoom updates write to transformRef
+  // + wrapperRef.style.transform via applyTransform(); React state is
+  // only synced on natural endpoints (wheel-idle, pointerup, inertia
+  // stop, programmatic-tween end). See applyTransform / commitTransform
+  // below.
   const [transform, setTransform] = useState<Transform>({
     tx: 0,
     ty: TOPBAR_H,
     scale: 0.15,
   });
   const transformRef = useRef(transform);
-  transformRef.current = transform;
+  // Intentionally NOT mirroring `transform` to `transformRef.current` on
+  // every render — applyTransform owns the ref. Mirroring would clobber
+  // a fresh in-flight update with stale React state.
   const initializedRef = useRef(false);
   // True when the user has interacted (click, drag, wheel, pinch). Used to
   // skip the auto-zoom from 75% to 100% if the user took action first.
@@ -182,9 +199,66 @@ export function useCanvas(
     [panBbox],
   );
 
+  // ─── Hot-path transform plumbing ─────────────────────────────────
+  //
+  // `applyTransform(next)` is the per-frame DOM mutation called from
+  // wheel / pointer / inertia handlers. It writes to the wrapper's
+  // style.transform directly so React doesn't have to re-render
+  // Canvas (and reconcile its 133-tile JSX tree) at 60 Hz.
+  //
+  // `commitTransform()` syncs React state with the live ref. Called
+  // on natural endpoints (wheel-idle, pointerup, inertia stop) so
+  // any consumer that reads `transform` from the hook output sees
+  // the settled value when the gesture ends.
+  //
+  // Mirror dispersion + bentoFit into refs so applyTransform can
+  // run the dispersion threshold check synchronously without
+  // forcing the user to wait until commit-on-idle to see tiles
+  // start spreading.
+  const dispersionRef = useRef(0);
+  const bentoFitRef = useRef(bentoFit);
+  bentoFitRef.current = bentoFit;
+
+  const applyTransform = useCallback((next: Transform) => {
+    transformRef.current = next;
+    const el = wrapperRef?.current;
+    if (el) {
+      el.style.transform = `translate3d(${next.tx}px, ${next.ty}px, 0) scale(${next.scale})`;
+    }
+    // Dispersion threshold check on the hot path — fires immediately
+    // when the user crosses the threshold mid-gesture, so tiles start
+    // spreading without waiting for commit-on-idle. The actual
+    // setDispersion / showToolbar work happens at most twice per
+    // session (one flip up, one flip back), so this is cheap.
+    const bf = bentoFitRef.current;
+    if (bf > 0) {
+      const d = dispersionRef.current;
+      if (next.scale > bf * 1.25 && d === 0) {
+        dispersionRef.current = 1;
+        setDispersion(1);
+      } else if (next.scale <= bf && d === 1) {
+        dispersionRef.current = 0;
+        setDispersion(0);
+        const s = useSelection.getState();
+        if (!s.expandedGroupKey && (s.selectedId || s.selectedGroupKey)) {
+          s.showToolbar();
+        }
+      }
+    }
+  }, [wrapperRef]);
+
+  // Sync React state with the live ref. Call after a gesture has
+  // settled (wheel-idle, pointerup, inertia stop) so anything that
+  // reads `transform` via the hook's return value sees the final
+  // committed position.
+  const commitTransform = useCallback(() => {
+    setTransform(transformRef.current);
+  }, []);
+
   useLayoutEffect(() => {
     if (initializedRef.current || !works.length) return;
     initializedRef.current = true;
+    let initial: Transform;
     if (bentoBbox) {
       // Initial framing: bento at 75% of its fit scale. Tiles are packed and
       // sit small with breathing room around them so the whole mound reads at
@@ -194,15 +268,21 @@ export function useCanvas(
       const cx = (bentoBbox.minX + bentoBbox.maxX) / 2;
       const cy = (bentoBbox.minY + bentoBbox.maxY) / 2;
       const startScale = fit * 0.75;
-      setTransform({
+      initial = {
         tx: v.w / 2 - cx * startScale,
         ty: v.h / 2 - cy * startScale,
         scale: startScale,
-      });
+      };
     } else {
-      setTransform(fitAllTransform(works, viewportRect()));
+      initial = fitAllTransform(works, viewportRect());
     }
-  }, [works, bentoBbox]);
+    // applyTransform writes to ref + DOM; setTransform mirrors React
+    // state so the first paint of the wrapper sees the right transform
+    // and so anything reading `transform` from the hook output starts
+    // with the right value.
+    applyTransform(initial);
+    setTransform(initial);
+  }, [works, bentoBbox, applyTransform]);
 
   // When the left toolbar slides out / back in (desktop only), the canvas
   // container's left edge shifts by (LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED).
@@ -218,8 +298,13 @@ export function useCanvas(
     const widthDelta = LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED; // 176
     // Toolbar shrinking, container shifts left, bump tx right to compensate.
     const txDelta = condensed ? widthDelta : -widthDelta;
-    setTransform((t) => ({ ...t, tx: t.tx + txDelta }));
-  }, [condensed]);
+    const next = {
+      ...transformRef.current,
+      tx: transformRef.current.tx + txDelta,
+    };
+    applyTransform(next);
+    setTransform(next);
+  }, [condensed, applyTransform]);
 
   const [isDragging, setIsDragging] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
@@ -319,13 +404,17 @@ export function useCanvas(
         v.vy = 0;
         v.vScale = 0;
         inertiaRafRef.current = null;
+        // Sync React state once the inertia loop is done so anything
+        // that reads `transform` (gallery FLIP source rect, navigation
+        // effects) sees the settled value.
+        commitTransform();
         return;
       }
-      setTransform(next);
+      applyTransform(next);
       inertiaRafRef.current = requestAnimationFrame(tick);
     }
     inertiaRafRef.current = requestAnimationFrame(tick);
-  }, [clampedZoom, clampedPan]);
+  }, [clampedZoom, clampedPan, applyTransform, commitTransform]);
 
   const [animDuration, setAnimDuration] = useState(1800);
   // True while a programmatic camera animation is in flight. The
@@ -346,13 +435,20 @@ export function useCanvas(
       programmaticAnimRef.current = true;
       setIsAnimating(true);
       setAnimDuration(duration);
+      // applyTransform mutates wrapper.style.transform; CSS transition
+      // (which the wrapper has while isAnimating=true) animates from
+      // the OLD DOM value to this new value over `duration` ms.
+      applyTransform(next);
+      // Sync React state so consumers reading `transform` see the
+      // settled value immediately (the visual interpolation runs in
+      // browser compositing land, not in JS).
       setTransform(next);
       animateTimerRef.current = setTimeout(() => {
         setIsAnimating(false);
         programmaticAnimRef.current = false;
       }, duration + 80);
     },
-    [cancelInertia],
+    [cancelInertia, applyTransform],
   );
 
   // Auto-zoom from 75% to 100% of bento fit, starting THE INSTANT
@@ -425,11 +521,13 @@ export function useCanvas(
     // Snap to 75 %-bento with no transition so the replay starts
     // from the same place the natural intro does. The follow-up
     // animateTransform handles the visible reveal.
-    setTransform({
+    const startSnap = {
       tx: v.w / 2 - cx * fit * 0.75,
       ty: v.h / 2 - cy * fit * 0.75,
       scale: fit * 0.75,
-    });
+    };
+    applyTransform(startSnap);
+    setTransform(startSnap);
     // Clear the user-interaction gate so the dispersion-tracker
     // and dispersion don't behave as if mid-session.
     userInteractedRef.current = false;
@@ -444,7 +542,7 @@ export function useCanvas(
         4000,
       );
     });
-  }, [introReplayToken, bentoBbox, animateTransform]);
+  }, [introReplayToken, bentoBbox, animateTransform, applyTransform]);
 
   // Flick-pan injection. /showcase/inertia bumps flickPanToken
   // with desired (vx, vy) in screen px / ms. We seed velocityRef
@@ -497,16 +595,29 @@ export function useCanvas(
       const eased = ease(t);
       const scale = startScale * Math.pow(targetScale / startScale, eased);
       const factor = scale / transformRef.current.scale;
-      setTransform(
-        clampedZoom(transformRef.current, factor, cx, cy, viewportRect()),
+      const next = clampedZoom(
+        transformRef.current,
+        factor,
+        cx,
+        cy,
+        viewportRect(),
       );
+      applyTransform(next);
+      // Sync React state at the END of the tween only.
+      if (t >= 1) setTransform(next);
       if (t < 1) raf = requestAnimationFrame(tick);
     }
     raf = requestAnimationFrame(tick);
     return () => {
       if (raf != null) cancelAnimationFrame(raf);
     };
-  }, [zoomCameraToken, zoomCameraFactor, zoomCameraDurationMs, clampedZoom]);
+  }, [
+    zoomCameraToken,
+    zoomCameraFactor,
+    zoomCameraDurationMs,
+    clampedZoom,
+    applyTransform,
+  ]);
 
   // Drive dispersion from the current zoom level with hysteresis. The
   // tiles spread out (groups apart) once the camera passes 125% of the
@@ -544,6 +655,14 @@ export function useCanvas(
       }
     }
   }, [transform.scale, bentoFit, dispersion]);
+
+  // Mirror dispersion state into dispersionRef so the hot-path
+  // applyTransform() check sees the latest value. Without this the
+  // ref would drift if dispersion ever changes via this useEffect
+  // (during programmatic anims that go via setTransform alone).
+  useEffect(() => {
+    dispersionRef.current = dispersion;
+  }, [dispersion]);
 
   // Re-fit on resize (only the first time we set it; respect the user's pan/zoom afterwards).
   // We *don't* auto-refit on every resize because that would yank the user out of context.
@@ -612,7 +731,7 @@ export function useCanvas(
       // on Mac trackpads where deltaY arrives in larger increments.
       if (e.ctrlKey || e.metaKey) {
         const factor = Math.exp(-e.deltaY * 0.0025);
-        setTransform(
+        applyTransform(
           clampedZoom(t, factor, e.clientX, e.clientY, viewportRect()),
         );
         // Track zoom velocity in log-scale per ms. EMA with
@@ -637,7 +756,7 @@ export function useCanvas(
           dx = dy;
           dy = 0;
         }
-        setTransform(
+        applyTransform(
           clampedPan(
             { tx: t.tx - dx, ty: t.ty - dy, scale: t.scale },
             viewportRect(),
@@ -655,15 +774,27 @@ export function useCanvas(
       // wheel event arrives first, the timer is reset above and
       // inertia never fires — the user is still actively scrolling.
       // Once events truly stop, the timer fires and the camera
-      // glides with whatever velocity the EMA captured.
+      // glides with whatever velocity the EMA captured. The
+      // inertia loop will commit the final transform to React state
+      // when it stops; if the velocity is below the threshold and
+      // inertia is a no-op, commit here so React state catches up.
       wheelIdleTimerRef.current = setTimeout(() => {
         wheelIdleTimerRef.current = null;
-        startInertia();
+        const v0 = velocityRef.current;
+        const willGlide =
+          Math.abs(v0.vx) >= 0.02 ||
+          Math.abs(v0.vy) >= 0.02 ||
+          Math.abs(v0.vScale) >= 0.0001;
+        if (willGlide) {
+          startInertia();
+        } else {
+          commitTransform();
+        }
       }, 80);
     }
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [clampedZoom, clampedPan, startInertia]);
+  }, [clampedZoom, clampedPan, startInertia, applyTransform, commitTransform]);
 
   // Pointer drag pan. Triggers on:
   //  - background left-click drag (click on canvas, not on a tile)
@@ -721,7 +852,7 @@ export function useCanvas(
       // on touch where the user expects the tile under their finger to
       // stay there.
       const t = transformRef.current;
-      setTransform(
+      applyTransform(
         clampedPan(
           { tx: t.tx + rawDx, ty: t.ty + rawDy, scale: t.scale },
           viewportRect(),
@@ -737,7 +868,7 @@ export function useCanvas(
       const cutoff = now - 80;
       while (samples.length > 2 && samples[0].t < cutoff) samples.shift();
     },
-    [isDragging, clampedPan],
+    [isDragging, clampedPan, applyTransform],
   );
 
   const onPointerUp = useCallback(
@@ -760,9 +891,15 @@ export function useCanvas(
         velocityRef.current.vScale = 0;
         startInertia();
       }
+      // If the user just tapped without flicking (no inertia), commit
+      // the small drag delta to React state so consumers see the
+      // settled position. startInertia commits at its own end.
+      if (samples.length < 2) {
+        commitTransform();
+      }
       dragSamplesRef.current = [];
     },
-    [isDragging, startInertia],
+    [isDragging, startInertia, commitTransform],
   );
 
   // Pinch zoom (touch). Tracks two-finger distance and scales accordingly.
@@ -814,7 +951,7 @@ export function useCanvas(
       const t = transformRef.current;
       const factor = scaleTarget / t.scale;
       if (factor !== 1) {
-        setTransform(
+        applyTransform(
           clampedZoom(t, factor, pinchCenter.x, pinchCenter.y, viewportRect()),
         );
       }
@@ -851,7 +988,7 @@ export function useCanvas(
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [clampedZoom, cancelInertia, startInertia]);
+  }, [clampedZoom, cancelInertia, startInertia, applyTransform]);
 
   // Keyboard shortcuts. Spacebar (held) for pan-cursor, "1" for fit, "0" for 100%, Esc handled at app level.
   useEffect(() => {
@@ -863,14 +1000,18 @@ export function useCanvas(
         e.preventDefault();
         setSpaceHeld(true);
       } else if (e.key === "1") {
-        setTransform(fitAllTransform(works, viewportRect()));
+        const next = fitAllTransform(works, viewportRect());
+        applyTransform(next);
+        setTransform(next);
       } else if (e.key === "0") {
         // 100% zoom centred on the current view centre.
         const t = transformRef.current;
         const v = viewportRect();
         const centerCanvasX = (v.x + v.w / 2 - t.tx) / t.scale;
         const centerCanvasY = (v.y + v.h / 2 - t.ty) / t.scale;
-        setTransform(centerOn(v, centerCanvasX, centerCanvasY, 1));
+        const next = centerOn(v, centerCanvasX, centerCanvasY, 1);
+        applyTransform(next);
+        setTransform(next);
       }
     }
     function onKeyUp(e: KeyboardEvent) {
@@ -882,7 +1023,7 @@ export function useCanvas(
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [works]);
+  }, [works, applyTransform]);
 
   const fitAll = useCallback(() => {
     animateTransform(fitAllTransform(works, viewportRect()), 2800);
