@@ -580,35 +580,44 @@ export function Canvas() {
     isMobileLayout,
   ]);
 
-  // visibleWorkIds: the DEBOUNCED visibility set that the renderer
-  // actually consumes. Holds its previous value during continuous
-  // gestures (rapid wheel-zoom can trigger a commit every ~150 ms;
-  // applying the filter on each would mount/unmount tiles in flight
-  // and stall the gesture) and only flips to the new value after
-  // 250 ms of idle.
+  // visibleWorkIds: the DEBOUNCED visibility set the renderer consumes
+  // when no programmatic camera tween is in flight. Holds its previous
+  // value during continuous gestures (rapid wheel-zoom can trigger a
+  // commit every ~150 ms; applying the filter on each would mount /
+  // unmount tiles in flight and stall the gesture) and only flips to
+  // the new value after 250 ms of idle.
   //
-  // Bypasses the debounce in two cases — the user feels both as
-  // "immediate apply, no UI lag":
+  // The renderer ALSO checks `isAnimating` directly (see JSX below).
+  // While an `animateTransform` tween runs, the renderer ignores
+  // visibleWorkIds and mounts all 133 tiles. Doing the override there
+  // — synchronously in the render that sets `isAnimating=true` — is
+  // what keeps tiles painted before the camera moves. A useEffect-
+  // based override would lag one render cycle and produce a brief
+  // white flash on group-exit before the missing tiles mount.
   //
-  //   1. First application: `appliedRef.current === null` means we've
-  //      never trimmed yet. On the very first commit (intro animation
-  //      settle, hard reload, etc.) snap to the filtered set now so
-  //      the bento doesn't show all 133 tiles for an extra 250 ms.
+  // The effect below maintains the steady-state value with two
+  // bypasses:
   //
-  //   2. Programmatic-camera commit: `isAnimating` is true exactly
-  //      while a camera tween (fitAll, navigate-to-project, zoom-to-work)
-  //      is in flight. useCanvas commits the destination transform at
-  //      the START of the tween — so this branch fires the filter
-  //      against the target state right away, and as the camera
-  //      visually slides toward that target, the tile set is already
-  //      correct underneath it. Skip the debounce here too, otherwise
-  //      a fitAll keystroke shows a stale tile set for 250 ms after
-  //      the camera has already landed.
+  //   1. Snap on settle (`prevIsAnimatingRef.current && !isAnimating`):
+  //      the moment a tween ends, apply the destination filter now —
+  //      no debounce. Without this we'd sit on render-all for an extra
+  //      250 ms after every camera animation lands.
+  //
+  //   2. First application (`appliedRef.current === null`): initial
+  //      mount, after the ResizeObserver first reports a size.
+  //
+  // We don't bother updating during a tween — the renderer ignores
+  // visibleWorkIds anyway, and any work spent recomputing would just
+  // be churn against a value nobody reads.
   const appliedRef = useRef<Set<string> | null>(null);
+  const prevIsAnimatingRef = useRef(isAnimating);
   const [visibleWorkIds, setVisibleWorkIds] = useState<Set<string> | null>(
     null,
   );
   useEffect(() => {
+    const wasAnimating = prevIsAnimatingRef.current;
+    prevIsAnimatingRef.current = isAnimating;
+
     if (nextVisibleWorkIds === null) {
       if (appliedRef.current !== null) {
         appliedRef.current = null;
@@ -616,11 +625,12 @@ export function Canvas() {
       }
       return;
     }
-    if (appliedRef.current === null || isAnimating) {
+    if (appliedRef.current === null || (wasAnimating && !isAnimating)) {
       appliedRef.current = nextVisibleWorkIds;
       setVisibleWorkIds(nextVisibleWorkIds);
       return;
     }
+    if (isAnimating) return;
     const t = window.setTimeout(() => {
       appliedRef.current = nextVisibleWorkIds;
       setVisibleWorkIds(nextVisibleWorkIds);
@@ -761,11 +771,27 @@ export function Canvas() {
               />
             );
           })}
-          {displayWorks.map((w) =>
-            visibleWorkIds && !visibleWorkIds.has(w.id) ? null : (
+          {displayWorks.map((w) => {
+            // Render-all override has higher precedence than the
+            // visibility filter. Two paths short-circuit it:
+            //   - `isAnimating`: a programmatic camera tween is in
+            //     flight. Read synchronously here (NOT via a useEffect
+            //     that schedules another render) so the override fires
+            //     in the same React render that sets isAnimating=true.
+            //     Without that synchronicity there's a ~one-render gap
+            //     where the destination filter is already trimmed but
+            //     the new tiles haven't mounted yet — visible white
+            //     flash on group-exit before the bento appears.
+            //   - `visibleWorkIds === null`: initial mount before the
+            //     ResizeObserver has reported a container size. Render
+            //     everything, trim later.
+            if (isAnimating || visibleWorkIds === null) {
+              return <WorkTile key={w.id} work={w} />;
+            }
+            return visibleWorkIds.has(w.id) ? (
               <WorkTile key={w.id} work={w} />
-            ),
-          )}
+            ) : null;
+          })}
         </div>
         <ExpandedGroup />
       </DispersionContext.Provider>
