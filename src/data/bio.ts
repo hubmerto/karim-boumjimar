@@ -229,17 +229,16 @@ export const NEWS: NewsEntry[] = [
     date: "9 October 2025",
     title: "Mouths, Vessels, Portals",
     suffix: ", Alice Folker Gallery, Copenhagen — through 28 November 2025",
-    url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/",
   },
   {
     date: "29 August 2025",
     title: "Pandemonium Paradiso",
-    suffix: ", O—Overgaden, Copenhagen — through 26 October 2025",
+    suffix: ", O—Overgaden, Institute of Contemporary Art, Copenhagen, DK",
     url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
     press: [
       {
-        label: "Alice Folker overview",
-        url: "https://alicefolker.dk/exhibitions/39-karim-boumjimar-pandemonium-paradiso-o-overgaden/overview/",
+        label: "Art Viewer",
+        url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
       },
     ],
   },
