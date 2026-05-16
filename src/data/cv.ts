@@ -87,14 +87,8 @@ export const CV_SOLO: CvEntry[] = [
     country: "DK",
     // Audit: overgaden.org/en/exhibitions/ slug was marked "partial"
     // (specific page slug not located); using Art Viewer's review as
-    // the primary citation, with the Alice Folker overview as press.
+    // the primary citation.
     url: "https://artviewer.org/karim-boumjimar-at-o-overgaden-copenhagen/",
-    press: [
-      {
-        label: "Alice Folker overview",
-        url: "https://alicefolker.dk/exhibitions/39-karim-boumjimar-pandemonium-paradiso-o-overgaden/overview/",
-      },
-    ],
   },
   {
     year: "2025",
@@ -117,14 +111,6 @@ export const CV_SOLO: CvEntry[] = [
     city: "Pori",
     country: "FI",
     url: "https://www.poriartmuseum.fi/en/events/karim-boumjimar-drawings-from-the-hotel-2/",
-  },
-  {
-    year: "2025",
-    title: "Mouths, Vessels, Portals",
-    venue: "Alice Folker Gallery",
-    city: "Copenhagen",
-    country: "DK",
-    url: "https://alicefolker.dk/exhibitions/7-karim-boumjimar-mouths-vessels-portals/",
   },
 ];
 

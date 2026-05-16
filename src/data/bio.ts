@@ -226,11 +226,6 @@ export const NEWS: NewsEntry[] = [
     url: "https://miettinen-collection.de/2025/10/26/this-is-just-the-beginning/",
   },
   {
-    date: "9 October 2025",
-    title: "Mouths, Vessels, Portals",
-    suffix: ", Alice Folker Gallery, Copenhagen — through 28 November 2025",
-  },
-  {
     date: "29 August 2025",
     title: "Pandemonium Paradiso",
     suffix: ", O—Overgaden, Institute of Contemporary Art, Copenhagen, DK",
