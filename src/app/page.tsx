@@ -5,11 +5,13 @@ import { CrashOverlay } from "@/components/CrashOverlay";
 import { GroupViewControls } from "@/components/GroupViewControls";
 import { Index } from "@/components/Index";
 import { InspectorSheet } from "@/components/InspectorSheet";
+import { JsonLd } from "@/components/JsonLd";
 import { LeftToolbar } from "@/components/LeftToolbar";
 import { PreloadGalleryImages } from "@/components/PreloadGalleryImages";
 import { Splash } from "@/components/Splash";
 import { TopBar } from "@/components/TopBar";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
+import { PERSON_JSONLD } from "@/lib/person-jsonld";
 import { useSelection } from "@/lib/store";
 
 /**
@@ -50,6 +52,13 @@ export default function Home() {
           group is pinned, so the FLIP open is smooth instead of
           waiting on a network fetch. */}
       <PreloadGalleryImages />
+      {/* Person (additionalType VisualArtist) JSON-LD — feeds the
+          Google knowledge graph and reinforces karimboumjimar.com as
+          the canonical source. Rendered inside this client tree, but
+          Next.js server-renders client components during SSR so the
+          script tag lands in the initial HTML (visible to crawlers
+          without JS). Single source of truth in `lib/person-jsonld`. */}
+      <JsonLd data={PERSON_JSONLD} />
     </>
   );
 }

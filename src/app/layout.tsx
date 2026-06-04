@@ -55,6 +55,24 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  // Default canonical = site root. The home page (`/`) inherits this
+  // value; every other route exports its own canonical via
+  // `pageMetadata()` from `@/lib/seo`, which replaces this default.
+  // Keeping a value here protects the home page from accidentally
+  // shipping with no canonical at all.
+  alternates: {
+    canonical: SITE_URL,
+  },
+  // Optional Google Search Console verification meta tag — only
+  // rendered when the env var is set. Read from build env via Next so
+  // it's baked into the static HTML; doesn't require a runtime server.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
   // Disable iOS auto-linking of dates / numbers / addresses in text.
   formatDetection: {
     telephone: false,

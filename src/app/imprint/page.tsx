@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { LegalPage, Section } from "@/components/LegalPage";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Imprint, Karim Boumjimar",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Imprint — Karim Boumjimar",
+  description:
+    "Legal notice and responsible party for karimboumjimar.com per the Danish E-Commerce Act and Article 5 of the EU Digital Services Act.",
+  pathname: "/imprint",
+});
 
 export default function ImprintPage() {
   return (

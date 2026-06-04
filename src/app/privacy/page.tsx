@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { LegalPage, Section } from "@/components/LegalPage";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy, Karim Boumjimar",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Privacy Policy — Karim Boumjimar",
+  description:
+    "GDPR-compliant privacy policy for karimboumjimar.com — a static site with no cookies, no analytics, and no third-party tracking.",
+  pathname: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
