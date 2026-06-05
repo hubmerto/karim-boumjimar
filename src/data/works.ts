@@ -2845,8 +2845,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/clubare-04.webp",
         alt: "Club Are, performance still",
-        width: 530,
-        height: 800,
+        width: 800,
+        height: 530,
       },
     ],
     position: { x: 8258, y: 2767 },
@@ -2899,8 +2899,8 @@ export const WORKS: Work[] = [
       {
         src: "/images/works/clubare-07.webp",
         alt: "Club Are, performance still",
-        width: 530,
-        height: 800,
+        width: 800,
+        height: 530,
       },
     ],
     position: { x: 7765, y: 3512 },
