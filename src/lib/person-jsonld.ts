@@ -1,3 +1,4 @@
+import { BIO_LEAD } from "@/data/bio";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -14,6 +15,17 @@ import { SITE_URL } from "@/lib/seo";
  * Place form because the precise admin region isn't important and a
  * full `Place` object is overkill for an artist bio.
  *
+ * `description` is the same BIO_LEAD constant that AboutView renders
+ * as its first visible paragraph (see src/data/bio.ts). Schema and
+ * rendered text agree byte-for-byte: Google has no excuse to prefer
+ * a third-party gallery snippet over this one when picking the
+ * entity description.
+ *
+ * `mainEntityOfPage` advertises this URL as the entity's home page —
+ * the explicit "this domain is the canonical surface for this Person"
+ * signal. Combined with `@id` and `url` pointing at the same origin
+ * it tightens the entity-home claim that the knowledge panel reads.
+ *
  * The IG handle is pulled from `src/data/bio.ts` (CONTACT.instagram =
  * "@beigetype" → "https://www.instagram.com/beigetype/"). The other
  * sameAs URLs come from the SEO brief (Artsy, Helsinki Contemporary,
@@ -25,6 +37,7 @@ export const PERSON_JSONLD = {
   "@type": "Person",
   additionalType: "VisualArtist",
   "@id": `${SITE_URL}/#person`,
+  mainEntityOfPage: SITE_URL,
   name: "Karim Boumjimar",
   url: SITE_URL,
   birthDate: "1998",
@@ -66,8 +79,7 @@ export const PERSON_JSONLD = {
     },
   ],
   jobTitle: "Visual Artist",
-  description:
-    "Spanish-Moroccan visual artist working across drawing, ceramics, and performance. Examines social hierarchies through the entanglement of nature, bodies, and identity.",
+  description: BIO_LEAD,
   sameAs: [
     "https://www.instagram.com/beigetype/",
     "https://www.artsy.net/artist/karim-boumjimar",

@@ -2,19 +2,39 @@
 
 export const ARTIST_NAME = "Karim Boumjimar";
 
-export const BIO_SHORT =
-  "Karim Boumjimar (b. 1998, Málaga, Spain) is an artist whose work examines social hierarchies through the entanglement of nature, bodies, and identity. Working across drawing, ceramics, and performance, his practice explores how subjectivity is formed through ecological and cultural systems rather than outside of them.";
+/**
+ * Single-paragraph, credentials-forward bio. Source of truth for BOTH
+ * the visible /about lead and the Person JSON-LD `description`, so
+ * the structured-data string and the rendered text are byte-for-byte
+ * identical. Google's knowledge panel ingests both surfaces; keeping
+ * them aligned prevents the kind of split signal that lets a gallery
+ * site outrank the artist's own domain for the bio snippet.
+ *
+ * Phrasing rules baked in here:
+ *  - Lead with name + birth year + birth city + nationality — Google's
+ *    Person panels weight that header.
+ *  - State the MFA + BFA institutions on the first line. The previous
+ *    version only mentioned mediums; credentials lived two routes
+ *    away on /bio and never reached the schema description.
+ *  - Close with the practice's thesis statement — the social-
+ *    hierarchies / nature-bodies-identity framing — so the snippet
+ *    Google might cite explains the work, not just the CV.
+ *  - One paragraph, ~ 60 words. Anything longer gets truncated in
+ *    SERP previews.
+ */
+export const BIO_LEAD =
+  "Karim Boumjimar (b. 1998, Málaga, Spain) is a visual artist working across drawing, ceramics, and performance. He holds an MFA from the Royal Danish Academy of Fine Arts, Copenhagen, and a BFA from Central Saint Martins, London. His work examines social hierarchies through the entanglement of nature, bodies, and identity.";
 
 /**
- * Artist statement, used by AboutView. Compressed from the previous
- * five-paragraph version: paragraph 2 restated the subhead, paragraph
- * 3 doubled paragraph 1's framing, and paragraph 5 was a
- * summary-of-summary. The geography line at the bottom replaces
- * absent context (the previous version omitted that he's based in
- * Copenhagen and is Spanish-Moroccan).
+ * Artist statement, used by AboutView. First paragraph is exactly
+ * BIO_LEAD (so the visible lead matches the JSON-LD description
+ * verbatim — see BIO_LEAD's docstring). The remaining paragraphs are
+ * the longer poetic statement; they're secondary visible text and
+ * Google won't pull from them for the entity snippet, but they're
+ * what readers actually engage with on the page.
  */
 export const ABOUT_PARAGRAPHS = [
-  "Karim Boumjimar (b. 1998, Málaga) is a Spanish-Moroccan artist working across drawing, ceramics, and performance. His practice examines social hierarchies through the entanglement of nature, body, and identity, treating subjectivity as something formed through ecological and cultural systems rather than outside of them.",
+  BIO_LEAD,
   "Figures appear hybrid and unstable — simultaneously human, animal, and mythological — emerging through gestural processes that hold transformation over fixity. Compositions are shaped by desire, power, and vulnerability; bodies merge, dissolve, and recombine, refusing the binary categories that fix them.",
   "Ceramics operates at the centre of this language, somewhere between object, body, and residue. Treated as both contemporary and archaeological, it holds traces of movement and memory while remaining open to change.",
   "Boumjimar lives and works in Copenhagen, between Stockholm, Berlin, and Spain.",
