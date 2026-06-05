@@ -48,8 +48,16 @@ export const PERSON_JSONLD = {
   alumniOf: [
     {
       "@type": "CollegeOrUniversity",
+      // Billedkunstskolerne — the Fine Arts academy, where Karim's
+      // MFA is from. The older `kadk.dk` domain 301s to kglakademi.dk,
+      // which is Det Kongelige Akademi — the combined Architecture /
+      // Design / Conservation school. Different institution; same
+      // umbrella name in Danish ("Det Kongelige …"), easy to confuse.
+      // The correct authority for the Fine Arts school is
+      // kunstakademiet.dk, page title "Billedkunstskolerne – Det
+      // Kongelige Danske Kunstakademi".
       name: "Royal Danish Academy of Fine Arts",
-      sameAs: "https://kadk.dk/",
+      sameAs: "https://kunstakademiet.dk/",
     },
     {
       "@type": "CollegeOrUniversity",
