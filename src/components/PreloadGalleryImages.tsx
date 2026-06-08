@@ -27,18 +27,50 @@ import { useSelection } from "@/lib/store";
 // The mirror is the only build that sets a basePath, and it's also the
 // only one with images.unoptimized. So "no basePath" ⟺ "optimizer on".
 const OPTIMIZER_ON = BASE_PATH === "";
-// A real entry in next/image's default deviceSizes; q75 is the default
-// quality. Keeps the warm aligned with the gallery's likely request so
-// it's a cache hit rather than a third distinct variant.
-const WARM_WIDTH = 1200;
+
+// next/image's default deviceSizes — the candidate widths it puts in the
+// srcset for a viewport-relative (`sizes` with vw) image. The browser
+// then picks one based on the resolved `sizes` width × devicePixelRatio.
+const DEVICE_SIZES = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
+// next/image's default quality when the component sets none (ExpandedGroup
+// doesn't pass `quality`), so we must warm at the same q to hit its cache.
 const WARM_QUALITY = 75;
 
-function warmUrl(src: string): string {
+/**
+ * Resolve the gallery <Image sizes> string to a CSS pixel width for the
+ * current viewport. MUST stay in sync with ExpandedGroup's `sizes`:
+ *   "(max-width: 768px) 92vw, (max-width: 1280px) 60vw, 45vw"
+ * If that string changes, change this too or the warm width drifts off
+ * the gallery's actual request and the prefetch stops being a cache hit.
+ */
+function gallerySizesCssPx(vw: number): number {
+  if (vw <= 768) return vw * 0.92;
+  if (vw <= 1280) return vw * 0.6;
+  return vw * 0.45;
+}
+
+/**
+ * The exact deviceSizes width the browser will select for the gallery
+ * image at this viewport — replicating the standard srcset/sizes pick
+ * (smallest candidate ≥ sizesCss × DPR). Warming THIS width means the
+ * gallery's request on open is a cache hit instead of a cold transcode.
+ * Previously this was hard-coded to 1200, which mismatched the variant
+ * the gallery actually displayed (e.g. 2048 on a retina desktop), so the
+ * warm was wasted and the visible image loaded cold (~1s delay).
+ */
+function galleryWarmWidth(): number {
+  if (typeof window === "undefined") return 1200;
+  const dpr = window.devicePixelRatio || 1;
+  const needed = gallerySizesCssPx(window.innerWidth) * dpr;
+  return DEVICE_SIZES.find((w) => w >= needed) ?? DEVICE_SIZES[DEVICE_SIZES.length - 1];
+}
+
+function warmUrl(src: string, width: number): string {
   const resolved = asset(src);
   if (!OPTIMIZER_ON) return resolved; // mirror: raw original
   return `/_next/image?url=${encodeURIComponent(
     resolved,
-  )}&w=${WARM_WIDTH}&q=${WARM_QUALITY}`;
+  )}&w=${width}&q=${WARM_QUALITY}`;
 }
 
 export function PreloadGalleryImages() {
@@ -49,6 +81,9 @@ export function PreloadGalleryImages() {
     const works = WORKS.filter(
       (w) => `${w.title}|${w.year}` === selectedGroupKey,
     );
+    // Compute the width once per pin from the current viewport so the
+    // warmed variant matches the one the gallery will request on open.
+    const width = galleryWarmWidth();
     // Hold references so the GC doesn't drop the requests mid-flight;
     // release them on cleanup so a different group's preload doesn't
     // keep this one's bytes live.
@@ -57,7 +92,7 @@ export function PreloadGalleryImages() {
       for (const image of work.images) {
         const el = new Image();
         el.decoding = "async";
-        el.src = warmUrl(image.src);
+        el.src = warmUrl(image.src, width);
         cache.push(el);
       }
     }
