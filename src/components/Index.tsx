@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { WORKS } from "@/data/works";
 import { useSelection } from "@/lib/store";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 type Sort = "chronological" | "alphabetical";
 
@@ -57,6 +58,10 @@ export function Index({
   const [sort, setSort] = useState<Sort>("chronological");
   const [activeIdx, setActiveIdx] = useState(0);
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Index is a blocking drawer (it has a click-outside backdrop), so
+  // trap focus while it's open and restore to the trigger on close.
+  useFocusTrap(panelRef, open);
 
   // navigateToGroup only updates Zustand state — it doesn't change the
   // URL. From a non-canvas route (/contact, /bio, /imprint, …) that's a
@@ -159,6 +164,7 @@ export function Index({
       <div
         ref={panelRef}
         role="dialog"
+        aria-modal="true"
         aria-label="Works index"
         className="fixed top-16 md:top-12 bottom-0 left-0 z-40 flex w-[420px] max-w-[90vw] flex-col border-r border-line bg-canvas"
       >

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelection } from "@/lib/store";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { DefaultView } from "@/components/InspectorContent";
 import { ProjectContent } from "@/components/ProjectPanel";
 
@@ -236,6 +237,30 @@ export function InspectorSheet() {
     [isOpen, toggleSnap],
   );
 
+  // The sheet is only MODAL at the `full` snap, where it covers the
+  // canvas opaquely. At `peek` (handle only) and `mid` (canvas still
+  // visible/interactive above it) it is NON-modal, so do NOT trap
+  // focus there — trapping a non-modal sheet would strand keyboard/SR
+  // users away from the canvas behind it.
+  const isModal = snap === "full";
+  useFocusTrap(sheetRef, isModal);
+
+  // Escape closes the sheet to its resting peek state. The other three
+  // dialogs already wire Escape; this brings the sheet in line. Only
+  // active while the sheet is raised (mid/full) so Escape on a bare
+  // peek handle doesn't swallow the key from anything else.
+  useEffect(() => {
+    if (snap === "peek") return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setSnap("peek");
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [snap]);
+
   // Only meaningful on the exhibitions canvas; other views show their own full content.
   // Must come AFTER all hooks to satisfy the rules of hooks.
   if (view !== "exhibitions") return null;
@@ -255,6 +280,7 @@ export function InspectorSheet() {
         willChange: "transform",
       }}
       role="dialog"
+      aria-modal={isModal ? "true" : undefined}
       aria-label="Inspector"
     >
       <div className="flex h-full flex-col border-t border-line bg-canvas shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">

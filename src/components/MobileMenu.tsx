@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { WORKS } from "@/data/works";
 import { useSelection, type View } from "@/lib/store";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const ITEMS: { key: View; label: string; href: string }[] = [
   { key: "exhibitions", label: "Exhibitions", href: "/" },
@@ -55,6 +56,11 @@ export function MobileMenu({
   const view = useSelection((s) => s.view);
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const [mode, setMode] = useState<Mode>("sections");
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Full-screen blocking drawer → trap focus while open, restore to
+  // the TopBar Menu button (the trigger) on close.
+  useFocusTrap(panelRef, open);
 
   // Reset to sections every time the menu re-opens, so previous "looked
   // at index" state doesn't surprise the user on the next open.
@@ -79,8 +85,10 @@ export function MobileMenu({
 
   return (
     <div
+      ref={panelRef}
       className="fixed inset-0 top-16 z-40 flex flex-col bg-canvas md:hidden"
       role="dialog"
+      aria-modal="true"
       aria-label={mode === "index" ? "Works index" : "Sections"}
     >
       {mode === "sections" ? (

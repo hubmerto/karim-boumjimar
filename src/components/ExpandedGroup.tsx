@@ -14,6 +14,7 @@ import { clearFlipRects, getFlipRect } from "@/lib/flipRects";
 import { asset } from "@/lib/paths";
 import { useSelection } from "@/lib/store";
 import { thumbSrc } from "@/lib/thumbs";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 // Slower FLIP so photos visibly travel between their canvas-tile
 // position and their gallery-strip slot. 1500ms still read as a snap
@@ -285,6 +286,14 @@ export function ExpandedGroup() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [displayKey]);
 
+  // Fullscreen blocking modal → trap focus, but only once it's fully
+  // OPEN. During the FLIP open/close the chrome (close button) is
+  // opacity:0 / pointer-events:none and the background is already
+  // pointer/​wheel-locked, so trapping there would just move focus to
+  // an invisible control. On deactivate (phase leaves "open" → closing)
+  // focus restores to the tile that opened the gallery.
+  useFocusTrap(wrapperRef, phase === "open");
+
   if (!displayKey || !works.length) return null;
 
   const fade = phase === "open" ? 1 : 0;
@@ -298,6 +307,7 @@ export function ExpandedGroup() {
       ref={wrapperRef}
       className="absolute inset-0 z-20 bg-canvas"
       role="dialog"
+      aria-modal="true"
       aria-label="Expanded group"
       onClick={(e) => {
         e.stopPropagation();
