@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Image from "next/image";
 import { WORKS } from "@/data/works";
 import { clearFlipRects, getFlipRect } from "@/lib/flipRects";
 import { asset } from "@/lib/paths";
@@ -148,7 +149,14 @@ export function ExpandedGroup() {
     items.forEach((el, id) => {
       const src = sourceRectsRef.current.get(id);
       if (!src) return;
-      const target = el.querySelector("img") ?? el;
+      // Animate the tight image wrapper ([data-flip-img]), not the raw
+      // <img>: next/image manages its own inline style and can
+      // re-render on load, which would wipe an imperative transform set
+      // on the <img>. The wrapper is a plain div at the exact image box
+      // (h-[88%] + matching aspect-ratio), so its rect equals the
+      // image's and React never touches its transform.
+      const target =
+        el.querySelector<HTMLElement>("[data-flip-img]") ?? el;
       const dst = target.getBoundingClientRect();
       if (dst.width === 0 || dst.height === 0) return;
       const dx = src.left - dst.left;
@@ -195,7 +203,8 @@ export function ExpandedGroup() {
     items.forEach((el, id) => {
       const src = sourceRectsRef.current.get(id);
       if (!src) return;
-      const target = (el.querySelector("img") ?? el) as HTMLElement;
+      const target = (el.querySelector<HTMLElement>("[data-flip-img]") ??
+        el) as HTMLElement;
       target.style.transition = "none";
       target.style.transformOrigin = "top left";
       target.style.transform = "";
@@ -337,7 +346,7 @@ export function ExpandedGroup() {
           touchAction: "pan-x",
         }}
       >
-        {works.map((w) => {
+        {works.map((w, i) => {
           const img = w.images[0];
           if (!img) return null;
           return (
@@ -349,7 +358,6 @@ export function ExpandedGroup() {
                 else itemRefs.current.delete(w.id);
               }}
               className="flex h-full flex-shrink-0 items-center"
-              style={{ willChange: "transform" }}
             >
               <ProgressiveImage
                 fullSrc={asset(img.src)}
@@ -357,6 +365,11 @@ export function ExpandedGroup() {
                 alt={img.alt}
                 width={img.width}
                 height={img.height}
+                // index 0 is the tile the user tapped (carousel rotated
+                // so it's first) → eager-load it; the rest lazy-load as
+                // the user swipes, keeping mobile from fetching the
+                // whole group up front.
+                priority={i === 0}
               />
             </div>
           );
@@ -367,22 +380,29 @@ export function ExpandedGroup() {
 }
 
 /**
- * Renders the canvas thumbnail first (already cached because the
- * bento drew it) and swaps to the full-resolution image once it
- * has finished loading. Two reasons we do this:
+ * Gallery image delivered through next/image, so every variant is
+ * resized/transcoded on demand at the edge (Vercel) — a narrow
+ * viewport requests a small candidate instead of the 3–4MB original.
+ * On the static-export mirror (images.unoptimized) next/image falls
+ * back to serving the original, which is acceptable there.
  *
- * 1. The user never sees a white frame waiting for ~3500 px bytes
- *    to arrive — the thumbnail fills the slot the moment the
- *    gallery mounts.
- * 2. The thumbnail has known intrinsic dimensions, so the parent
- *    div has a non-zero bounding rect on the very first render.
- *    The FLIP useLayoutEffect needs that rect; otherwise it skips
- *    the tile and the photo "jumps" into position instead of
- *    animating from its bento spot.
+ * Layout / FLIP contract:
+ *  - The outer div ([data-flip-img]) is a TIGHT box at the rendered
+ *    image size: height 88% of the strip, width derived from the
+ *    declared aspect ratio. This matches the previous `h-[88%] w-auto`
+ *    <img> exactly, so the horizontal strip lays out identically and
+ *    the FLIP (which now targets this div) measures the right rect.
+ *  - The box has a non-zero rect on first render from CSS alone
+ *    (height + aspect-ratio), so the FLIP never skips a tile — no
+ *    dependency on an image having loaded.
+ *  - The cached bento thumbnail is painted as the box background, so
+ *    there's no blank frame before the optimized variant decodes; the
+ *    box aspect matches the image, so object-contain lands the photo
+ *    exactly over the thumb.
  *
- * The width / height attrs come from the full-res image so the
- * computed aspect ratio is identical for both srcs and the swap
- * doesn't reflow the layout.
+ * The width / height props feed the aspect ratio only (works.ts DATA,
+ * left untouched even where the on-disk pixels were later shrunk — the
+ * ratio is what matters and it's unchanged).
  */
 function ProgressiveImage({
   fullSrc,
@@ -390,51 +410,43 @@ function ProgressiveImage({
   alt,
   width,
   height,
+  priority,
 }: {
   fullSrc: string;
   thumbSrc: string;
   alt: string;
   width?: number;
   height?: number;
+  priority?: boolean;
 }) {
-  const [src, setSrc] = useState(thumbSrc);
-
-  // Reset to the thumb whenever the work changes (e.g. user
-  // jumps from one group's gallery directly to another). Without
-  // this the new tile would briefly render the previous work's
-  // full-res while its own thumb / full-res are still loading.
-  useEffect(() => {
-    setSrc(thumbSrc);
-  }, [thumbSrc]);
-
-  // Kick off the full-res load off-DOM. Once it's in cache, swap
-  // the visible <img>'s src — the browser will paint the high-res
-  // version on the next frame without any flicker because the
-  // dimensions are identical.
-  useEffect(() => {
-    let cancelled = false;
-    const loader = new Image();
-    loader.decoding = "async";
-    loader.onload = () => {
-      if (!cancelled) setSrc(fullSrc);
-    };
-    loader.src = fullSrc;
-    return () => {
-      cancelled = true;
-    };
-  }, [fullSrc]);
-
+  const aspectRatio = width && height ? `${width} / ${height}` : "2 / 3";
   return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      draggable={false}
-      // h-[88%] (not max-h) so all items render at the same height
-      // regardless of native dimensions.
-      className="block h-[88%] w-auto select-none"
-    />
+    <div
+      data-flip-img
+      className="relative h-[88%] select-none"
+      style={{
+        aspectRatio,
+        backgroundImage: `url("${thumbSrc}")`,
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        willChange: "transform",
+      }}
+    >
+      <Image
+        src={fullSrc}
+        alt={alt}
+        fill
+        // Image is viewport-HEIGHT-bound (h-[88%]); on-screen WIDTH
+        // varies per photo aspect. These width-based hints are generous
+        // upper bounds so the browser still picks a resized candidate
+        // (hundreds of KB) rather than the original — the smaller the
+        // viewport, the smaller the candidate.
+        sizes="(max-width: 768px) 92vw, (max-width: 1280px) 60vw, 45vw"
+        priority={priority}
+        draggable={false}
+        className="select-none object-contain"
+      />
+    </div>
   );
 }
