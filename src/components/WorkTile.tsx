@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import type { Work } from "@/types/work";
 import { workBounds } from "@/lib/canvas-math";
 import { useDispersion } from "@/lib/dispersion";
@@ -88,27 +88,12 @@ function WorkTileImpl({ work }: Props) {
     return `tile-fade-in ${fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1) ${fadeDelay}ms both`;
   }, [skipIntro, splashGone, fadeDelay, fadeDuration]);
 
-  // Mount the <img> at the same moment the tile starts to fade in. With
-  // 123 tiles, mounting them all at once when the splash clears spikes
-  // memory and crashes iOS Safari. Staggering by the same per-tile delay
-  // means the browser fetches + decodes images at a trickle (~25/sec),
-  // never holding too much decoded data at once.
-  //
-  // Post-intro (skipIntro=true): the staggered drip-feed isn't needed —
-  // the user is already past the initial mass-mount, and they're
-  // virtualization-remounting one or two tiles at a time as they pan.
-  // Mount the img immediately so the user doesn't see a delayed pop-in
-  // when a tile re-enters view.
-  const [imgMounted, setImgMounted] = useState(skipIntro);
-  useEffect(() => {
-    if (!splashGone) return;
-    if (skipIntro) {
-      setImgMounted(true);
-      return;
-    }
-    const t = setTimeout(() => setImgMounted(true), fadeDelay);
-    return () => clearTimeout(t);
-  }, [splashGone, fadeDelay, skipIntro]);
+  // The thumbnail is mounted immediately and eager-loaded (see the
+  // <img> below): all ~133 canvas thumbs download up front and stay in
+  // the DOM, so panning / zooming around never reveals a tile that has
+  // to load in. This component is desktop-only (mobile uses the Pixi
+  // renderer), so the old iOS-Safari mass-mount OOM concern that drove
+  // the previous staggered drip-feed no longer applies.
 
   return (
     <button
@@ -163,23 +148,24 @@ function WorkTileImpl({ work }: Props) {
           animation: innerAnimation,
         }}
       >
-        {imgMounted ? (
-          // Plain <img> - next/image fights with arbitrary 2D transforms on the parent.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            // 600px thumbnail on the canvas overview (~5x lighter
-            // than the 2400px full-res). Full-size loads when the
-            // user opens the gallery (ExpandedGroup).
-            src={asset(thumbSrc(img.src))}
-            alt={img.alt}
-            width={img.width}
-            height={img.height}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            className="block h-full w-full object-cover"
-          />
-        ) : null}
+        {/* Plain <img> - next/image fights with arbitrary 2D transforms on the parent. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          // 600px thumbnail on the canvas overview (~5x lighter than the
+          // 2400px full-res). Full-size loads when the user opens the
+          // gallery (ExpandedGroup).
+          src={asset(thumbSrc(img.src))}
+          alt={img.alt}
+          width={img.width}
+          height={img.height}
+          // eager (not lazy): every canvas thumbnail loads up front and
+          // stays loaded, so moving around the canvas never triggers a
+          // fetch / shows a blank tile. Modest up-front cost on desktop.
+          loading="eager"
+          decoding="async"
+          draggable={false}
+          className="block h-full w-full object-cover"
+        />
       </span>
     </button>
   );
