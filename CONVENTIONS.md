@@ -4,13 +4,11 @@ Decisions about copy, content, and structure that are settled and shouldn't be r
 
 ## Project navigation
 
-Projects live entirely on the canvas at `/`. There are no per-project routes.
+Projects are viewable two ways: (1) on the canvas at `/` and (2) via per-project static routes `/works/[slug]` (14 routes, one per project, added in the SEO pass — see REVIEW.md).
 
-The canvas shows all 13 works as a bento grid; clicking a tile triggers `navigateToGroup` to pan the camera and open the gallery. This is the only way to view a project page.
+The canvas shows all 133 work tiles (14 projects) as a bento grid; clicking a tile triggers `navigateToGroup` to pan the camera and open the gallery. A `/works/<slug>` deep link mounts the same canvas and auto-opens that project on load.
 
-The CV (`/cv`) does not cross-link to project pages — there are no project pages to link to. CV entries link to external venue and press URLs only.
-
-If a future requirement needs deep-linkable project pages (for press releases, social shares, SEO), the recommended approach is a query-param entry point parsed on mount: `/?project=<slug>`. Per-project static routes (~13 new pages) are not recommended — duplicate plumbing for no user gain.
+> NOTE (2026-06, audit): this section previously claimed "13 works", "no per-project routes", and recommended against per-project static routes. All three are stale — there are now 14 projects, 133 tiles, and `/works/[slug]` exists. Updated to match the code.
 
 ## Project page copy conventions
 

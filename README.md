@@ -35,9 +35,9 @@ If you already have Node 20+ and pnpm: just `pnpm install && pnpm dev`.
 src/
   app/                   Root layout + page (App Router)
   components/            Canvas, Inspector, ProjectPanel, LeftToolbar, ...
-  components/views/      Bio / About / News / Grant text views
+  components/views/      Bio / Contact / News / Grant text views
   data/
-    works.ts             41 work tiles with positions (generated)
+    works.ts             133 work tiles (14 projects) with positions (generated)
     bio.ts               bio paragraphs, news, grant info
     descriptions.ts      long-form project descriptions
   lib/
