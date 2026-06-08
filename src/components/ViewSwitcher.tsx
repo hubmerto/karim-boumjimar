@@ -79,8 +79,15 @@ export function ViewSwitcher() {
   if (mobile === null) return null;
 
   if (view === "exhibitions") {
+    // The exhibitions canvas is the page's primary content region, so it
+    // gets the <main> landmark. The text views below (bio/contact/news/
+    // grant) render their own <main> via TextView/LegalPage, so this
+    // branch is the ONLY place the canvas needs one — do not add another
+    // higher up or the text routes would end up with two. The <main>
+    // wraps position:fixed children (Canvas/CanvasPixi, ProjectPanel) and
+    // contributes no box of its own; it exists purely as the landmark.
     return mobile ? (
-      <>
+      <main>
         <CanvasPixi />
         {/* ExpandedGroup is rendered inside Canvas on desktop. On
             mobile the Pixi canvas takes that slot, so we mount it
@@ -92,9 +99,9 @@ export function ViewSwitcher() {
             event chain and block native horizontal scroll inside
             the strip. */}
         <MobileExpandedGroupShell />
-      </>
+      </main>
     ) : (
-      <>
+      <main>
         <Canvas />
         {/* Single right-side panel — work fields + project description
             in one stack. Replaces the previous Inspector + ProjectPanel
@@ -102,7 +109,7 @@ export function ViewSwitcher() {
         <div className="fixed right-0 top-12 bottom-0 z-10 hidden md:flex">
           <ProjectPanel />
         </div>
-      </>
+      </main>
     );
   }
   if (view === "bio") return <BioView />;

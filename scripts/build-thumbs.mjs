@@ -39,6 +39,13 @@ for (const f of files) {
   const outPath = resolve(outDir, f);
   const inBuf = readFileSync(inPath);
   const out = await sharp(inBuf, { failOn: "none" })
+    // .rotate() with no args bakes EXIF orientation into the pixels
+    // before resizing, so source photos carrying an orientation tag
+    // (e.g. Noritsu film scans) don't ship sideways. MUST come before
+    // .resize() so dimensions are computed post-rotation. Without this,
+    // a future photo drop with EXIF orientation regenerates sideways
+    // thumbs — the Club Are bug.
+    .rotate()
     .resize(MAX, MAX, { fit: "inside", withoutEnlargement: true })
     .webp({ quality: QUALITY, effort: 5 })
     .toBuffer();
