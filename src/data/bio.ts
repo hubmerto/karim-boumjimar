@@ -4,7 +4,7 @@ export const ARTIST_NAME = "Karim Boumjimar";
 
 /**
  * Single-paragraph, credentials-forward bio. Source of truth for BOTH
- * the visible /about lead and the Person JSON-LD `description`, so
+ * the visible /contact lead and the Person JSON-LD `description`, so
  * the structured-data string and the rendered text are byte-for-byte
  * identical. Google's knowledge panel ingests both surfaces; keeping
  * them aligned prevents the kind of split signal that lets a gallery
@@ -26,7 +26,7 @@ export const BIO_LEAD =
   "Karim Boumjimar (b. 1998, Málaga, Spain) is a visual artist working across drawing, ceramics, and performance. He holds an MFA from the Royal Danish Academy of Fine Arts, Copenhagen, and a BFA from Central Saint Martins, London. His work examines social hierarchies through the entanglement of nature, bodies, and identity.";
 
 /**
- * Artist statement, used by AboutView. First paragraph is exactly
+ * Artist statement, used by ContactView. First paragraph is exactly
  * BIO_LEAD (so the visible lead matches the JSON-LD description
  * verbatim — see BIO_LEAD's docstring). The remaining paragraphs are
  * the longer poetic statement; they're secondary visible text and

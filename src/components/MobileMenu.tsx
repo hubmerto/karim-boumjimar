@@ -10,7 +10,7 @@ const ITEMS: { key: View; label: string; href: string }[] = [
   { key: "exhibitions", label: "Exhibitions", href: "/" },
   { key: "news", label: "News", href: "/news" },
   { key: "bio", label: "Bio", href: "/bio" },
-  { key: "about", label: "About", href: "/about" },
+  { key: "contact", label: "Contact", href: "/contact" },
   { key: "grant", label: "Grant", href: "/grant" },
 ];
 

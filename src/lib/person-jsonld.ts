@@ -3,8 +3,10 @@ import { SITE_URL } from "@/lib/seo";
 
 /**
  * Schema.org Person describing Karim Boumjimar. Embedded on the home
- * page and /about so Google can build a knowledge-graph entry pointing
- * at karimboumjimar.com as the authoritative source. `sameAs` lists
+ * page and /contact so Google can build a knowledge-graph entry
+ * pointing at karimboumjimar.com as the authoritative source.
+ * (Previously /about, before the route was renamed to /contact.)
+ * `sameAs` lists
  * the artist's other canonical web presences — Google uses these for
  * entity-linking and to consolidate ranking signal across the artist's
  * scattered pages on third-party platforms.
@@ -15,8 +17,9 @@ import { SITE_URL } from "@/lib/seo";
  * Place form because the precise admin region isn't important and a
  * full `Place` object is overkill for an artist bio.
  *
- * `description` is the same BIO_LEAD constant that AboutView renders
- * as its first visible paragraph (see src/data/bio.ts). Schema and
+ * `description` is the same BIO_LEAD constant that ContactView
+ * renders as its first visible paragraph (see src/data/bio.ts).
+ * Schema and
  * rendered text agree byte-for-byte: Google has no excuse to prefer
  * a third-party gallery snippet over this one when picking the
  * entity description.

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type View = "exhibitions" | "news" | "bio" | "about" | "grant";
+export type View = "exhibitions" | "news" | "bio" | "contact" | "grant";
 
 /** Mobile InspectorSheet snap states. Mirrors the local Snap union
  * inside InspectorSheet.tsx — duplicated here because the type

@@ -59,7 +59,7 @@ export function Index({
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   // navigateToGroup only updates Zustand state — it doesn't change the
-  // URL. From a non-canvas route (/about, /bio, /imprint, …) that's a
+  // URL. From a non-canvas route (/contact, /bio, /imprint, …) that's a
   // no-op visually: the canvas (ViewSwitcher) isn't mounted on those
   // routes, so flipping selectedGroupKey + navTargetGroupKey doesn't
   // render anything. Push to "/" first so we land on the canvas, then

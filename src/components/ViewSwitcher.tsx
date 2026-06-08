@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Canvas } from "@/components/Canvas";
 import { ExpandedGroup } from "@/components/ExpandedGroup";
 import { ProjectPanel } from "@/components/ProjectPanel";
-import { AboutView } from "@/components/views/AboutView";
+import { ContactView } from "@/components/views/ContactView";
 import { BioView } from "@/components/views/BioView";
 import { GrantView } from "@/components/views/GrantView";
 import { NewsView } from "@/components/views/NewsView";
@@ -106,7 +106,7 @@ export function ViewSwitcher() {
     );
   }
   if (view === "bio") return <BioView />;
-  if (view === "about") return <AboutView />;
+  if (view === "contact") return <ContactView />;
   if (view === "news") return <NewsView />;
   if (view === "grant") return <GrantView />;
   return null;

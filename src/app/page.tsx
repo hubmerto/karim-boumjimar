@@ -29,7 +29,7 @@ export default function Home() {
   const setView = useSelection((s) => s.setView);
 
   // Reset the store's view to "exhibitions" whenever the home
-  // page mounts. Without this, navigating from /about (or any
+  // page mounts. Without this, navigating from /contact (or any
   // other text route) back to "/" via the LeftToolbar's
   // Exhibitions link would land here with view still set to
   // whatever it was before, and ViewSwitcher would keep showing

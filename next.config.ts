@@ -35,6 +35,22 @@ const nextConfig: NextConfig = {
   // Adds ~2x JS file count to the deploy but no runtime cost (only fetched
   // when DevTools is open).
   productionBrowserSourceMaps: true,
+  // /about → /contact: the page was renamed when contact info +
+  // newsletter signup took over. 301 preserves any inbound link equity
+  // (the previous SEO pass had been pointing the Person + ProfilePage
+  // JSON-LD at /about). Skipped under `output: "export"` (GitHub Pages
+  // mirror): static exports can't emit a server redirect, and the GH
+  // Pages mirror is a backup of last resort — a broken /about there
+  // is acceptable. The canonical Vercel deploy is what matters.
+  ...(isStaticExport
+    ? {}
+    : {
+        async redirects() {
+          return [
+            { source: "/about", destination: "/contact", permanent: true },
+          ];
+        },
+      }),
 };
 
 export default nextConfig;

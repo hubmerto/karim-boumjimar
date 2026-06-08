@@ -39,7 +39,7 @@ export function LegalPage({
       {/* Body has overflow:hidden + height:100dvh (the canvas
           lockdown). The legal page is a fixed pane below the TopBar
           with its own internal vertical scroll — same pattern as
-          BioView / AboutView / NewsView. The desktop `md:left-[200px]`
+          BioView / ContactView / NewsView. The desktop `md:left-[200px]`
           clears the LeftToolbar so the article doesn't sit under it. */}
       <main className="fixed inset-0 top-16 z-0 overflow-y-auto bg-canvas text-ink md:top-12 md:left-[200px]">
         <article className="mx-auto max-w-[640px] px-4 pt-12 pb-24 text-caption leading-relaxed text-pretty break-words text-ink">

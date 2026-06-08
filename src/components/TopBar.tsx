@@ -18,7 +18,7 @@ export function TopBar() {
       <button
         type="button"
         onClick={() => {
-          // From a text route (/bio, /about, /grant, /news) we need
+          // From a text route (/bio, /contact, /grant, /news) we need
           // to actually navigate home; the store reset alone won't
           // change the URL. From "/" we just bump the camera-reset
           // token and clear selection.

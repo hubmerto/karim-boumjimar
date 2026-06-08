@@ -9,7 +9,7 @@ import { TopBar } from "@/components/TopBar";
 import { useSelection, type View } from "@/lib/store";
 
 /**
- * Shared chrome for the text-only routes (/about, /bio, /news,
+ * Shared chrome for the text-only routes (/contact, /bio, /news,
  * /grant). Renders the same TopBar / LeftToolbar / Splash /
  * CrashOverlay as the home page, but skips the canvas / inspector
  * sheet — those are exhibitions-only. Sets the store's `view` so

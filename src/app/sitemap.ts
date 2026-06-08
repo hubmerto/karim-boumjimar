@@ -8,13 +8,16 @@ const SITE_URL =
 // `output: "export"` (the GitHub Pages mirror build).
 export const dynamic = "force-static";
 
-// Top-level navigation. About / Bio / News / Grant each have real
-// /about, /bio, /news, /grant routes now (server-rendered shells
+// Top-level navigation. Contact / Bio / News / Grant each have real
+// /contact, /bio, /news, /grant routes now (server-rendered shells
 // wrapping the client view) so their own metadata + canonical lives
 // at the listed URL — search engines should index them directly.
+// /about lives only as a 301 redirect to /contact (configured in
+// next.config.ts); it's intentionally NOT listed here so the sitemap
+// only advertises the canonical destination.
 const TOP_LEVEL_PATHS = [
   "",
-  "/about",
+  "/contact",
   "/bio",
   "/news",
   "/grant",
