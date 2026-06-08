@@ -175,7 +175,11 @@ export function ExpandedGroup() {
     if (wrapperRef.current) void wrapperRef.current.offsetHeight;
     requestAnimationFrame(() => {
       items.forEach((el) => {
-        const target = el.querySelector("img") ?? el;
+        // MUST target the same element the source transform was set on
+        // above ([data-flip-img]). It previously cleared the inner <img>
+        // instead, so the box kept its tiny FLIP-start scale forever —
+        // every gallery image was frozen at ~0.3x size.
+        const target = el.querySelector<HTMLElement>("[data-flip-img]") ?? el;
         target.style.transition = `transform ${TRANSITION_MS}ms ${EASE}`;
         target.style.transform = "";
       });
