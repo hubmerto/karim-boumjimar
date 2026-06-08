@@ -105,22 +105,25 @@ export function Canvas() {
   const selectedId = useSelection((s) => s.selectedId);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
   const indexOpen = useSelection((s) => s.indexOpen);
+  const toolbarHidden = useSelection((s) => s.toolbarHidden);
   const condensed = !!(selectedId || selectedGroupKey);
   // Single merged ProjectPanel (420 px) covers both the work fields
   // and the project description. Canvas right edge must clear it
   // when anything is selected so tiles aren't hidden behind it.
   const rightClass = condensed ? "md:right-[420px]" : "md:right-0";
-  // Left edge: matches whatever's covering the canvas on the left.
-  // When the Works Index drawer is open it reserves 420 px on the
-  // left, so the canvas wrapper has to start at 420 too — otherwise
-  // fitBboxTransform's tx (computed for a viewport at x=420) ends up
-  // applied to a wrapper that begins at x=24, and the cluster lands
-  // 396 px to the left of where it should be (visible behind the
-  // drawer). Index has top priority because it covers the toolbar.
+  // Left edge: matches whatever's ACTUALLY covering the canvas on the
+  // left, which is the nav's visibility (toolbarHidden) — NOT the
+  // selection state. When the nav is slid off, the canvas extends to
+  // the left edge (left-0) so images go edge-to-edge with no leftover
+  // white strip; when the nav is shown it reserves 200px. The Works
+  // Index drawer (420px) wins over both. Keep this in lockstep with
+  // useCanvas's leftWidth() or the camera centering (fitBboxTransform
+  // tx) will be computed for a different offset than the CSS uses and
+  // the cluster lands sideways.
   const leftClass = indexOpen
     ? "md:left-[420px]"
-    : condensed
-      ? "md:left-[24px]"
+    : toolbarHidden
+      ? "md:left-0"
       : "md:left-[200px]";
   // Pick a column-count distribution based on viewport. Default to
   // desktop on the server (and on the client first render) so SSR and

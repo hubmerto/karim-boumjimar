@@ -28,18 +28,23 @@ export function LeftToolbar() {
   return (
     <>
       {/* Re-open handle, only visible when the toolbar is slid off.
-          Clicking deselects the current project and brings the nav
-          back. */}
+          Clicking brings the nav back. The strip itself is transparent
+          (no bg / border) so it never reads as a white bar over the
+          edge-to-edge canvas — only the small chevron chip is visible.
+          Full height keeps it an easy target; the chip is centered for
+          legibility over any image behind it. */}
       <button
         type="button"
         onClick={showToolbar}
         aria-label="Show sections"
         title="Show sections"
-        className={`fixed left-0 top-12 bottom-0 z-30 hidden w-6 items-center justify-center border-r border-line bg-canvas text-mute hover:text-ink md:flex ${
+        className={`fixed left-0 top-12 bottom-0 z-30 hidden w-6 items-center justify-center md:flex ${
           hidden ? "opacity-100" : "pointer-events-none opacity-0"
         } transition-opacity duration-200`}
       >
-        <span className="text-caption">›</span>
+        <span className="flex h-12 w-5 items-center justify-center rounded-r-md border border-l-0 border-line bg-canvas/85 text-caption text-mute shadow-sm backdrop-blur-sm">
+          ›
+        </span>
       </button>
 
       <nav
