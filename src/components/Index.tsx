@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { WORKS } from "@/data/works";
 import { useSelection } from "@/lib/store";
 
@@ -51,9 +52,28 @@ export function Index({
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
   const expandedGroupKey = useSelection((s) => s.expandedGroupKey);
   const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
+  const router = useRouter();
+  const pathname = usePathname();
   const [sort, setSort] = useState<Sort>("chronological");
   const [activeIdx, setActiveIdx] = useState(0);
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // navigateToGroup only updates Zustand state — it doesn't change the
+  // URL. From a non-canvas route (/about, /bio, /imprint, …) that's a
+  // no-op visually: the canvas (ViewSwitcher) isn't mounted on those
+  // routes, so flipping selectedGroupKey + navTargetGroupKey doesn't
+  // render anything. Push to "/" first so we land on the canvas, then
+  // let the store change carry the selection across the navigation
+  // (Zustand persists across the Next.js client transition). Same fix
+  // for the Enter-key path further down. Already on "/" → skip the
+  // push so we don't trigger a needless soft reload.
+  const goToGroup = useCallback(
+    (key: string) => {
+      if (pathname !== "/") router.push("/");
+      navigateToGroup(key);
+    },
+    [pathname, router, navigateToGroup],
+  );
 
   // Close the index when the gallery opens — having both stacked is
   // visually noisy and the gallery wants the full width. Picking
@@ -109,12 +129,12 @@ export function Index({
       } else if (e.key === "Enter") {
         e.preventDefault();
         const target = entries[activeIdx];
-        if (target) navigateToGroup(target.groupKey);
+        if (target) goToGroup(target.groupKey);
       }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, entries, activeIdx, navigateToGroup, onClose]);
+  }, [open, entries, activeIdx, goToGroup, onClose]);
 
   // Scroll the active row into view.
   useEffect(() => {
@@ -180,7 +200,7 @@ export function Index({
                 role="option"
                 aria-selected={i === activeIdx}
                 onMouseEnter={() => setActiveIdx(i)}
-                onClick={() => navigateToGroup(e.groupKey)}
+                onClick={() => goToGroup(e.groupKey)}
                 className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-3 text-left text-ui ${
                   i === activeIdx
                     ? "bg-line text-ink"
