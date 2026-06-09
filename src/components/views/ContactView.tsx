@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { ABOUT_PARAGRAPHS, ARTIST_NAME, CONTACT } from "@/data/bio";
+import { ARTIST_NAME, BIO_LEAD, CONTACT } from "@/data/bio";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { TextView } from "@/components/views/TextView";
 
@@ -18,10 +17,19 @@ export function ContactView() {
       <h2 className="text-2xl text-ink leading-tight tracking-tight">
         Bodies, myths, environments — merging.
       </h2>
+      {/* Two short paragraphs. The first is BIO_LEAD verbatim — it must
+          stay byte-for-byte identical to the Person JSON-LD description
+          (see src/data/bio.ts) so the entity snippet and visible text
+          agree. The second condenses the practice statement. */}
       <div className="mt-8 space-y-5 text-body leading-[1.65] text-pretty break-words text-ink">
-        {ABOUT_PARAGRAPHS.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
+        <p>{BIO_LEAD}</p>
+        <p>
+          His figures appear hybrid and unstable — at once human, animal, and
+          mythological — shaped by desire, power, and vulnerability, refusing
+          the categories that try to fix them. Ceramics sits at the centre of
+          the work, treated as something between object, body, and residue: at
+          once contemporary and archaeological.
+        </p>
       </div>
 
       <section
@@ -41,9 +49,9 @@ export function ContactView() {
         <NewsletterForm />
       </section>
 
-      {/* Direct contact + legal at the foot of the page. Mirrors the
-          desktop LeftToolbar footer, but reachable from the body of
-          the page on mobile (where there is no left rail). */}
+      {/* Direct contact + colophon. Imprint / Privacy are intentionally
+          NOT repeated here — they live in the side nav (desktop) and the
+          mobile menu, so duplicating them on the page is redundant. */}
       <div className="mt-14 border-t border-line pt-6 text-xs leading-[1.6] text-mute">
         <div className="text-ink">{ARTIST_NAME}</div>
         <a href={`mailto:${CONTACT.email}`} className="block hover:text-ink">
@@ -57,14 +65,17 @@ export function ContactView() {
         >
           {CONTACT.instagram}
         </a>
-        <div className="mt-3 flex gap-4">
-          <Link href="/imprint" className="hover:text-ink">
-            Imprint
-          </Link>
-          <Link href="/privacy" className="hover:text-ink">
-            Privacy
-          </Link>
-        </div>
+        <p className="mt-4">
+          Website by{" "}
+          <a
+            href="https://hubmerto.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-ink"
+          >
+            Humberto Gesser ↗
+          </a>
+        </p>
       </div>
     </TextView>
   );

@@ -68,7 +68,7 @@ export function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 max-w-[420px]" noValidate>
+    <form onSubmit={handleSubmit} className="mt-6" noValidate>
       <label htmlFor="newsletter-email" className="sr-only">
         Email address
       </label>
