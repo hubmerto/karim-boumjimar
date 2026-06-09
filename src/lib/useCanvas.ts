@@ -298,6 +298,16 @@ export function useCanvas(
     if (prevCondensedRef.current === condensed) return;
     prevCondensedRef.current = condensed;
     if (!window.matchMedia("(min-width: 768px)").matches) return;
+    // If a camera fly is imminent (a tile/group nav was just requested),
+    // skip this instant tx nudge entirely: animateTransform is about to
+    // position the camera to an ABSOLUTE target (computed from the final
+    // viewport) on the next frame, so bumping tx here only produces a
+    // one-frame ~176px lurch right before the fly — exactly the "jump"
+    // we don't want. The compensation still runs for selections that do
+    // NOT fly (eg. showProjectPanel) where the toolbar slides but the
+    // camera should stay anchored.
+    const s = useSelection.getState();
+    if (s.navTargetGroupKey || s.navTargetWorkId) return;
     const widthDelta = LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED; // 176
     // Toolbar shrinking, container shifts left, bump tx right to compensate.
     const txDelta = condensed ? widthDelta : -widthDelta;
