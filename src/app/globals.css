@@ -118,10 +118,13 @@ canvas {
   to { opacity: 1; }
 }
 
-/* Text/legal route enter fade (src/app/template.tsx). Opacity-only so it
-   doesn't establish a containing block for the fixed-position text panes.
-   Easing matches the canvas/splash signature curve; ~420ms sits below the
-   canvas's heavier camera moves so it reads as the page settling in. The
+/* Text/legal route enter fade. Applied to the content <main> of each
+   text/legal view (TextView / BioView / LegalPage) — NOT a whole-route
+   wrapper — so ONLY the content fades on navigation; the TopBar and
+   LeftToolbar stay static instead of crossfading with it. Those views
+   re-mount on every navigation (no shared layout), so the animation
+   re-fires each time. Easing matches the canvas/splash signature curve;
+   ~420ms sits below the canvas's heavier camera moves. The
    prefers-reduced-motion block below clamps this automatically. */
 @keyframes route-fade-in {
   from { opacity: 0; }

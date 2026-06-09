@@ -35,6 +35,13 @@ export default function Home() {
   // whatever it was before, and ViewSwitcher would keep showing
   // the text view instead of the canvas.
   useEffect(() => {
+    // Don't clobber an in-flight navigation: when the Index (desktop or
+    // mobile) routes here to open a specific project, it has already set
+    // navTargetGroupKey + selectedGroupKey. setView() would clear the
+    // selection, leaving only a camera pan with no group view. Skip the
+    // reset in that case — navigateToGroup already set view:"exhibitions".
+    const s = useSelection.getState();
+    if (s.navTargetGroupKey || s.navTargetWorkId) return;
     setView("exhibitions");
   }, [setView]);
 

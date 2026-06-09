@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ARTIST_NAME, CONTACT } from "@/data/bio";
 import { WORKS } from "@/data/works";
@@ -55,6 +56,8 @@ export function MobileMenu({
 }) {
   const view = useSelection((s) => s.view);
   const navigateToGroup = useSelection((s) => s.navigateToGroup);
+  const pathname = usePathname();
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("sections");
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -179,6 +182,10 @@ export function MobileMenu({
                 <button
                   type="button"
                   onClick={() => {
+                    // The canvas only exists on "/". From a text route
+                    // there's nothing to consume the nav target, so route
+                    // to the overview first (mirrors the desktop Index).
+                    if (pathname !== "/") router.push("/");
                     navigateToGroup(e.groupKey);
                     onClose();
                   }}

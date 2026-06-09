@@ -35,7 +35,7 @@ export function LegalPage({
           with its own internal vertical scroll — same pattern as
           BioView / ContactView / NewsView. The desktop `md:left-[200px]`
           clears the LeftToolbar so the article doesn't sit under it. */}
-      <main className="fixed inset-0 top-16 z-0 overflow-y-auto bg-canvas text-ink md:top-12 md:left-[200px]">
+      <main className="route-fade fixed inset-0 top-16 z-0 overflow-y-auto bg-canvas text-ink md:top-12 md:left-[200px]">
         {/* Left-aligned (no mx-auto) to match the other text pages, which
             start their content at the left padding rather than centering. */}
         <article className="max-w-[680px] px-6 py-12 text-caption leading-relaxed text-pretty break-words text-ink md:px-10 md:py-14">
