@@ -118,6 +118,19 @@ canvas {
   to { opacity: 1; }
 }
 
+/* Text/legal route enter fade (src/app/template.tsx). Opacity-only so it
+   doesn't establish a containing block for the fixed-position text panes.
+   Easing matches the canvas/splash signature curve; ~420ms sits below the
+   canvas's heavier camera moves so it reads as the page settling in. The
+   prefers-reduced-motion block below clamps this automatically. */
+@keyframes route-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.route-fade {
+  animation: route-fade-in 420ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
 /* ─── typography defaults ─── */
 html {
   -webkit-hyphens: none;
