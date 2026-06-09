@@ -36,12 +36,24 @@ extend({ Container, Sprite });
  * gallery view shows the full set when the user taps in). Desktop
  * renders all 123 sprites.
  */
+// Base number of representative tiles each project contributes to the
+// mobile bento overview. The largest few projects contribute one EXTRA
+// tile (see curateForMobile) so the diamond reads fuller. The gallery
+// view still shows the full project on tap regardless of this curation.
 const MOBILE_TILES_PER_PROJECT = 3;
+// How many of the largest projects get a 4th overview tile. Bumps the
+// bento from 42 to 47 tiles, which (with diamondColCounts' raised edge
+// floor) fills the diamond out instead of leaving sharp single-tile tips.
+const MOBILE_EXTRA_TILE_PROJECTS = 5;
 
 type Transform = { tx: number; ty: number; scale: number };
 
-/** Pick first / middle / last for a project so the canvas has a spread
- * sample rather than three near-identical installation shots. */
+/** Curate evenly-spaced representative tiles per project for the mobile
+ * overview — always including the first and last image so the sample
+ * spreads across the project rather than showing near-identical
+ * installation shots. Most projects contribute MOBILE_TILES_PER_PROJECT
+ * (3); the MOBILE_EXTRA_TILE_PROJECTS largest projects contribute 4, so
+ * the bento diamond fills out fuller (47 tiles total). */
 function curateForMobile() {
   const byGroup = new Map<string, typeof WORKS>();
   for (const w of WORKS) {
@@ -53,16 +65,28 @@ function curateForMobile() {
     }
     arr.push(w);
   }
+  // The largest projects get the extra tile: they always have >=4 images
+  // to draw from, so the 4th is a genuinely different shot, not a near-
+  // duplicate. Derived from project size (not hardcoded titles) so it
+  // stays correct if works.ts changes.
+  const extraKeys = new Set(
+    [...byGroup.entries()]
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, MOBILE_EXTRA_TILE_PROJECTS)
+      .map(([key]) => key),
+  );
   const out: typeof WORKS = [];
-  for (const arr of byGroup.values()) {
-    if (arr.length <= MOBILE_TILES_PER_PROJECT) {
+  for (const [key, arr] of byGroup) {
+    const want = MOBILE_TILES_PER_PROJECT + (extraKeys.has(key) ? 1 : 0);
+    const take = Math.min(want, arr.length);
+    if (arr.length <= take) {
       out.push(...arr);
-    } else {
-      out.push(
-        arr[0],
-        arr[Math.floor(arr.length / 2)],
-        arr[arr.length - 1],
-      );
+      continue;
+    }
+    // Evenly-spaced indices across [0, len-1], inclusive of both ends.
+    // take=3 → first / middle / last; take=4 → adds one from mid-project.
+    for (let i = 0; i < take; i++) {
+      out.push(arr[Math.round((i * (arr.length - 1)) / (take - 1))]);
     }
   }
   return out;
@@ -74,13 +98,19 @@ const BENTO_ROW_GAP = 130;
 /** Build a symmetric diamond column-count array that sums to N tiles.
  * Tall diamond (more rows than columns) for portrait phones. */
 function diamondColCounts(n: number): number[] {
-  // Pick column count proportional to sqrt(n) but biased toward fewer
-  // columns so it reads tall on a phone. ~7 cols for 39 tiles.
-  const cols = Math.max(3, Math.round(Math.sqrt(n) * 1.1));
+  // Pick column count proportional to sqrt(n), biased toward FEWER
+  // columns so the diamond reads tall (and tiles stay big) on a portrait
+  // phone. ~7 cols for ~47 tiles.
+  const cols = Math.max(3, Math.round(Math.sqrt(n)));
   const half = Math.floor(cols / 2);
-  // Triangular weights peaking in the middle.
+  // Triangular weights peaking in the middle, on a raised EDGE_FLOOR. A
+  // higher floor keeps the edge columns well-populated so the diamond
+  // fills into a fuller rhombus instead of tapering to sharp single-tile
+  // tips. (FLOOR 3 + 7 cols + 47 tiles → ~[5,6,8,9,8,6,5].)
+  const EDGE_FLOOR = 3;
   const weights = Array.from({ length: cols }, (_, i) =>
-    1 + (cols % 2 === 1 ? half - Math.abs(i - half) : Math.min(i, cols - 1 - i)),
+    EDGE_FLOOR +
+    (cols % 2 === 1 ? half - Math.abs(i - half) : Math.min(i, cols - 1 - i)),
   );
   const sumW = weights.reduce((a, b) => a + b, 0);
   // Initial distribution proportional to weights.
