@@ -113,7 +113,10 @@ export function ProjectContent({
   })();
 
   return (
-    <div className="space-y-6">
+    // Keyed by the project so the info crossfades in (route-fade) each
+    // time a different project is opened, matching the text-page fade.
+    // Shared by the desktop panel and the mobile sheet (ProjectContent).
+    <div key={selectedGroupKey ?? "panel"} className="route-fade space-y-6">
       <div className="flex items-center justify-between">
         <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
           About
