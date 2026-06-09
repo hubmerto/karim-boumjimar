@@ -242,8 +242,13 @@ export function useCanvas(
       } else if (next.scale <= bf && d === 1) {
         dispersionRef.current = 0;
         setDispersion(0);
+        // Re-bento (zoom-out past the threshold) returns the user to the
+        // overview, so bring the left nav back whenever it's hidden — not
+        // only when a project is still selected. Deselecting leaves the
+        // nav hidden, and zooming out from there should still reveal it.
+        // Skip while the gallery is open.
         const s = useSelection.getState();
-        if (!s.expandedGroupKey && (s.selectedId || s.selectedGroupKey)) {
+        if (!s.expandedGroupKey && s.toolbarHidden) {
           s.showToolbar();
         }
       }

@@ -612,14 +612,14 @@ export function CanvasPixi() {
       scale: targetScale,
     };
 
-    // Cubic ease-out tween via rAF, mutating both the PIXI
-    // container and React state at the end. 1800ms gives the user
-    // enough time to perceive the camera move as deliberate; the
-    // sprite spread (in TileLayer's useTick) is paced to settle
-    // around the same time.
+    // Cubic ease-out tween via rAF, mutating both the PIXI container and
+    // React state at the end. 4500ms matches the desktop arrangement pace
+    // (useCanvas / WorkTile) so arranging into a group feels cohesive
+    // across platforms; the sprite spread (TileLayer useTick) is paced to
+    // settle at the same time.
     const start = transformRef.current;
     const t0 = performance.now();
-    const DURATION = 1800;
+    const DURATION = 4500;
     if (animRafRef.current != null) cancelAnimationFrame(animRafRef.current);
     function tick(now: number) {
       const t = Math.min(1, (now - t0) / DURATION);
@@ -676,7 +676,8 @@ export function CanvasPixi() {
     };
     const start = transformRef.current;
     const t0 = performance.now();
-    const DURATION = 1500;
+    // Overview return, matched to the same 4500ms float pace.
+    const DURATION = 4500;
     if (animRafRef.current != null) cancelAnimationFrame(animRafRef.current);
     function tick(now: number) {
       const t = Math.min(1, (now - t0) / DURATION);
@@ -1420,9 +1421,10 @@ function TileLayer({
   // Time-based bento <-> cluster tween. Snapshots the start
   // position of every sprite at the moment `spread` flips so
   // the tick can interpolate over a fixed duration with cubic
-  // easing — matched to the camera zoom (1800ms) so tiles arrive
-  // at their cluster slots the same time the camera lands.
-  const SPREAD_TWEEN_MS = 1800;
+  // easing — matched to the camera zoom (4500ms) so tiles arrive
+  // at their cluster slots the same time the camera lands, at the
+  // same slow float pace as desktop.
+  const SPREAD_TWEEN_MS = 4500;
   const spreadTweenStartRef = useRef<number | null>(null);
   const spreadFromRef = useRef<Map<string, { x: number; y: number }>>(
     new Map(),
