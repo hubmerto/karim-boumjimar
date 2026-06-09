@@ -127,11 +127,15 @@ function WorkTileImpl({ work }: Props) {
         width: Math.round(bounds.width),
         height: Math.round(bounds.height),
         transform: `translate(${dx}px, ${dy}px)`,
-        // Slow + soft so the spread reads as a settle, not a jump.
-        // Duration matches the camera nav animation (2800ms) so tiles
-        // and camera settle together. No willChange: 41 always-promoted
-        // layers was contributing to iOS Safari OOM kills on mount.
-        transition: "transform 2800ms cubic-bezier(0.22, 1, 0.36, 1)",
+        // Slow, floating re-bento: tiles drift back into the diamond
+        // instead of snapping. Lengthened to 4500ms with a gentle
+        // ease-in-out (was 2800ms cubic-bezier(0.22,1,0.36,1) — a
+        // fast-start curve whose big initial jump made the 133-tile
+        // desktop rearrange read as laggy). Smaller per-frame movement
+        // = calmer motion that matches the canvas's floating pace. No
+        // willChange: 41 always-promoted layers was contributing to iOS
+        // Safari OOM kills on mount.
+        transition: "transform 4500ms cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
       {/* Inner wrapper carries the fade-in animation so it doesn't

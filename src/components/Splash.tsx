@@ -14,13 +14,15 @@ import { thumbSrc } from "@/lib/thumbs";
 // wire. A thin progress line under the wordmark shows real load progress.
 //
 // Guard rails:
-//  - MIN_HOLD_MS: floor so the logo + line register even on a warm cache.
+//  - MIN_VISIBLE_MS: the loading animation always plays at least this
+//    long, so a first-time visitor sees the logo + line fill even when
+//    the assets are already cached (instant decode) — never a flash.
 //  - MAX_WAIT_MS: hard cap so a slow / broken asset can never trap the
 //    visitor behind the splash forever.
 //  - sessionStorage: once seen in a tab, skip entirely (same-tab reloads,
 //    bfcache, mobile address-bar gestures shouldn't replay it).
 const FADE_MS = 1000;
-const MIN_HOLD_MS = 900;
+const MIN_VISIBLE_MS = 2000;
 const MAX_WAIT_MS = 20000;
 const EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 const SESSION_KEY = "kbz_splash_seen";
@@ -75,10 +77,14 @@ export function Splash({ forcePlay = false }: { forcePlay?: boolean } = {}) {
     }
 
     let cancelled = false;
+    let finished = false;
+    let raf = 0;
     const start = performance.now();
 
     const finish = () => {
-      if (cancelled) return;
+      if (cancelled || finished) return;
+      finished = true;
+      setProgress(1);
       setPhase("out");
       window.setTimeout(() => {
         if (cancelled) return;
@@ -92,28 +98,18 @@ export function Splash({ forcePlay = false }: { forcePlay?: boolean } = {}) {
       }, FADE_MS);
     };
 
-    // Preload + decode the overview thumbnails, tracking real progress.
+    // Preload + decode the overview thumbnails. decode() resolves once an
+    // image is downloaded AND decoded (ready to paint with no jank).
+    // Errors count as done so one missing asset can't stall the gate.
     const urls = overviewThumbUrls();
     const total = Math.max(1, urls.length);
-    let done = 0;
+    let decoded = 0;
     const bump = () => {
-      if (cancelled) return;
-      done += 1;
-      setProgress(done / total);
-      if (done >= total) {
-        // Everything's decoded — reveal, but never before MIN_HOLD so the
-        // logo + line don't flash by on a fast/warm connection.
-        const wait = Math.max(0, MIN_HOLD_MS - (performance.now() - start));
-        window.setTimeout(finish, wait);
-      }
+      decoded += 1;
     };
     for (const url of urls) {
       const img = new Image();
       img.src = url;
-      // decode() resolves once the image is downloaded AND decoded (ready
-      // to paint with no jank), which is exactly the readiness the reveal
-      // needs. Fall back to load/error events where unsupported. Errors
-      // count as done so one missing asset can't stall the gate.
       if (typeof img.decode === "function") {
         img.decode().then(bump, bump);
       } else {
@@ -122,11 +118,32 @@ export function Splash({ forcePlay = false }: { forcePlay?: boolean } = {}) {
       }
     }
 
-    // Hard cap: reveal regardless after MAX_WAIT_MS.
-    const cap = window.setTimeout(finish, MAX_WAIT_MS);
+    // Drive the line each frame. It fills by the SLOWER of two things:
+    // real decode progress, and a steady MIN_VISIBLE_MS clock. So on a
+    // warm cache (instant decode) the line still fills smoothly over ~2s
+    // instead of snapping full and flashing away — the loading animation
+    // always plays on a first visit. On a cold load it tracks the real
+    // download. Reveal only once BOTH are complete (or the hard cap hits).
+    const tick = () => {
+      if (cancelled) return;
+      const elapsed = performance.now() - start;
+      const real = decoded / total;
+      const timeFrac = Math.min(1, elapsed / MIN_VISIBLE_MS);
+      setProgress(Math.min(real, timeFrac));
+      if ((real >= 1 && elapsed >= MIN_VISIBLE_MS) || elapsed >= MAX_WAIT_MS) {
+        finish();
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // Background-safe backstop: rAF pauses in a hidden tab, so guarantee
+    // the gate still resolves via a timer.
+    const cap = window.setTimeout(finish, MAX_WAIT_MS + 500);
 
     return () => {
       cancelled = true;
+      cancelAnimationFrame(raf);
       window.clearTimeout(cap);
     };
   }, [setSplashGone, forcePlay]);

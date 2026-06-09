@@ -131,7 +131,11 @@ canvas {
   to { opacity: 1; }
 }
 .route-fade {
-  animation: route-fade-in 420ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  /* ~2s, decelerate (ease-out) so the content appears right away and
+     settles gently — a longer, calmer fade that matches the canvas's
+     slow camera motion. An ease-IN-out at this length would sit
+     near-invisible for the first ~half-second and read as a lag. */
+  animation: route-fade-in 2000ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 /* ─── typography defaults ─── */

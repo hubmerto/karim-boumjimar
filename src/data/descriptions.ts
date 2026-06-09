@@ -160,7 +160,7 @@ export const DESCRIPTIONS: Record<string, Description> = {
     ],
   },
   "Glory on Earth|2024": {
-    body: "A performance staged within a ceramic installation - bodies and clay in proximity, both vulnerable, both witnesses.",
+    body: "Glory on Earth is a performance by Karim Boumjimar that explores the body as a space of transformation, desire, and collective belonging. Bringing together performers, movement, costume, and improvised action, the work unfolds as a temporary community in which distinctions between human, animal, and mythical forms begin to dissolve.\n\nDrawing on queer histories of gathering, celebration, and resistance, the performance considers how bodies come together in moments of vulnerability and pleasure. Rather than presenting identity as fixed, Glory on Earth embraces fluidity, transformation, and contradiction. Bodies merge, separate, touch, and support one another, creating shifting constellations of intimacy that challenge normative ideas of gender, sexuality, and social order.\n\nThe work is informed by Boumjimar’s ongoing interest in ecology and the interconnectedness of living beings. Nature appears not as a passive backdrop but as an active force through which alternative forms of kinship and coexistence can be imagined. Within the performance, the body becomes entangled with other bodies, materials, and environments.",
     credits: [
       {
         label: "Photography",
