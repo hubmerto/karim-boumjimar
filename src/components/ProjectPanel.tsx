@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MEDIUM_LABEL } from "@/components/InspectorContent";
 import { WORKS } from "@/data/works";
 import type {
@@ -81,22 +81,37 @@ export function ProjectContent({
     };
   }, [selectedGroupKey]);
 
-  if (!work) return null;
+  // Retain the last rendered project so the panel can animate OUT (slide
+  // away) with its content intact, instead of going blank the instant the
+  // selection clears. The refs only advance while something is selected;
+  // during the close transition work/description/selectedGroupKey are
+  // already null, so we fall back to the retained values.
+  const lastWorkRef = useRef(work);
+  if (work) lastWorkRef.current = work;
+  const displayWork = work ?? lastWorkRef.current;
+  const lastDescRef = useRef(description);
+  if (description) lastDescRef.current = description;
+  const displayDescription = description ?? lastDescRef.current;
+  const lastGroupKeyRef = useRef(selectedGroupKey);
+  if (selectedGroupKey) lastGroupKeyRef.current = selectedGroupKey;
+  const displayGroupKey = selectedGroupKey ?? lastGroupKeyRef.current;
+
+  if (!displayWork) return null;
 
   // PHOTO sits in the credits block at the bottom, not the About
   // fields — credits are credits regardless of whether they came
   // from works.ts.photoCredit or descriptions.ts.credits[].
   const rows: { label: string; value: string | undefined }[] = [
-    { label: "TITLE", value: work.title },
-    { label: "YEAR", value: String(work.year) },
-    { label: "MEDIUM", value: MEDIUM_LABEL[work.medium] },
-    { label: "MATERIALS", value: work.materials },
-    { label: "DIMENSIONS", value: work.dimensions },
-    { label: "EXHIBITION", value: work.exhibition },
-    { label: "VENUE", value: work.venue },
-    { label: "CITY", value: work.city },
-    { label: "DATE", value: work.date },
-    { label: "COLLECTION", value: work.collection },
+    { label: "TITLE", value: displayWork.title },
+    { label: "YEAR", value: String(displayWork.year) },
+    { label: "MEDIUM", value: MEDIUM_LABEL[displayWork.medium] },
+    { label: "MATERIALS", value: displayWork.materials },
+    { label: "DIMENSIONS", value: displayWork.dimensions },
+    { label: "EXHIBITION", value: displayWork.exhibition },
+    { label: "VENUE", value: displayWork.venue },
+    { label: "CITY", value: displayWork.city },
+    { label: "DATE", value: displayWork.date },
+    { label: "COLLECTION", value: displayWork.collection },
   ].filter((r): r is { label: string; value: string } => Boolean(r.value));
 
   // Merge per-work photoCredit into the description's credit list,
@@ -105,18 +120,18 @@ export function ProjectContent({
   // already have an Installation Photography / Photography credit
   // and we don't want to duplicate it).
   const credits = (() => {
-    const base = description?.credits ?? [];
-    if (!work.photoCredit) return base;
+    const base = displayDescription?.credits ?? [];
+    if (!displayWork.photoCredit) return base;
     const alreadyHasPhoto = base.some((c) => /photo/i.test(c.label));
     if (alreadyHasPhoto) return base;
-    return [...base, { label: "Photography", value: work.photoCredit }];
+    return [...base, { label: "Photography", value: displayWork.photoCredit }];
   })();
 
   return (
     // Keyed by the project so the info crossfades in (route-fade) each
     // time a different project is opened, matching the text-page fade.
     // Shared by the desktop panel and the mobile sheet (ProjectContent).
-    <div key={selectedGroupKey ?? "panel"} className="route-fade space-y-6">
+    <div key={displayGroupKey ?? "panel"} className="route-fade space-y-6">
       <div className="flex items-center justify-between">
         <span className="italic text-meta uppercase tracking-[0.1em] text-mute">
           About
@@ -161,9 +176,9 @@ export function ProjectContent({
           </div>
         ))}
       </dl>
-      {description ? (
+      {displayDescription ? (
         <div className="space-y-3 border-t border-line pt-4 text-ui leading-[1.6] break-words text-ink">
-          {description.body
+          {displayDescription.body
             .split(/\n\n+/)
             .filter(Boolean)
             .map((para, i) => (
@@ -255,14 +270,40 @@ function CreditName({ part }: { part: CreditValue }) {
   );
 }
 
+// Matches the canvas container's left/right transition (Canvas.tsx, 400ms,
+// same easing) so the panel slides off exactly as the canvas re-expands
+// into the vacated space — one coordinated motion, no jump.
+const PANEL_SLIDE_MS = 400;
+
 export function ProjectPanel() {
-  const selectedGroupKey = useSelection((s) => s.selectedGroupKey);
-  const selectedId = useSelection((s) => s.selectedId);
-  if (!selectedGroupKey && !selectedId) return null;
+  const open = useSelection((s) => !!(s.selectedGroupKey || s.selectedId));
+  // Keep the panel mounted through the slide-out so it animates away with
+  // its (retained) content instead of popping; unmount once it's offscreen.
+  const [mounted, setMounted] = useState(open);
+  const [shown, setShown] = useState(open);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      // Flip to shown on the NEXT frame so the enter slide runs from the
+      // offscreen (translateX 100%) state instead of snapping in.
+      const r = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(r);
+    }
+    setShown(false);
+    const t = setTimeout(() => setMounted(false), PANEL_SLIDE_MS);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  if (!mounted) return null;
   return (
     <aside
       className="h-full w-[420px] overflow-y-auto border-l border-line bg-canvas"
       aria-label="Project description"
+      style={{
+        transform: shown ? "translateX(0)" : "translateX(100%)",
+        transition: `transform ${PANEL_SLIDE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+        willChange: "transform",
+      }}
     >
       <div className="p-6">
         <ProjectContent showClose />

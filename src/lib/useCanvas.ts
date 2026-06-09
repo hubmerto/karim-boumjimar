@@ -288,36 +288,39 @@ export function useCanvas(
   }, [works, bentoBbox, applyTransform]);
 
   // When the left toolbar slides out / back in (desktop only), the canvas
-  // container's left edge shifts by (LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED).
-  // Compensate the tx so tile screen positions stay anchored. The toolbar is
-  // hidden on mobile (md:flex), so this compensation must NOT run there or
-  // the canvas content jumps 176px every time the user makes a selection.
-  const condensed = useSelection((s) => !!(s.selectedId || s.selectedGroupKey));
-  const prevCondensedRef = useRef(condensed);
+  // container's left edge shifts between 0 (hidden) and LEFT_TOOLBAR_W_FULL
+  // (shown). Compensate tx so tile screen positions stay anchored.
+  //
+  // This MUST key off `toolbarHidden` — the flag that actually drives the
+  // left offset (see leftClass / leftWidth) — NOT the selection state.
+  // Keying off selection was the bug behind the "jump" when CLOSING a
+  // project: a deselect flips the selection but leaves the toolbar hidden,
+  // so the left offset doesn't move, yet the old code still applied a
+  // spurious ~176px tx shift. (Also stays desktop-only; the toolbar is
+  // md:flex, absent on mobile.)
+  const toolbarHidden = useSelection((s) => s.toolbarHidden);
+  const prevHiddenRef = useRef(toolbarHidden);
   useEffect(() => {
-    if (prevCondensedRef.current === condensed) return;
-    prevCondensedRef.current = condensed;
+    if (prevHiddenRef.current === toolbarHidden) return;
+    prevHiddenRef.current = toolbarHidden;
     if (!window.matchMedia("(min-width: 768px)").matches) return;
     // If a camera fly is imminent (a tile/group nav was just requested),
-    // skip this instant tx nudge entirely: animateTransform is about to
-    // position the camera to an ABSOLUTE target (computed from the final
-    // viewport) on the next frame, so bumping tx here only produces a
-    // one-frame ~176px lurch right before the fly — exactly the "jump"
-    // we don't want. The compensation still runs for selections that do
-    // NOT fly (eg. showProjectPanel) where the toolbar slides but the
-    // camera should stay anchored.
+    // skip this instant tx nudge: animateTransform is about to position the
+    // camera to an ABSOLUTE target on the next frame, so bumping tx here
+    // only produces a one-frame lurch before the fly.
     const s = useSelection.getState();
     if (s.navTargetGroupKey || s.navTargetWorkId) return;
-    const widthDelta = LEFT_TOOLBAR_W_FULL - LEFT_TOOLBAR_W_CONDENSED; // 176
-    // Toolbar shrinking, container shifts left, bump tx right to compensate.
-    const txDelta = condensed ? widthDelta : -widthDelta;
+    // Left offset flips 0 <-> LEFT_TOOLBAR_W_FULL. Hiding the toolbar moves
+    // the container left edge to 0, so bump tx right to keep tiles
+    // anchored; showing it does the reverse.
+    const txDelta = toolbarHidden ? LEFT_TOOLBAR_W_FULL : -LEFT_TOOLBAR_W_FULL;
     const next = {
       ...transformRef.current,
       tx: transformRef.current.tx + txDelta,
     };
     applyTransform(next);
     setTransform(next);
-  }, [condensed, applyTransform]);
+  }, [toolbarHidden, applyTransform]);
 
   const [isDragging, setIsDragging] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
