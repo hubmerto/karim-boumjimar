@@ -479,12 +479,12 @@ export function Canvas() {
 
   // Flip the module-level "intro reveal complete" flag after the
   // worst-case per-tile fade window has elapsed since the splash
-  // cleared. After this fires, any WorkTile mount (e.g., a tile that
-  // virtualization re-mounts when the user pans it back into the
-  // buffered viewport) skips the staggered fade-in and renders straight
-  // into its final state. Without this, a tile fading off-screen
-  // during the intro and then re-mounting later would replay the whole
-  // page-load reveal — visible flashing as the user explores.
+  // cleared. After this fires, any LATER WorkTile mount (HMR, React
+  // strict-mode double-mount, or a future re-mount — desktop no longer
+  // virtualizes, so tiles stay mounted and don't re-mount on pan) skips
+  // the staggered fade-in and renders straight into its final state.
+  // Without this, a tile that did re-mount after the intro would replay
+  // the whole page-load reveal — visible flashing as the user explores.
   //
   // Timing: INTRO_REVEAL_MS (6000) is the camera reveal duration in
   // useCanvas; the per-tile fade adds up to delay(4500) + duration(1500)

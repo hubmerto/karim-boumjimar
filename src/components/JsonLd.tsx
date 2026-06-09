@@ -24,7 +24,6 @@
  */
 export function JsonLd({ data }: { data: object }) {
   const json = JSON.stringify(data).replace(/</g, "\\u003c");
-  // eslint-disable-next-line react/no-danger
   const props = { dangerouslySetInnerHTML: { __html: json } };
   return <script type="application/ld+json" {...props} />;
 }

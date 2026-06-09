@@ -25,9 +25,12 @@ function tileSeed(id: string) {
 // playing? Flipped to true by `markIntroPlayed()` after INTRO_REVEAL_MS
 // + the worst-case per-tile fade window has elapsed since splashGone.
 // Captured at WorkTile mount time via useState's lazy init, so tiles
-// that mount AFTER the window has expired (Step 4 virtualization
-// remounting a tile that scrolled back into view) skip the staggered
-// fade-in entirely. Resets to false on full page reload because module
+// that mount AFTER the window has expired skip the staggered fade-in
+// entirely. (Desktop no longer virtualizes — every tile mounts once at
+// page load — so this now only guards a late mount from HMR, React
+// strict-mode double-mount, or a future re-mount, not the old
+// scrolled-back-into-a-virtualized-viewport case.) Resets to false on
+// full page reload because module
 // state doesn't survive a navigation. Intentionally NOT in the Zustand
 // store: it's a one-way page-lifetime flag, not user-facing UI state,
 // and we don't want React subscribers to re-render when it flips.
@@ -62,10 +65,11 @@ function WorkTileImpl({ work }: Props) {
   // init runs once per mount, so:
   //   - First mount during the initial reveal window → introPlayed=false
   //     → skipIntro=false → animation + img-stagger play.
-  //   - Re-mount AFTER the window expired (Canvas unmounted the tile
-  //     when it scrolled out of the buffered viewport, then re-mounted
-  //     it when it scrolled back in) → introPlayed=true → skipIntro=true
-  //     → tile renders straight into its final state, no replay.
+  //   - Any LATER mount after the window expired (HMR, strict-mode
+  //     double-mount, or a future re-mount — desktop no longer
+  //     virtualizes, so tiles stay mounted and don't re-mount on pan)
+  //     → introPlayed=true → skipIntro=true → tile renders straight
+  //     into its final state, no replay.
   // Captured value is stable for the lifetime of this mount — flipping
   // `introPlayed` later doesn't reach back and skip an in-flight animation.
   const [skipIntro] = useState(() => introPlayed);
@@ -135,12 +139,12 @@ function WorkTileImpl({ work }: Props) {
           For the FIRST mount during the intro window, opacity:0 + the
           `tile-fade-in` keyframe animation fades it back in. For later
           mounts (skipIntro=true), we drop straight to opacity:1 with
-          no animation — the user is past the reveal, so a tile coming
-          back into view from virtualization shouldn't replay the
-          page-load entrance. The img itself only mounts after the
-          splash so the browser doesn't fetch + decode all 133 sources
-          during the initial paint — iOS Safari was OOM-killing the
-          tab on first load otherwise. */}
+          no animation — the user is past the reveal, so a late mount
+          (HMR / strict-mode) shouldn't replay the page-load entrance.
+          The <img> below is eager-loaded and always mounted: this
+          component is desktop-only (mobile uses the Pixi renderer), so
+          the old iOS-Safari mass-mount OOM that once justified deferring
+          the image no longer applies. */}
       <span
         className="block h-full w-full"
         style={{

@@ -10,6 +10,13 @@ const isStaticExport = process.env.STATIC_EXPORT === "1";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 const nextConfig: NextConfig = {
+  // Pin Turbopack's workspace root to this project. Without it, Next
+  // infers the root from the nearest lockfile, and a stray parent-dir
+  // package-lock.json (outside this repo) was being picked — emitting a
+  // "multiple lockfiles / inferred workspace root" warning every build.
+  // process.cwd() resolves to this project dir for all `next` invocations
+  // (local + Vercel).
+  turbopack: { root: process.cwd() },
   // Only emit a static export when explicitly building for GH Pages.
   // On Vercel we want the runtime so <Image> can optimize on the fly.
   ...(isStaticExport ? { output: "export" as const } : {}),

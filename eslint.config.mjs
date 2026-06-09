@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored / static assets — not authored source. public/gif.worker.js
+    // is a minified third-party worker (gif.js) that trips no-array-
+    // constructor and was the sole error failing the lint gate; linting
+    // public/ only ever produces noise.
+    "public/**",
   ]),
   {
     // The React 19 Compiler ships experimental ESLint rules that flag

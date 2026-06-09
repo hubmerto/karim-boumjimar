@@ -4,6 +4,15 @@ Site: `karimboumjimar.com` (currently #1 for the artist's name). Goal of
 this pass: consolidation — per-page metadata, rich-result candidates,
 crawl hygiene. Nothing user-visible changes.
 
+> **Correction (2026-06-09).** This audit predates two later changes, so a
+> couple of entries below are stale: (1) `/about` was renamed to `/contact`
+> and is now a permanent (301) redirect — the Person + ProfilePage JSON-LD
+> lives at `/contact`, not `/about`; (2) the "Stockholm Cosmologies
+> description keyed `|2026`" typo (trade-off note + follow-up #7) is fixed —
+> `descriptions.ts` now keys it `|2025` to match `works.ts`, so no project
+> falls back to a generated description. Everything else still reflects the
+> current code.
+
 ## Route map (after this pass)
 
 | Route                              | Type   | Title                                          | JSON-LD                |
