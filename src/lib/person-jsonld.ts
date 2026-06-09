@@ -84,6 +84,11 @@ export const PERSON_JSONLD = {
   jobTitle: "Visual Artist",
   description: BIO_LEAD,
   sameAs: [
+    // Wikidata first — the strongest entity anchor for the knowledge
+    // panel. The site links here via sameAs and the Wikidata item links
+    // back via official website (P856), which is the bidirectional signal
+    // Google uses to bind this Person to its panel.
+    "https://www.wikidata.org/wiki/Q135780698",
     "https://www.instagram.com/beigetype/",
     "https://www.artsy.net/artist/karim-boumjimar",
     "https://helsinkicontemporary.com/artists/karim-boumjimar",
