@@ -539,7 +539,10 @@ export function useCanvas(
         ty: v.h / 2 - cy * fit,
         scale: fit,
       },
-      1500,
+      // Slow zoom-out, matched to the tile re-bento float (WorkTile
+      // transform = 4500ms) so the camera and the photos settle back
+      // into the diamond together at one calm pace.
+      4500,
     );
   }, [navResetOverviewToken, bentoBbox, animateTransform]);
 
@@ -1067,7 +1070,9 @@ export function useCanvas(
   }, [works, applyTransform]);
 
   const fitAll = useCallback(() => {
-    animateTransform(fitAllTransform(works, viewportRect()), 2800);
+    // 4500ms to match the tile re-bento float (WorkTile transform) and
+    // the group-in fly — one consistent, slow floating pace everywhere.
+    animateTransform(fitAllTransform(works, viewportRect()), 4500);
   }, [works, animateTransform]);
 
   const zoomToWork = useCallback(
@@ -1194,7 +1199,8 @@ export function useCanvas(
     requestAnimationFrame(() => {
       animateTransform(
         fitBboxTransform(groupBbox, viewportRect(), 0.92),
-        1500,
+        // Match the group-in fly / tile float pace (4500ms).
+        4500,
       );
     });
     // selectedGroupKey is intentionally NOT in deps: this effect's
