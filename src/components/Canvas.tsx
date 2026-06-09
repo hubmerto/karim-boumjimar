@@ -511,12 +511,18 @@ export function Canvas() {
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 top-12 overflow-hidden bg-canvas transition-[left,right] duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${leftClass} ${rightClass}`}
+      className={`fixed inset-0 top-12 overflow-hidden bg-canvas ${leftClass} ${rightClass}`}
       style={{
         cursor,
         touchAction: "none",
         userSelect: "none",
         WebkitUserSelect: "none",
+        // Split timing: the LEFT edge moves with the nav slide, eased over
+        // 2s to match the crossfade pace; the RIGHT edge (project panel)
+        // stays snappy at 400ms. Keep these in lockstep with the nav's
+        // transition (LeftToolbar) and the panel slide (ProjectPanel).
+        transition:
+          "left 2000ms cubic-bezier(0.32, 0.72, 0, 1), right 400ms cubic-bezier(0.32, 0.72, 0, 1)",
       }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

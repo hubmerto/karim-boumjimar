@@ -64,7 +64,7 @@ export function LeftToolbar() {
 
       <nav
         aria-label="Sections"
-        className={`fixed left-0 top-12 bottom-0 z-20 hidden w-[200px] flex-col justify-between border-r border-line bg-canvas transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] md:flex ${
+        className={`fixed left-0 top-12 bottom-0 z-20 hidden w-[200px] flex-col justify-between border-r border-line bg-canvas transition-transform duration-[2000ms] ease-[cubic-bezier(0.32,0.72,0,1)] md:flex ${
           hidden ? "-translate-x-full" : "translate-x-0"
         }`}
       >
