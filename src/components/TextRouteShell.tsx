@@ -2,7 +2,6 @@
 
 import { useEffect, type ReactNode } from "react";
 import { CrashOverlay } from "@/components/CrashOverlay";
-import { Index } from "@/components/Index";
 import { LeftToolbar } from "@/components/LeftToolbar";
 import { Splash } from "@/components/Splash";
 import { TopBar } from "@/components/TopBar";
@@ -24,8 +23,6 @@ export function TextRouteShell({
   children: ReactNode;
 }) {
   const setView = useSelection((s) => s.setView);
-  const indexOpen = useSelection((s) => s.indexOpen);
-  const setIndexOpen = useSelection((s) => s.setIndexOpen);
 
   useEffect(() => {
     setView(view);
@@ -36,7 +33,9 @@ export function TextRouteShell({
       <TopBar />
       <LeftToolbar />
       {children}
-      <Index open={indexOpen} onClose={() => setIndexOpen(false)} />
+      {/* No <Index> here: the index is a canvas feature. The LeftToolbar's
+          Index button routes back to the overview (/) and opens it there,
+          so it never floats a drawer over the text. */}
       <Splash />
       <CrashOverlay />
     </>

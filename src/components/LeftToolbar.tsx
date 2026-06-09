@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useSelection, type View } from "@/lib/store";
 
 const ITEMS: { key: View; label: string; href: string }[] = [
@@ -10,6 +11,18 @@ const ITEMS: { key: View; label: string; href: string }[] = [
   { key: "contact", label: "Contact", href: "/contact" },
   { key: "grant", label: "Grant", href: "/grant" },
 ];
+
+// Routes that render no canvas. The Index is a canvas-navigation feature,
+// so opening it from one of these should take the user to the overview
+// (where the index belongs) rather than floating the drawer over the text.
+const TEXT_ROUTES = new Set([
+  "/bio",
+  "/contact",
+  "/news",
+  "/grant",
+  "/imprint",
+  "/privacy",
+]);
 
 export function LeftToolbar() {
   const view = useSelection((s) => s.view);
@@ -24,6 +37,8 @@ export function LeftToolbar() {
   const showToolbar = useSelection((s) => s.showToolbar);
   const indexOpen = useSelection((s) => s.indexOpen);
   const setIndexOpen = useSelection((s) => s.setIndexOpen);
+  const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <>
@@ -56,7 +71,17 @@ export function LeftToolbar() {
         <div>
           <button
             type="button"
-            onClick={() => setIndexOpen(!indexOpen)}
+            onClick={() => {
+              const p = pathname.replace(/\/+$/, "") || "/";
+              if (TEXT_ROUTES.has(p)) {
+                // No canvas on text routes — go to the overview and open
+                // the Index there instead of covering the text.
+                router.push("/");
+                setIndexOpen(true);
+              } else {
+                setIndexOpen(!indexOpen);
+              }
+            }}
             aria-haspopup="dialog"
             aria-expanded={indexOpen}
             className="flex w-full items-center border-b border-line px-6 py-3 text-left text-ui text-ink hover:text-mute"
