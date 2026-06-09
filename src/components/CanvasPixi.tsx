@@ -95,6 +95,14 @@ function curateForMobile() {
 const BENTO_COL_GAP = 80;
 const BENTO_ROW_GAP = 130;
 
+// The TopBar overlays the top of the full-screen (inset:0) canvas, so the
+// VISIBLE canvas area starts below it. Center the overview within that
+// visible band, not the raw window, or the diamond sits high and leaves
+// more white at the bottom than the top. top-16 (64px) on mobile,
+// top-12 (48px) on desktop (the forced-mobile showcase path).
+const TOPBAR_H_MOBILE = 64;
+const TOPBAR_H_DESKTOP = 48;
+
 /** Build a symmetric diamond column-count array that sums to N tiles.
  * Tall diamond (more rows than columns) for portrait phones. */
 function diamondColCounts(n: number): number[] {
@@ -464,9 +472,15 @@ export function CanvasPixi() {
     bentoBboxRef.current = { minX, minY, maxX, maxY };
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
+    // Center vertically within the VISIBLE canvas area (below the TopBar
+    // that overlays the top of the full-screen canvas), not the raw
+    // window center. Otherwise the overview sits ~32px high and leaves
+    // noticeably more white below the diamond than above it.
+    const topbarH = isMobile ? TOPBAR_H_MOBILE : TOPBAR_H_DESKTOP;
+    const viewCenterY = topbarH + (size.h - topbarH) / 2;
     const target: Transform = {
       tx: size.w / 2 - cx * targetScale,
-      ty: size.h / 2 - cy * targetScale,
+      ty: viewCenterY - cy * targetScale,
       scale: targetScale,
     };
 
@@ -478,7 +492,7 @@ export function CanvasPixi() {
     const startScale = targetScale * 0.55;
     const start: Transform = {
       tx: size.w / 2 - cx * startScale,
-      ty: size.h / 2 - cy * startScale,
+      ty: viewCenterY - cy * startScale,
       scale: startScale,
     };
     transformRef.current = start;
