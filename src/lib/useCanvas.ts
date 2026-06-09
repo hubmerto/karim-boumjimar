@@ -40,11 +40,14 @@ const SHEET_MID_FRACTION = 0.45; // matches InspectorSheet "mid" snap
 
 function leftWidth() {
   if (typeof window === "undefined") return LEFT_TOOLBAR_W_FULL;
-  const condensed = !!(
-    useSelection.getState().selectedId ||
-    useSelection.getState().selectedGroupKey
-  );
-  return condensed ? LEFT_TOOLBAR_W_CONDENSED : LEFT_TOOLBAR_W_FULL;
+  // Mirror the canvas's CSS left offset, which follows the nav's ACTUAL
+  // visibility (toolbarHidden) — not the selection state. Nav slid off →
+  // canvas extends to the left edge (0); nav shown → reserve the full
+  // 200px. (Previously this returned 24 whenever a project was selected,
+  // which desynced from the hidden nav: after a deselect/zoom-out the
+  // selection cleared but toolbarHidden stayed true, leaving a ~200px
+  // white gap down the left where the nav used to be.)
+  return useSelection.getState().toolbarHidden ? 0 : LEFT_TOOLBAR_W_FULL;
 }
 
 function viewportRect() {
