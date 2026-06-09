@@ -438,9 +438,37 @@ export function useCanvas(
       programmaticAnimRef.current = true;
       setIsAnimating(true);
       setAnimDuration(duration);
-      // applyTransform mutates wrapper.style.transform; CSS transition
-      // (which the wrapper has while isAnimating=true) animates from
-      // the OLD DOM value to this new value over `duration` ms.
+      // Put the CSS transition on the wrapper SYNCHRONOUSLY and force a
+      // reflow BEFORE we change the transform below. This is the crux of
+      // the fly-to-group animation.
+      //
+      // The transition that actually animates the camera is React-driven
+      // (Canvas renders `transition: transform ${animDuration}ms ...`
+      // while isAnimating). But setIsAnimating(true) above is async — React
+      // commits it on a LATER paint. applyTransform() mutates
+      // wrapper.style.transform synchronously, right now. If that mutation
+      // lands in a frame where the element's transition is still "none"
+      // (React hasn't committed isAnimating yet), the browser jumps the
+      // camera to the target in a single frame — a TELEPORT, no fly. It was
+      // a race that sometimes animated; once all 133 tiles stayed mounted
+      // the React commit got heavy enough to lose the race every time, so
+      // every selection teleported.
+      //
+      // Fix: set the same transition directly on the DOM node and read
+      // offsetHeight to flush layout, committing the CURRENT transform as
+      // the tween's start value with the transition already active. Then
+      // the transform change below is what the browser animates from. We
+      // still call setIsAnimating(true) so React's next render writes the
+      // identical transition string and doesn't clobber this one. Keep the
+      // easing/duration here in lockstep with Canvas.tsx's wrapper style.
+      const el = wrapperRef?.current;
+      if (el) {
+        el.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+        void el.offsetHeight; // force reflow → commit the start state
+      }
+      // applyTransform mutates wrapper.style.transform; the transition set
+      // above animates from the OLD (now-committed) DOM value to this new
+      // value over `duration` ms.
       applyTransform(next);
       // Sync React state so consumers reading `transform` see the
       // settled value immediately (the visual interpolation runs in
@@ -451,7 +479,7 @@ export function useCanvas(
         programmaticAnimRef.current = false;
       }, duration + 80);
     },
-    [cancelInertia, applyTransform],
+    [cancelInertia, applyTransform, wrapperRef],
   );
 
   // Auto-zoom from 75% to 100% of bento fit, starting THE INSTANT
