@@ -53,6 +53,19 @@ export function CrashOverlay() {
     }
 
     function onError(e: ErrorEvent) {
+      // Only surface real, same-origin app crashes. Two kinds of browser
+      // 'error' events are NOT app crashes and must not raise the alarming
+      // overlay (it persists to sessionStorage and greets the next load):
+      //  1. Cross-origin script errors — the browser strips all detail to
+      //     the opaque "Script error." with no Error object/stack. Thrown
+      //     by browser extensions, third-party embeds, or (on previews)
+      //     Vercel's own Live toolbar. Not our code, nothing actionable.
+      //  2. Resource load failures (an <img>/<script>/<link> that 404s)
+      //     bubble an 'error' event whose target is the element, not a JS
+      //     exception. A missing asset isn't a crash.
+      const isResourceError = e.target instanceof Element;
+      const isCrossOriginNoise = e.message === "Script error." && !e.error;
+      if (isResourceError || isCrossOriginNoise) return;
       persist(e.message ?? String(e), e.error?.stack);
     }
     function onRejection(e: PromiseRejectionEvent) {
