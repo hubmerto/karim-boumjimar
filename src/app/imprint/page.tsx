@@ -3,6 +3,7 @@ import { LegalPage, Section } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
   title: "Imprint, Karim Boumjimar",
+  alternates: { canonical: "/imprint" },
 };
 
 export default function ImprintPage() {

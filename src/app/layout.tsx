@@ -55,6 +55,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  // Self-canonical for the home page. Child routes override this with
+  // their own clean path (see each route's layout/page metadata). This
+  // is what tells Google that tracking-param variants like
+  // /about?ref=artshelp.com fold into the param-free URL, and it dedupes
+  // the /pixi mobile-renderer route (which inherits canonical "/").
+  alternates: { canonical: "/" },
   // Disable iOS auto-linking of dates / numbers / addresses in text.
   formatDetection: {
     telephone: false,

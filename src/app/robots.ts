@@ -13,6 +13,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
+        // Internal dev-demo routes (interaction prototypes) and the
+        // standalone Pixi renderer demo. They duplicate or fragment the
+        // real content and should never surface in search.
+        disallow: ["/showcase/", "/pixi"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

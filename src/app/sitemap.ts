@@ -7,12 +7,11 @@ const SITE_URL =
 // `output: "export"` (the GitHub Pages mirror build).
 export const dynamic = "force-static";
 
-// Routes the site exposes. About / Bio / News / Grant currently live
-// inside the single SPA at `/` (the LeftToolbar swaps the view via
-// Zustand state) — they're listed here so search engines and link
-// previews still surface the canonical URLs once we add real
-// /about, /bio, /news, /grant routes (or once we wire client-side
-// routing for them). For now they all resolve to the same page.
+// Routes the site exposes. About / Bio / News / Grant / Imprint / Privacy
+// are now real, individually addressable pages (each with its own
+// canonical and title), in addition to the home canvas at `/`. The
+// /pixi renderer demo and /showcase prototypes are intentionally left
+// out (and disallowed in robots.ts) so only canonical content is listed.
 const PATHS = ["", "/about", "/bio", "/news", "/grant", "/imprint", "/privacy"];
 
 export default function sitemap(): MetadataRoute.Sitemap {

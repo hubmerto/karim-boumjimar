@@ -3,6 +3,7 @@ import { LegalPage, Section } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy Policy, Karim Boumjimar",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
