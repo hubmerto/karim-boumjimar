@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ContentGuard } from "@/components/ContentGuard";
 import { CustomCursor } from "@/components/CustomCursor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Footer } from "@/components/Footer";
 import "./globals.css";
 
 const libre = Libre_Baskerville({
@@ -107,6 +108,9 @@ export default function RootLayout({
     <html lang="en" className={libre.variable}>
       <body>
         <ErrorBoundary>{children}</ErrorBoundary>
+        {/* Shared designer credit. Server-rendered so the anchor
+            lands in the SSR HTML of every route without JS. */}
+        <Footer />
         {/* Black-ball cursor — tracks the mouse on fine-pointer
             devices, grows on interactive elements. Hidden on
             touch via the component's own pointer:fine guard. */}
