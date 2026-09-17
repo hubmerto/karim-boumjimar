@@ -1,0 +1,25 @@
+{
+  "_source": "https://web.archive.org/cdx/search/cdx?url=www.karimboumjimar.com&output=json&limit=200&filter=statuscode:200",
+  "_fetched_at": "2026-09-17",
+  "_note": "The Internet Archive was intermittently offline during evidence collection. This is the successful pull; follow-up queries for narrower date ranges and for /sitemap.xml or /robots.txt returned the IA 'Temporarily Offline' page and are not represented here. Retry when IA is back to fill in gaps.",
+  "columns": ["urlkey", "timestamp", "original", "mimetype", "statuscode", "digest", "length"],
+  "rows": [
+    ["com,karimboumjimar)/", "20220901205906", "https://www.karimboumjimar.com/", "text/html", "200", "XYOWMUVILG3WPX7K4AEYOU5ICUIYMXOF", "20557"],
+    ["com,karimboumjimar)/", "20220901205943", "https://www.karimboumjimar.com/", "text/html", "200", "XYOWMUVILG3WPX7K4AEYOU5ICUIYMXOF", "20584"],
+    ["com,karimboumjimar)/", "20220904085834", "https://www.karimboumjimar.com/", "text/html", "200", "MZXA6BNMVI3V64IBTC4IHP32TEHE2INX", "31814"],
+    ["com,karimboumjimar)/", "20220904085842", "https://www.karimboumjimar.com/", "text/html", "200", "MZXA6BNMVI3V64IBTC4IHP32TEHE2INX", "31816"],
+    ["com,karimboumjimar)/", "20221225163035", "https://www.karimboumjimar.com/", "text/html", "200", "DIEJLCV6B3HES4ELE4HG5GZFUIJYOYEU", "21081"],
+    ["com,karimboumjimar)/", "20230107051115", "https://www.karimboumjimar.com/", "text/html", "200", "TI7RYWTDESQWCMXXVSQQWDQ35ZV7X3ZN", "27744"],
+    ["com,karimboumjimar)/", "20230519194916", "https://www.karimboumjimar.com/", "text/html", "200", "WCD5SIZVDQHSQ36P5EKPWRPZDHG37FPH", "26759"],
+    ["com,karimboumjimar)/", "20240423202440", "https://www.karimboumjimar.com/", "text/html", "200", "MWZ7EKHVRRXU2P75QI46P6V2LSFRH6WB", "19303"],
+    ["com,karimboumjimar)/", "20240905180500", "https://www.karimboumjimar.com/", "text/html", "200", "ZXI3JS3MGNOOEPGETD5J5H4UUKCORKHK", "19175"],
+    ["com,karimboumjimar)/", "20240924123939", "https://www.karimboumjimar.com/", "text/html", "200", "PC3UXWTAKOG2KXX6YGWFPTVZ4AOCG6NU", "19133"],
+    ["com,karimboumjimar)/", "20241218004736", "https://www.karimboumjimar.com/", "text/html", "200", "EQC6MS77G7LI7WHGVDVGZBG4O3OFEK7I", "19313"],
+    ["com,karimboumjimar)/", "20250416133910", "https://www.karimboumjimar.com/", "text/html", "200", "EDV5IVETBZNTI4KMVHJ74JLH4TKIOZ4I", "16417"],
+    ["com,karimboumjimar)/", "20251129232502", "https://www.karimboumjimar.com/", "text/html", "200", "456BY6SMRPCFA5WZQI5OPEUIMDWGCZRT", "21220"]
+  ],
+  "notes": {
+    "apex_no_www": "A parallel CDX query for 'karimboumjimar.com' (no subdomain) returned zero rows. All 200-OK captures are on the www subdomain.",
+    "coverage_gap": "The last successful capture in this pull is 2025-11-29, five months before the 2026-06-04 SEO consolidation. Any post-SEO Wayback captures are unknown until IA is reachable again."
+  }
+}
