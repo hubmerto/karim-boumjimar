@@ -1,0 +1,24 @@
+{
+  "_source": "https://www.wikidata.org/w/rest.php/v1/page/Q135780698/history",
+  "_fetched_at": "2026-09-17",
+  "_note": "Full revision history at time of fetch. Every revision is third-party (Humberto's Wikidata account 'Dieletzentag' has never edited this item).",
+  "revisions": [
+    {"id":2544164343,"timestamp":"2026-09-11T20:06:21Z","minor":false,"size":16872,"comment":"/* wbsetdescription-add:1|as */ Assamese description added","user":{"id":4077771,"name":"MS Sakib"},"delta":181},
+    {"id":2503976934,"timestamp":"2026-06-09T21:33:45Z","minor":false,"size":16691,"comment":"/* wbsetdescription-add:1|bn */ Bengali description added","user":{"id":4077771,"name":"MS Sakib"},"delta":171},
+    {"id":2502274967,"timestamp":"2026-06-05T15:53:44Z","minor":false,"size":16520,"comment":"/* wbsetdescription-set:1|en */ Spanish-Moroccan visual artist (born 1998)","user":{"id":22952,"name":"Jamie7687"},"delta":24},
+    {"id":2502274718,"timestamp":"2026-06-05T15:52:53Z","minor":false,"size":16496,"comment":"/* wbremoveclaims-remove:1| */ [[Property:P569]]: 28 January 98 CE","user":{"id":22952,"name":"Jamie7687"},"delta":-893},
+    {"id":2502274183,"timestamp":"2026-06-05T15:51:14Z","minor":false,"size":17389,"comment":"/* wbmergeitems-from:0||Q140068240 */","user":{"id":22952,"name":"Jamie7687"},"delta":7679},
+    {"id":2451562306,"timestamp":"2026-01-05T07:06:28Z","minor":false,"size":9710,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P7763]]: [[Q73555012]] (copyright status)","user":{"id":244729,"name":"Hannolans"},"delta":1655},
+    {"id":2434686572,"timestamp":"2025-11-27T11:24:15Z","minor":false,"size":8055,"comment":"/* wbeditentity-update-languages-short:0||en */ Add birthyear 1998 in English description","user":{"id":244729,"name":"Hannolans"},"delta":13},
+    {"id":2399041556,"timestamp":"2025-09-01T08:38:32Z","minor":false,"size":8042,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P21]]: [[Q6581097]] (sex/gender: male)","user":{"id":244729,"name":"Hannolans"},"delta":1278},
+    {"id":2391975912,"timestamp":"2025-08-14T12:21:20Z","minor":false,"size":6764,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P106]]: [[Q483501]] (occupation: artist)","user":{"id":2528330,"name":"Jasleht"},"delta":1215},
+    {"id":2391974618,"timestamp":"2025-08-14T12:18:02Z","minor":false,"size":5549,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P6379]]: [[Q86443703]] (has work in collection)","user":{"id":2528330,"name":"Jasleht"},"delta":1307},
+    {"id":2391974149,"timestamp":"2025-08-14T12:16:51Z","minor":false,"size":4242,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P569]]: 1998 (date of birth)","user":{"id":2528330,"name":"Jasleht"},"delta":1304},
+    {"id":2391973722,"timestamp":"2025-08-14T12:15:19Z","minor":false,"size":2938,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P735]]: [[Q1729369]] (given name: Karim)","user":{"id":2528330,"name":"Jasleht"},"delta":1217},
+    {"id":2391973525,"timestamp":"2025-08-14T12:14:40Z","minor":false,"size":1721,"comment":"/* wbsetclaim-create:2||1 */ [[Property:P31]]: [[Q5]] (instance of: human)","user":{"id":2528330,"name":"Jasleht"},"delta":1203},
+    {"id":2391973199,"timestamp":"2025-08-14T12:13:39Z","minor":false,"size":518,"comment":"/* wbsetdescription-add:1|en */ artist","user":{"id":2528330,"name":"Jasleht"},"delta":64},
+    {"id":2391973196,"timestamp":"2025-08-14T12:13:39Z","minor":false,"size":454,"comment":"/* wbsetlabel-add:1|en */ Karim Boumjimar","user":{"id":2528330,"name":"Jasleht"},"delta":74},
+    {"id":2391973191,"timestamp":"2025-08-14T12:13:39Z","minor":false,"size":380,"comment":"/* wbsetlabel-add:1|mul */ Karim Boumjimar","user":{"id":2528330,"name":"Jasleht"},"delta":76},
+    {"id":2391972868,"timestamp":"2025-08-14T12:13:00Z","minor":false,"size":304,"comment":"/* wbeditentity-create:2|fi */ Karim Boumjimar, taiteilija (item created)","user":{"id":2528330,"name":"Jasleht"},"delta":null}
+  ]
+}

@@ -1,0 +1,9 @@
+abf3ffe 2026-06-09T17:17:05+02:00 seo: add Wikidata to Person sameAs (bidirectional entity link)
+b8113ea 2026-06-09T12:03:13+02:00 chore: repo cleanup batch (lint gate, config, stale docs/comments)
+b4143ce 2026-06-08T10:27:24+02:00 feat(contact): rename /about → /contact, add newsletter signup UI
+e1da3fa 2026-06-05T09:49:26+02:00 seo(entity-home): credentials-forward Person.description + ProfilePage on /about
+9a1ff6e 2026-06-05T09:31:31+02:00 fix(seo): point Royal Danish Academy of Fine Arts sameAs at the right institution
+8737755 2026-06-04T21:32:41+02:00 seo: per-page metadata, JSON-LD, per-project routes, sitemap
+aab61e4 2026-05-16T14:36:19-04:00 Remove press; Alice Folker.
+d3bf2c7 2026-05-11T13:35:31+02:00 Content updates: Drawings, Kultuur, Pandemonium, drop alicefolker links
+02adf00 2026-05-07T19:23:38+02:00 Navigation showcase: anchor at Pandemonium, visit Beauty + Queer
